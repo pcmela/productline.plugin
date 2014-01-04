@@ -10,5 +10,42 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.contentTypes">
+      <file-association
+            content-type="productline.plugin.configuration"
+            file-extensions="productline"
+            file-names="configuration.productline">
+      </file-association>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="productline.plugin.editor.ProductLineConfigurationEditor"
+            default="false"
+            extensions="productline"
+            id="productline.plugin.editor"
+            name="Product Line">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+         <command
+               commandId="productline.plugin.ui.CreateConfigurationCommand"
+               label="Create Product Line Configuration"
+               style="push">
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="productline.plugin.ui.CreateConfigurationCommandHandler"
+            id="productline.plugin.ui.CreateConfigurationCommand"
+            name="Command">
+      </command>
+   </extension>
 
 </plugin>

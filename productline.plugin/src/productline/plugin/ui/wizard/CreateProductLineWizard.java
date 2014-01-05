@@ -5,7 +5,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
 
-public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard {
+public class CreateProductLineWizard extends Wizard{
 
 	CreateProductLineWizardPage1 page1;
 	
@@ -21,10 +21,5 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		return false;
 	}
 
-	@Override
-	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		// TODO Auto-generated method stub
-		
-	}
 
 }

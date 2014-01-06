@@ -1,15 +1,21 @@
 package productline.plugin.ui.wizard;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 public class CreateProductLineWizardPage1 extends WizardPage {
@@ -18,30 +24,42 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 	private final String BUTTON_DATA_VALUE_NEWDB = "NEW_DB";
 	private final String BUTTON_DATA_VALUE_EXISTINGDB = "EXISTING_DB";
 
+	private IPath projectLoacation;
+	
 	private Composite container;
 
+	private Label lDefaultPath;
+	private Text tDefaultPath;
+	
 	private Label lNewDbUserName;
 	private Text tNewDbUserName;
 	private Label lNewDbPassword;
 	private Text tNewDbPassword;
+	private Label lNewDbPasswordConfirm;
+	private Text tNewDbPasswordConfirm;
 
 	private Label lExistingDbUserName;
 	private Text tExistingDbUserName;
 	private Label lExistingDbPassword;
 	private Text tExistingDbPassword;
+	private Label lExistingDbPath;
+	private Text tExistingDbPath;
+	private Button bExistingDbPath;
+	
+	private boolean createNewDB = true;
+	
 
 	protected CreateProductLineWizardPage1(String pageName) {
 		super(pageName);
-		setTitle("First Pagte");
-		setDescription("First Page");
+		setTitle("Create database");
+		setDescription("Create database for storing specification of product line");
 	}
 
 	@Override
 	public void createControl(Composite parent) {
 		container = new Composite(parent, SWT.NONE);
-		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(2, false);
-		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		//container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		FormLayout layout = new FormLayout();
 		container.setLayout(layout);
 
 		Listener listener = new Listener() {
@@ -55,11 +73,13 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 						((Button) child).setSelection(false);
 						if (((Button) child).getData(BUTTON_DATA_KEY_ID)
 								.equals(BUTTON_DATA_VALUE_NEWDB)) {
-							setEnableToExistingDbSection(false);
-							setEnableToNewDbSection(true);
-						} else {
 							setEnableToExistingDbSection(true);
 							setEnableToNewDbSection(false);
+							createNewDB = false;
+						} else {
+							setEnableToExistingDbSection(false);
+							setEnableToNewDbSection(true);
+							createNewDB = true;
 						}
 					}
 				}
@@ -67,73 +87,251 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 			}
 		};
 
-		Button button = new Button(container, SWT.RADIO);
-		button.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_NEWDB);
-		GridData buttonData = new GridData();
-		buttonData.horizontalSpan = 2;
-		button.setLayoutData(buttonData);
-		button.setText("Create new DB");
-		button.addListener(SWT.Selection, listener);
-		createExistingDbSection();
-
-		Button button2 = new Button(container, SWT.RADIO);
-		button2.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_EXISTINGDB);
-		GridData button2Data = new GridData();
-		button2Data.horizontalSpan = 2;
-		button2.setLayoutData(button2Data);
-		button2.setText("Use existing DB");
-		button2.addListener(SWT.Selection, listener);
-		createNewDbSection();
+		createElements(listener);
+		
 
 		setControl(container);
 	}
-
-	private void createNewDbSection() {
+	
+	private void createElements(Listener listener){
+		//New DB section
+		Button button = new Button(container, SWT.RADIO);
+		button.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_NEWDB);
+		button.setText("Create new DB");
+		button.addListener(SWT.Selection, listener);
+		
+		lDefaultPath = new Label(container, SWT.NONE);
+		lDefaultPath.setText("Default path:");
+		tDefaultPath = new Text(container, SWT.SINGLE | SWT.BORDER);
+		tDefaultPath.setEnabled(false);
+		if(projectLoacation != null){
+			tDefaultPath.setText(projectLoacation.toString());
+		}
+		
 		lNewDbUserName = new Label(container, SWT.NONE);
-		lNewDbUserName.setText("Username:");
+		lNewDbUserName.setText("Username:");		
 		tNewDbUserName = new Text(container, SWT.BORDER);
-		GridData dataUserName = new GridData();
-		dataUserName.grabExcessHorizontalSpace = true;
-		dataUserName.horizontalAlignment = GridData.FILL;
-		tNewDbUserName.setLayoutData(dataUserName);
 		
-		
-
 		lNewDbPassword = new Label(container, SWT.NONE);
-		lNewDbPassword.setText("Password");
-		tNewDbPassword = new Text(container, SWT.PASSWORD | SWT.BORDER);
-		GridData dataPassword = new GridData();
-		dataPassword.grabExcessHorizontalSpace = true;
-		dataPassword.horizontalAlignment = GridData.FILL;
-		tNewDbPassword.setLayoutData(dataPassword);
+		lNewDbPassword.setText("Password:");		
+		tNewDbPassword = new Text(container, SWT.PASSWORD | SWT.BORDER);		
+		
+		lNewDbPasswordConfirm = new Label(container, SWT.NONE);
+		lNewDbPasswordConfirm.setText("Confirm password:");		
+		tNewDbPasswordConfirm = new Text(container, SWT.PASSWORD | SWT.BORDER);
+		
+		
+		FormData dataDefaultPathLabel = new FormData();
+		dataDefaultPathLabel.top = new FormAttachment(tDefaultPath, 5, SWT.CENTER);
+		dataDefaultPathLabel.left = new FormAttachment(0, 5);
+		lDefaultPath.setLayoutData(dataDefaultPathLabel);
+		
+		FormData dataDefaultPathText = new FormData();
+		dataDefaultPathText.top = new FormAttachment(0, 5);
+		dataDefaultPathText.left = new FormAttachment(lDefaultPath, 5);
+		dataDefaultPathText.right = new FormAttachment(100, -5);
+		tDefaultPath.setLayoutData(dataDefaultPathText);
+		
+		FormData buttonData = new FormData();
+		buttonData.top = new FormAttachment(tDefaultPath, 5);
+		buttonData.left = new FormAttachment(0, 5);
+		button.setLayoutData(buttonData);
+		
+		
+		FormData dataUserName = new FormData();
+		dataUserName.top = new FormAttachment(tNewDbUserName, 5, SWT.CENTER);
+		dataUserName.left = new FormAttachment(0, 30);
+		lNewDbUserName.setLayoutData(dataUserName);
+		
+		FormData dataUserNameNewText = new FormData();
+		dataUserNameNewText.top = new FormAttachment(button, 5);
+		dataUserNameNewText.left = new FormAttachment(lNewDbPasswordConfirm, 5);
+		dataUserNameNewText.right = new FormAttachment(100, -5);
+		tNewDbUserName.setLayoutData(dataUserNameNewText);
+		
+		FormData dataPasswordNewLabel = new FormData();
+		dataPasswordNewLabel.top = new FormAttachment(tNewDbPassword, 5, SWT.CENTER);
+		dataPasswordNewLabel.left = new FormAttachment(0, 30);
+		lNewDbPassword.setLayoutData(dataPasswordNewLabel);
+		
+		FormData dataPasswordNewText = new FormData();
+		dataPasswordNewText.top = new FormAttachment(tNewDbUserName, 5);
+		dataPasswordNewText.left = new FormAttachment(lNewDbPasswordConfirm, 5);
+		dataPasswordNewText.right = new FormAttachment(100, -5);
+		tNewDbPassword.setLayoutData(dataPasswordNewText);
+		
+		FormData dataPasswordConfirmNewLabel = new FormData();
+		dataPasswordConfirmNewLabel.top = new FormAttachment(tNewDbPasswordConfirm, 5, SWT.CENTER);
+		dataPasswordConfirmNewLabel.left = new FormAttachment(0, 30);
+		lNewDbPasswordConfirm.setLayoutData(dataPasswordConfirmNewLabel);
+		
+		FormData dataPasswordConfirmNewText = new FormData();
+		dataPasswordConfirmNewText.top = new FormAttachment(tNewDbPassword, 5);
+		dataPasswordConfirmNewText.left = new FormAttachment(lNewDbPasswordConfirm, 5);
+		dataPasswordConfirmNewText.right = new FormAttachment(100, -5);
+		tNewDbPasswordConfirm.setLayoutData(dataPasswordConfirmNewText);
+		
+		
+		//Existing DB section
+		Button button2 = new Button(container, SWT.RADIO);
+		button2.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_EXISTINGDB);
+		FormData button2Data = new FormData();
+		button2Data.top = new FormAttachment(tNewDbPasswordConfirm, 5);
+		button2Data.left = new FormAttachment(0, 5);
+		button2.setLayoutData(button2Data);
+		button2.setText("Use existing DB");
+		button2.addListener(SWT.Selection, listener);
+		
+		lExistingDbUserName = new Label(container, SWT.NONE);
+		lExistingDbUserName.setText("Username:");
+		tExistingDbUserName = new Text(container, SWT.BORDER);
+		
+		lExistingDbPassword = new Label(container, SWT.NONE);
+		lExistingDbPassword.setText("Password");
+		tExistingDbPassword = new Text(container, SWT.PASSWORD | SWT.BORDER);
+		
+		lExistingDbPath = new Label(container, SWT.NONE);
+		lExistingDbPath.setText("Path");
+		tExistingDbPath = new Text(container, SWT.SINGLE | SWT.BORDER);
+		bExistingDbPath = new Button(container, SWT.PUSH);
+		bExistingDbPath.setText("Browse");
+		bExistingDbPath.addListener(SWT.Selection, createFileBrowserListener());
+		
+		FormData dataUserNameExistingLabel = new FormData();
+		dataUserNameExistingLabel.top = new FormAttachment(tExistingDbUserName, 5, SWT.CENTER);
+		dataUserNameExistingLabel.left = new FormAttachment(0, 30);
+		lExistingDbUserName.setLayoutData(dataUserNameExistingLabel);
+		
+		FormData dataUserNameExistingText = new FormData();
+		dataUserNameExistingText.top = new FormAttachment(button2, 5);
+		dataUserNameExistingText.left = new FormAttachment(lNewDbPasswordConfirm, 5);
+		dataUserNameExistingText.right = new FormAttachment(100, -5);
+		tExistingDbUserName.setLayoutData(dataUserNameExistingText);
+		
+		FormData dataPasswordExistingLabel = new FormData();
+		dataPasswordExistingLabel.top = new FormAttachment(tExistingDbPassword, 5, SWT.CENTER);
+		dataPasswordExistingLabel.left = new FormAttachment(0, 30);
+		lExistingDbPassword.setLayoutData(dataPasswordExistingLabel);
+		
+		FormData dataPasswordExistingText = new FormData();
+		dataPasswordExistingText.top = new FormAttachment(tExistingDbUserName, 5);
+		dataPasswordExistingText.left = new FormAttachment(lNewDbPasswordConfirm, 5);
+		dataPasswordExistingText.right = new FormAttachment(100, -5);
+		tExistingDbPassword.setLayoutData(dataPasswordExistingText);
+		
+		FormData dataPathExistingLabel = new FormData();
+		dataPathExistingLabel.top = new FormAttachment(tExistingDbPath, 5, SWT.CENTER);
+		dataPathExistingLabel.left = new FormAttachment(0, 30);
+		lExistingDbPath.setLayoutData(dataPathExistingLabel);
+		
+		FormData dataPathExistingText = new FormData();
+		dataPathExistingText.top = new FormAttachment(tExistingDbPassword, 5);
+		dataPathExistingText.left = new FormAttachment(lNewDbPasswordConfirm, 5);
+		dataPathExistingText.right = new FormAttachment(85, 0);
+		tExistingDbPath.setLayoutData(dataPathExistingText);
+		
+		FormData dataPathExistingButton = new FormData();
+		dataPathExistingButton.top = new FormAttachment(tExistingDbPath, 5, SWT.CENTER);
+		dataPathExistingButton.left = new FormAttachment(tExistingDbPath, 5);
+		dataPathExistingButton.right = new FormAttachment(100, -5);
+		bExistingDbPath.setLayoutData(dataPathExistingButton);
+		
+		
 	}
+
 
 	private void setEnableToNewDbSection(boolean enable) {
 		tNewDbUserName.setEnabled(enable);
 		tNewDbPassword.setEnabled(enable);
+		tNewDbPasswordConfirm.setEnabled(enable);
 	}
 
 	private void setEnableToExistingDbSection(boolean enable) {
 		tExistingDbUserName.setEnabled(enable);
 		tExistingDbPassword.setEnabled(enable);
+		tExistingDbPath.setEnabled(enable);
+		bExistingDbPath.setEnabled(enable);
+	}
+	
+	private Listener createFileBrowserListener(){
+		
+		return new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				FileDialog fd = new FileDialog(new Shell(), SWT.OPEN);
+		        fd.setText("Open");
+		        fd.setFilterPath("C:/");
+		        String[] filterExt = { "*.h2.db" };
+		        fd.setFilterExtensions(filterExt);
+		        tExistingDbPath.setText(fd.open());
+			}
+		};
 	}
 
-	private void createExistingDbSection() {
-		lExistingDbUserName = new Label(container, SWT.NONE);
-		lExistingDbUserName.setText("Username:");
-		tExistingDbUserName = new Text(container, SWT.BORDER);
-		GridData dataUserName = new GridData();
-		dataUserName.grabExcessHorizontalSpace = true;
-		dataUserName.horizontalAlignment = GridData.FILL;
-		tExistingDbUserName.setLayoutData(dataUserName);
-
-		lExistingDbPassword = new Label(container, SWT.NONE);
-		lExistingDbPassword.setText("Password");
-		tExistingDbPassword = new Text(container, SWT.PASSWORD | SWT.BORDER);
-		GridData dataPassword = new GridData();
-		dataPassword.grabExcessHorizontalSpace = true;
-		dataPassword.horizontalAlignment = GridData.FILL;
-		tExistingDbPassword.setLayoutData(dataPassword);
+	public Text gettNewDbUserName() {
+		return tNewDbUserName;
 	}
+
+	public void settNewDbUserName(Text tNewDbUserName) {
+		this.tNewDbUserName = tNewDbUserName;
+	}
+
+	public Text gettNewDbPassword() {
+		return tNewDbPassword;
+	}
+
+	public void settNewDbPassword(Text tNewDbPassword) {
+		this.tNewDbPassword = tNewDbPassword;
+	}
+
+	public Text gettNewDbPasswordConfirm() {
+		return tNewDbPasswordConfirm;
+	}
+
+	public void settNewDbPasswordConfirm(Text tNewDbPasswordConfirm) {
+		this.tNewDbPasswordConfirm = tNewDbPasswordConfirm;
+	}
+
+	public Text gettExistingDbUserName() {
+		return tExistingDbUserName;
+	}
+
+	public void settExistingDbUserName(Text tExistingDbUserName) {
+		this.tExistingDbUserName = tExistingDbUserName;
+	}
+
+	public Text gettExistingDbPassword() {
+		return tExistingDbPassword;
+	}
+
+	public void settExistingDbPassword(Text tExistingDbPassword) {
+		this.tExistingDbPassword = tExistingDbPassword;
+	}
+
+	public Text gettExistingDbPath() {
+		return tExistingDbPath;
+	}
+
+	public void settExistingDbPath(Text tExistingDbPath) {
+		this.tExistingDbPath = tExistingDbPath;
+	}
+
+	public boolean isCreateNewDB() {
+		return createNewDB;
+	}
+
+	public void setCreateNewDB(boolean createNewDB) {
+		this.createNewDB = createNewDB;
+	}
+
+	public IPath getProjectLoacation() {
+		return projectLoacation;
+	}
+
+	public void setProjectLoacation(IPath projectLoacation) {
+		this.projectLoacation = projectLoacation;
+	}
+
+	
 
 }

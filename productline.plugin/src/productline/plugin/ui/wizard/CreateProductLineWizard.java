@@ -18,6 +18,12 @@ import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
+import org.hibernate.Session;
+
+import diploma.productline.HibernateUtil;
+import diploma.productline.entity.ProductLine;
+import productline.plugin.internal.ConfigurationKeys;
+import productline.plugin.internal.DatabaseUtil;
 
 public class CreateProductLineWizard extends Wizard {
 
@@ -27,11 +33,6 @@ public class CreateProductLineWizard extends Wizard {
 	private IProject project;
 	private IPath workspaceLocation;
 	private final String FOLDER = "/src/";
-	
-	private final String CONNECTION_URL_KEY = "connection_url";
-	private final String USERNAME_KEY = "username";
-	private final String PASSWORD_KEY = "password";
-	private final String NAME_OF_CONFIG_FILE = "configuration.productline";
 
 	@Override
 	public void addPages() {
@@ -44,34 +45,56 @@ public class CreateProductLineWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		
-		Properties properties = new Properties();
-		try {
-			String p = workspaceLocation.toString()
-					+ project.toString() + "/" + NAME_OF_CONFIG_FILE;
-			IFile file = project.getFile("/" + NAME_OF_CONFIG_FILE);
-			file.create(new ByteArrayInputStream("ahoj".getBytes()), IResource.NONE, null);
-			
-			
-			File configuration = new File(workspaceLocation.toString()
-					+ project.toString() + "/" + NAME_OF_CONFIG_FILE);
-			
-			configuration.createNewFile();
-			properties.setProperty(CONNECTION_URL_KEY, "jdbc:h2:~/test2");
-			properties.setProperty(USERNAME_KEY, page1.gettNewDbUserName().getText());
-			properties.setProperty(PASSWORD_KEY, page1.gettNewDbPassword().getText());
 
-			properties.store(new FileOutputStream(configuration), null);
+		try {
+
+			String p = workspaceLocation.toString();
+			IFile file = project.getFile("/" + ConfigurationKeys.NAME_OF_CONFIG_FILE);
+			file.create(new ByteArrayInputStream(createConfigurationContent().getBytes()), IResource.NONE, null);
+
+			Properties properties = new Properties();
+			properties.load(file.getContents());
+			Properties hibernateProp = DatabaseUtil.getHibernateProperties(properties);
+			HibernateUtil.initSessionFactory(hibernateProp);
 			
-		} catch (IOException e) {
+			ProductLine productLine = new ProductLine();
+			productLine.setName(page1.gettProductLineName().getText());
+			productLine.setDescription(page1.gettProductLineDescription().getText());
+			Session session = HibernateUtil.getSessionFactory()
+					.getCurrentSession();
+			session.beginTransaction();
+			session.save(productLine);
+			session.getTransaction().commit();
+		} catch (CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (CoreException e) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		return true;
+	}
+
+	private String createConfigurationContent() {
+		StringBuilder result = new StringBuilder();
+		result.append(ConfigurationKeys.CONNECTION_URL_KEY).append(ConfigurationKeys.EQUAL)
+					.append("jdbc:h2:"+project.getLocation().toString()+"/database").append(ConfigurationKeys.NEW_LINE)
+				.append(ConfigurationKeys.USERNAME_KEY).append(ConfigurationKeys.EQUAL)
+					.append(page1.gettNewDbUserName().getText()).append(ConfigurationKeys.NEW_LINE)
+				.append(ConfigurationKeys.PASSWORD_KEY).append(ConfigurationKeys.EQUAL)
+					.append(page1.gettNewDbPassword().getText()).append(ConfigurationKeys.NEW_LINE)
+				.append(ConfigurationKeys.PRODUCTLINE_ID_KEY).append(ConfigurationKeys.EQUAL)
+					.append(page1.gettProductLineName().getText()).append(ConfigurationKeys.NEW_LINE)
+				//sync properties
+				.append(ConfigurationKeys.SYNC_URL_KEY).append(ConfigurationKeys.EQUAL)
+					.append(page2.gettWebUrl().getText()).append(ConfigurationKeys.NEW_LINE)
+				.append(ConfigurationKeys.SYNC_USERNAME_KEY).append(ConfigurationKeys.EQUAL)
+					.append(page2.gettWebUserName().getText()).append(ConfigurationKeys.NEW_LINE)
+				.append(ConfigurationKeys.SYNC_PASSWORD_KEY).append(ConfigurationKeys.EQUAL)
+					.append(page2.gettWebPassword()).append(ConfigurationKeys.NEW_LINE);
+		
+		return result.toString();
 	}
 
 	@Override

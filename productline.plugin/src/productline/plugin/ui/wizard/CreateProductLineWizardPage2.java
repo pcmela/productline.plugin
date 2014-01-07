@@ -195,4 +195,38 @@ public class CreateProductLineWizardPage2 extends WizardPage {
 		};
 	}
 
+	public Text gettWebUserName() {
+		return tWebUserName;
+	}
+
+	public void settWebUserName(Text tWebUserName) {
+		this.tWebUserName = tWebUserName;
+	}
+
+	public Text gettWebPassword() {
+		return tWebPassword;
+	}
+
+	public void settWebPassword(Text tWebPassword) {
+		this.tWebPassword = tWebPassword;
+	}
+
+	public Text gettWebUrl() {
+		return tWebUrl;
+	}
+
+	public void settWebUrl(Text tWebUrl) {
+		this.tWebUrl = tWebUrl;
+	}
+
+	public Text gettFilePath() {
+		return tFilePath;
+	}
+
+	public void settFilePath(Text tFilePath) {
+		this.tFilePath = tFilePath;
+	}
+	
+	
+
 }

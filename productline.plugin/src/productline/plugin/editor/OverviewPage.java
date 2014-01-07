@@ -1,14 +1,25 @@
 package productline.plugin.editor;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.jar.Attributes.Name;
+import java.util.Properties;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.action.IMenuCreator;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -16,9 +27,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -29,7 +38,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.HelpListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -37,16 +45,14 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.actions.BaseSelectionListenerAction;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.FormPage;
@@ -54,10 +60,18 @@ import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
+import org.eclipse.ui.internal.UIPlugin;
+import org.eclipse.ui.part.FileEditorInput;
+import org.hibernate.Session;
+import org.hibernate.exception.GenericJDBCException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.ui.AddEntityDialog;
 import productline.plugin.ui.ProductLineTreeContentProvider;
 import productline.plugin.ui.ProductLineTreeLabelProvider;
+import diploma.productline.HibernateUtil;
 import diploma.productline.configuration.YamlExtractor;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
@@ -65,7 +79,9 @@ import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
-public class OverviewPage extends FormPage {
+public class OverviewPage extends ProductLineFormPage {
+
+	private static final String MODIFY_LISTENER = "MODIFY_LISTENER";
 
 	SearchControl searchControl;
 
@@ -101,7 +117,9 @@ public class OverviewPage extends FormPage {
 
 	public OverviewPage(FormEditor editor, String id, String title) {
 		super(editor, id, title);
-
+		IEditorInput e = editor.getEditorInput();
+		source = ((FileEditorInput) e).getFile();
+		this.editor = editor;
 	}
 
 	@Override
@@ -152,11 +170,12 @@ public class OverviewPage extends FormPage {
 		treeViewer.setContentProvider(new ProductLineTreeContentProvider());
 		treeViewer.setLabelProvider(new ProductLineTreeLabelProvider());
 
-		String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml";
-		ProductLine productLine = YamlExtractor.extract(path);
+		/*
+		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
+		 * productLine = YamlExtractor.extract(path);
+		 */
 
-		treeViewer.setInput(productLine);
-		treeViewer.expandAll();
+		treeViewer.setInput(loadData(false));
 
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 
@@ -183,7 +202,7 @@ public class OverviewPage extends FormPage {
 
 		final AddAction actionAdd = new AddAction();
 		actionAdd.setText("Add");
-		
+
 		final MenuManager mgr = new MenuManager();
 		mgr.setRemoveAllWhenShown(true);
 
@@ -211,7 +230,7 @@ public class OverviewPage extends FormPage {
 	}
 
 	private void createDetailModule(Module module) {
-		disposeActiveElements();
+		disposeActiveElements(detailComposite.getChildren());
 
 		lModuleName = toolkit.createLabel(detailComposite, "Name", SWT.NONE);
 		tModuleName = toolkit.createText(detailComposite, module.getName());
@@ -232,11 +251,19 @@ public class OverviewPage extends FormPage {
 		tModuleName.setLayoutData(tdName);
 		tModuleDescription.setLayoutData(tdDescription);
 
+		tModuleName.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(ModifyEvent e) {
+				firePropertyChange(PROP_DIRTY);
+			}
+		});
+
 		detailComposite.layout();
 	}
 
 	private void createDetailVariability(Variability variability) {
-		disposeActiveElements();
+		disposeActiveElements(detailComposite.getChildren());
 
 		lVariabilityName = toolkit.createLabel(detailComposite, "Name",
 				SWT.NONE);
@@ -264,7 +291,7 @@ public class OverviewPage extends FormPage {
 	}
 
 	private void createDetailElement(Element element) {
-		disposeActiveElements();
+		disposeActiveElements(detailComposite.getChildren());
 
 		lElementName = toolkit.createLabel(detailComposite, "Name", SWT.NONE);
 		tElementName = toolkit.createText(detailComposite, element.getName());
@@ -286,14 +313,6 @@ public class OverviewPage extends FormPage {
 		tElementDescription.setLayoutData(tdDescription);
 
 		detailComposite.layout();
-	}
-
-	private void disposeActiveElements() {
-		Control[] active = detailComposite.getChildren();
-		for (Control c : active) {
-			c.dispose();
-		}
-
 	}
 
 	private void createDetailSection(Composite sashForm, FormToolkit toolkit) {
@@ -318,7 +337,7 @@ public class OverviewPage extends FormPage {
 		searchControl = new SearchControl("Filter", managedForm);
 		searchMatcher = new SearchMatcher(searchControl);
 		searchFilter = new DependencyFilter(new SearchMatcher(searchControl));
-		treeViewer.addFilter(searchFilter); // by default is filtered
+		treeViewer.addFilter(searchFilter);
 
 		ScrolledForm form = managedForm.getForm();
 
@@ -330,7 +349,7 @@ public class OverviewPage extends FormPage {
 				.createFromImage(PlatformUI.getWorkbench().getSharedImages()
 						.getImage(ISharedImages.IMG_ELCL_SYNCED))) {
 			public void run() {
-				loadData(true);
+				treeViewer.setInput(loadData(true));
 			}
 		});
 
@@ -374,34 +393,12 @@ public class OverviewPage extends FormPage {
 		treeViewer.expandAll();
 	}
 
-	void loadData(final boolean force) {
-		if (treeViewer.getTree().isDisposed()) {
-			return;
-		}
+	
 
-		treeViewer.setInput(null);
-
-		String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml";
-		ProductLine productLine = YamlExtractor.extract(path);
-
-		treeViewer.setInput(productLine);
-	}
-
-	static class DependencyFilter extends ViewerFilter {
-		protected SearchMatcher matcher;
-
-		public DependencyFilter(SearchMatcher matcher) {
-			this.matcher = matcher;
-		}
-
-		public boolean select(Viewer viewer, Object parentElement,
-				Object element) {
-			if (matcher != null && !matcher.isEmpty()) {
-				return matcher.isMatchingArtifact(element);
-			}
-			return true;
-		}
-
+	@Override
+	public boolean isDirty() {
+		// TODO Auto-generated method stub
+		return true;
 	}
 
 	class RemoveAction extends Action {
@@ -434,13 +431,14 @@ public class OverviewPage extends FormPage {
 			if (((TreeSelection) treeViewer.getSelection()).getFirstElement() instanceof BaseProductLineEntity) {
 				BaseProductLineEntity entity = (BaseProductLineEntity) ((TreeSelection) treeViewer
 						.getSelection()).getFirstElement();
-				
-				AddEntityDialog dialog = new AddEntityDialog(new Shell(), "Title", "Message");
+
+				AddEntityDialog dialog = new AddEntityDialog(new Shell(),
+						"Title", "Message");
 				dialog.create();
 				if (dialog.open() == Window.OK) {
-				  System.out.println(dialog.getFirstName());
-				  System.out.println(dialog.getLastName());
-				} 
+					System.out.println(dialog.getFirstName());
+					System.out.println(dialog.getLastName());
+				}
 			} else {
 
 			}

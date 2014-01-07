@@ -1,6 +1,7 @@
 package productline.plugin.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
@@ -8,18 +9,18 @@ import diploma.productline.entity.Element;
 public class ElementTreeContainer implements BaseProductLineEntity {
 
 	private final String name = "Elements";
-	private List<Element> elements;
+	private Set<Element> elements;
 	
 	@Override
 	public String getName() {
 		return name;
 	}
 
-	public List<Element> getElements() {
+	public Set<Element> getElements() {
 		return elements;
 	}
 
-	public void setElements(List<Element> elements) {
+	public void setElements(Set<Element> elements) {
 		this.elements = elements;
 	}
 

@@ -1,6 +1,7 @@
 package productline.plugin.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Variability;
@@ -8,18 +9,18 @@ import diploma.productline.entity.Variability;
 public class VariabilityTreeContainer implements BaseProductLineEntity {
 
 	private final String name = "Variabilities";
-	private List<Variability> variabilities;
+	private Set<Variability> variabilities;
 	
 	@Override
 	public String getName() {
 		return this.name;
 	}
 
-	public List<Variability> getVariabilities() {
+	public Set<Variability> getVariabilities() {
 		return variabilities;
 	}
 
-	public void setVariabilities(List<Variability> variabilities) {
+	public void setVariabilities(Set<Variability> variabilities) {
 		this.variabilities = variabilities;
 	}
 	

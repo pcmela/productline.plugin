@@ -31,6 +31,11 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 	private Label lDefaultPath;
 	private Text tDefaultPath;
 	
+	private Label lProductLineName;
+	private Text tProductLineName;
+	private Label lProductLineDescription;
+	private Text tProductLineDescription;
+	
 	private Label lNewDbUserName;
 	private Text tNewDbUserName;
 	private Label lNewDbPassword;
@@ -94,6 +99,15 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 	}
 	
 	private void createElements(Listener listener){
+		//Product Line section
+		lProductLineName = new Label(container, SWT.NONE);
+		lProductLineName.setText("Product Line name:");
+		tProductLineName = new Text(container, SWT.SINGLE | SWT.BORDER);	
+		
+		lProductLineDescription = new Label(container, SWT.NONE);
+		lProductLineDescription.setText("Product Line description:");
+		tProductLineDescription = new Text(container, SWT.SINGLE | SWT.BORDER);
+		
 		//New DB section
 		Button button = new Button(container, SWT.RADIO);
 		button.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_NEWDB);
@@ -132,8 +146,30 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 		dataDefaultPathText.right = new FormAttachment(100, -5);
 		tDefaultPath.setLayoutData(dataDefaultPathText);
 		
+		FormData dataPLNameLabel = new FormData();
+		dataPLNameLabel.top = new FormAttachment(tProductLineName, 5, SWT.CENTER);
+		dataPLNameLabel.left = new FormAttachment(0, 5);
+		lProductLineName.setLayoutData(dataPLNameLabel);
+		
+		FormData dataPLNameText = new FormData();
+		dataPLNameText.top = new FormAttachment(tDefaultPath, 5);
+		dataPLNameText.left = new FormAttachment(lProductLineDescription, 5);
+		dataPLNameText.right = new FormAttachment(100, -5);
+		tProductLineName.setLayoutData(dataPLNameText);
+		
+		FormData dataPLDescriptionLabel = new FormData();
+		dataPLDescriptionLabel.top = new FormAttachment(tProductLineDescription, 15, SWT.CENTER);
+		dataPLDescriptionLabel.left = new FormAttachment(0, 5);
+		lProductLineDescription.setLayoutData(dataPLDescriptionLabel);
+		
+		FormData dataPLDescriptionText = new FormData();
+		dataPLDescriptionText.top = new FormAttachment(tProductLineName, 5);
+		dataPLDescriptionText.left = new FormAttachment(lProductLineDescription, 5);
+		dataPLDescriptionText.right = new FormAttachment(100, -5);
+		tProductLineDescription.setLayoutData(dataPLDescriptionText);
+		
 		FormData buttonData = new FormData();
-		buttonData.top = new FormAttachment(tDefaultPath, 5);
+		buttonData.top = new FormAttachment(tProductLineDescription, 15);
 		buttonData.left = new FormAttachment(0, 5);
 		button.setLayoutData(buttonData);
 		
@@ -330,6 +366,22 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 
 	public void setProjectLoacation(IPath projectLoacation) {
 		this.projectLoacation = projectLoacation;
+	}
+
+	public Text gettProductLineName() {
+		return tProductLineName;
+	}
+
+	public void settProductLineName(Text tProductLineName) {
+		this.tProductLineName = tProductLineName;
+	}
+
+	public Text gettProductLineDescription() {
+		return tProductLineDescription;
+	}
+
+	public void settProductLineDescription(Text tProductLineDescription) {
+		this.tProductLineDescription = tProductLineDescription;
 	}
 
 	

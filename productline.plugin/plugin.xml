@@ -47,5 +47,18 @@
             name="Command">
       </command>
    </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="productline.plugin.category1"
+            name="Product Line">
+      </category>
+      <wizard
+            category="productline.plugin.category1"
+            class="productline.plugin.ui.wizard.CreateProductLineWizard"
+            id="productline.plugin.wizard1"
+            name="Product Line">
+      </wizard>
+   </extension>
 
 </plugin>

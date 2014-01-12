@@ -13,6 +13,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
@@ -25,7 +27,7 @@ import diploma.productline.entity.ProductLine;
 import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DatabaseUtil;
 
-public class CreateProductLineWizard extends Wizard {
+public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard {
 
 	CreateProductLineWizardPage1 page1;
 	CreateProductLineWizardPage2 page2;
@@ -116,6 +118,14 @@ public class CreateProductLineWizard extends Wizard {
 
 	public void setWorkspaceLocation(IPath workspaceLocation) {
 		this.workspaceLocation = workspaceLocation;
+	}
+
+	@Override
+	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		if(selection.getFirstElement() instanceof IJavaProject){
+			project = ((IJavaProject)selection.getFirstElement()).getProject();
+		}
+		
 	}
 
 }

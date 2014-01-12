@@ -408,7 +408,8 @@ public class OverviewPage extends ProductLineFormPage implements
 	}
 
 	private void createDetailVariability(Variability variability) {
-		disposeActiveElements(detailComposite.getChildren());
+		disposeActiveElements(rightComposite.getChildren());
+		createDetailSection();
 
 		lVariabilityName = toolkit.createLabel(detailComposite, "Name",
 				SWT.NONE);
@@ -431,12 +432,13 @@ public class OverviewPage extends ProductLineFormPage implements
 		tVariabilityName.setLayoutData(tdName);
 		tVariabilityDescription.setLayoutData(tdDescription);
 
-		detailComposite.layout();
+		rightComposite.layout();
 	}
 
 	private void createDetailElement(Element element) {
-		disposeActiveElements(detailComposite.getChildren());
-
+		disposeActiveElements(rightComposite.getChildren());
+		createDetailSection();
+		
 		lElementName = toolkit.createLabel(detailComposite, "Name", SWT.NONE);
 		tElementName = toolkit.createText(detailComposite, element.getName());
 
@@ -456,7 +458,7 @@ public class OverviewPage extends ProductLineFormPage implements
 		tElementName.setLayoutData(tdName);
 		tElementDescription.setLayoutData(tdDescription);
 
-		detailComposite.layout();
+		rightComposite.layout();
 	}
 
 	private void createRightSection(Composite sashForm, FormToolkit toolkit) {

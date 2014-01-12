@@ -1,11 +1,15 @@
 package productline.plugin;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.inject.Inject;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.e4.ui.di.Focus;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
@@ -18,12 +22,16 @@ import org.eclipse.swt.widgets.ExpandBar;
 import org.eclipse.swt.widgets.ExpandItem;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.hibernate.Session;
 
+import diploma.productline.HibernateUtil;
 import diploma.productline.configuration.YamlExtractor;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
+import productline.plugin.internal.ConfigurationKeys;
+import productline.plugin.internal.DatabaseUtil;
 import productline.plugin.ui.ProductLineTreeContentProvider;
 import productline.plugin.ui.ProductLineTreeLabelProvider;
 
@@ -50,7 +58,6 @@ private TreeViewer viewer;
         
         String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml";
         ProductLine productLine = YamlExtractor.extract(path);
-        
         /*ProductLine productLine = new ProductLine();
         Module module1 = new Module();
         Module module2 = new Module();
@@ -132,5 +139,43 @@ private TreeViewer viewer;
         expItem.setText("Details");
         expItem.setHeight(expComp.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);
         expItem.setExpanded(true);
+	}
+	
+	protected ProductLine loadData(final boolean initial) {
+		ProductLine productLine;
+
+		try {
+			
+
+			String id = "ProductLine1";
+			if (id != null && !id.equals("")) {
+				Session session = HibernateUtil.getSessionFactory()
+						.getCurrentSession();
+				session.beginTransaction();
+				productLine = (ProductLine) session.get(
+						ProductLine.class, id);
+				session.getTransaction().commit();
+				
+
+				if (initial == false) {
+					if (productLine == null) {
+						
+					}
+				}
+				
+				return productLine;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			
+		}
+
+		/*
+		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
+		 * productLine = YamlExtractor.extract(path);
+		 */
+		return null;
+
 	}
 }

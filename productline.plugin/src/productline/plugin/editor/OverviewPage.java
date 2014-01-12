@@ -1,37 +1,25 @@
 package productline.plugin.editor;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -40,13 +28,19 @@ import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
@@ -55,49 +49,53 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormEditor;
-import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.internal.UIPlugin;
 import org.eclipse.ui.part.FileEditorInput;
-import org.hibernate.Session;
-import org.hibernate.exception.GenericJDBCException;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
-import productline.plugin.internal.ConfigurationKeys;
+import productline.plugin.internal.ElementTreeContainer;
+import productline.plugin.internal.VariabilityTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
+import productline.plugin.ui.PackageListContentProvider;
+import productline.plugin.ui.PackageListDialog;
 import productline.plugin.ui.ProductLineTreeContentProvider;
 import productline.plugin.ui.ProductLineTreeLabelProvider;
-import diploma.productline.HibernateUtil;
-import diploma.productline.configuration.YamlExtractor;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
+import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
-public class OverviewPage extends ProductLineFormPage {
+public class OverviewPage extends ProductLineFormPage implements
+		IPackageListViewer {
 
-	private static final String MODIFY_LISTENER = "MODIFY_LISTENER";
-
-	SearchControl searchControl;
-
-	SearchMatcher searchMatcher;
-
-	Composite currentComposite;
+	private SearchControl searchControl;
+	private SearchMatcher searchMatcher;
+	private Composite currentComposite;
+	private ProductLine productLine;
 
 	DependencyFilter searchFilter;
 	TreeViewer treeViewer;
 	boolean isSettingSelection = false;
+
+	// Elements for details of ProductLine
+	Label lProductLineName;
+	Text tProductLineName;
+	Label lProductLineDescription;
+	Text tProductLineDescription;
 
 	// Elements for details of Module
 	Label lModuleName;
 	Text tModuleName;
 	Label lModuleDescription;
 	Text tModuleDescription;
+	private ListViewer listViewerPackage;
+	private Label lPackage;
+	private Button bAddPackage;
+	private Button bRemovePackage;
 
 	// Elements for details of Variability
 	Label lVariabilityName;
@@ -114,12 +112,19 @@ public class OverviewPage extends ProductLineFormPage {
 	FormToolkit toolkit;
 	Composite detailComposite;
 	Section detailSection;
+	Section detailPackageDependenciesModuleSection;
+	Composite detailPackageDependenciesModuleComposite;
+	Composite rightComposite;
 
-	public OverviewPage(FormEditor editor, String id, String title) {
+	IProject project;
+
+	public OverviewPage(FormEditor editor, String id, String title,
+			IProject project) {
 		super(editor, id, title);
 		IEditorInput e = editor.getEditorInput();
 		source = ((FileEditorInput) e).getFile();
 		this.editor = editor;
+		this.project = project;
 	}
 
 	@Override
@@ -139,7 +144,7 @@ public class OverviewPage extends ProductLineFormPage {
 		toolkit.adapt(sashForm, true, true);
 
 		createHierarchySection(sashForm, toolkit);
-		createDetailSection(sashForm, toolkit);
+		createRightSection(sashForm, toolkit);
 
 		createSearchBar(managedForm);
 
@@ -160,6 +165,7 @@ public class OverviewPage extends ProductLineFormPage {
 		gd_hierarchySection.minimumWidth = 100;
 		hierarchySection.setLayoutData(gd_hierarchySection);
 		hierarchySection.setText("Product Line Hiearchy");
+
 		formToolkit.paintBordersFor(hierarchySection);
 
 		Tree tree = formToolkit.createTree(hierarchySection, SWT.H_SCROLL
@@ -174,8 +180,9 @@ public class OverviewPage extends ProductLineFormPage {
 		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
 		 * productLine = YamlExtractor.extract(path);
 		 */
-
-		treeViewer.setInput(loadData(false));
+		productLine = loadData(false);
+		treeViewer.setInput(new Object[] { productLine });
+		treeViewer.expandAll();
 
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 
@@ -185,6 +192,9 @@ public class OverviewPage extends ProductLineFormPage {
 				Object selection = ((TreeSelection) treeViewer.getSelection())
 						.getFirstElement();
 
+				if (selection instanceof ProductLine) {
+					createDetailProductLine((ProductLine) selection);
+				}
 				if (selection instanceof Module) {
 					createDetailModule((Module) selection);
 				} else if (selection instanceof Variability) {
@@ -214,10 +224,14 @@ public class OverviewPage extends ProductLineFormPage {
 						.getSelection());
 				if (!selection.isEmpty()) {
 					Object o = selection.getFirstElement();
-					if ((o instanceof Variability) || (o instanceof Element)) {
-						mgr.add(actionRemove);
-					} else {
+					if (o instanceof ProductLine) {
 						mgr.add(actionAdd);
+					}
+					if (o instanceof VariabilityTreeContainer
+							|| o instanceof ElementTreeContainer) {
+						mgr.add(actionAdd);
+					}
+					if (o instanceof Variability || o instanceof Element || o instanceof Module) {
 						mgr.add(actionRemove);
 					}
 				}
@@ -227,10 +241,76 @@ public class OverviewPage extends ProductLineFormPage {
 		treeViewer.getControl().setMenu(
 				mgr.createContextMenu(treeViewer.getControl()));
 
+		Action newModuleElementAction = new Action("Create new Module", null) {
+			public void run() {
+				AddEntityDialog dialog = new AddEntityDialog(new Shell(),
+						productLine, Module.class, project);
+				dialog.create();
+				if (dialog.open() == Window.OK) {
+					System.out.println("Module Created");
+					productLine = loadData(false);
+					treeViewer.setInput(productLine);
+				}
+			}
+		};
+
+		ToolBarManager modulesToolBarManager = new ToolBarManager(SWT.FLAT);
+		modulesToolBarManager.add(newModuleElementAction);
+
+		Composite toolbarComposite = toolkit.createComposite(hierarchySection);
+		GridLayout toolbarLayout = new GridLayout(1, true);
+		toolbarLayout.marginHeight = 0;
+		toolbarLayout.marginWidth = 0;
+		toolbarComposite.setLayout(toolbarLayout);
+		toolbarComposite.setBackground(null);
+
+		modulesToolBarManager.createControl(toolbarComposite);
+		hierarchySection.setTextClient(toolbarComposite);
 	}
 
-	private void createDetailModule(Module module) {
-		disposeActiveElements(detailComposite.getChildren());
+	private void createDetailProductLine(ProductLine productLine) {
+		disposeActiveElements(rightComposite.getChildren());
+		resetCurrentSelectedObject();
+
+		// Set current selected object in HiearchyTree
+		currentSelectedObject = productLine;
+
+		createDetailSection();
+
+		lProductLineName = toolkit.createLabel(detailComposite, "Name",
+				SWT.NONE);
+		tProductLineName = toolkit.createText(detailComposite,
+				productLine.getName());
+
+		lProductLineDescription = toolkit.createLabel(detailComposite,
+				"Description");
+		lProductLineDescription.setLayoutData(new GridData(SWT.LEFT, SWT.TOP,
+				false, false));
+		tProductLineDescription = toolkit.createText(detailComposite, null,
+				SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+
+		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
+		tdName.horizontalSpan = 3;
+
+		GridData tdDescription = new GridData(SWT.FILL, SWT.TOP, true, false);
+		tdDescription.horizontalSpan = 3;
+		tdDescription.heightHint = 75;
+
+		tProductLineName.setLayoutData(tdName);
+		tProductLineDescription.setLayoutData(tdDescription);
+
+		rightComposite.layout();
+	}
+
+	private void createDetailModule(final Module module) {
+		disposeActiveElements(rightComposite.getChildren());
+		resetCurrentSelectedObject();
+
+		// Set current selected object in HiearchyTree
+		currentSelectedObject = module;
+
+		createDetailSection();
+		createDependenciesPackageSection();
 
 		lModuleName = toolkit.createLabel(detailComposite, "Name", SWT.NONE);
 		tModuleName = toolkit.createText(detailComposite, module.getName());
@@ -245,8 +325,9 @@ public class OverviewPage extends ProductLineFormPage {
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
 
-		GridData tdDescription = new GridData(SWT.FILL, SWT.FILL, true, true);
+		GridData tdDescription = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdDescription.horizontalSpan = 3;
+		tdDescription.heightHint = 75;
 
 		tModuleName.setLayoutData(tdName);
 		tModuleDescription.setLayoutData(tdDescription);
@@ -259,7 +340,71 @@ public class OverviewPage extends ProductLineFormPage {
 			}
 		});
 
-		detailComposite.layout();
+		bAddPackage = new Button(detailPackageDependenciesModuleComposite,
+				SWT.NONE);
+		bAddPackage.setText("Add");
+		bAddPackage.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				PackageListDialog dialog = new PackageListDialog(new Shell(),
+						project, OverviewPage.this);
+				dialog.setStoredElements(module.getPackages());
+				dialog.open();
+
+			}
+		});
+
+		bRemovePackage = new Button(detailPackageDependenciesModuleComposite,
+				SWT.NONE);
+		bRemovePackage.setText("Remove");
+		bRemovePackage.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				/*
+				 * PackageListDialog dialog = new PackageListDialog(new Shell(),
+				 * project); dialog.open();
+				 */
+
+			}
+		});
+
+		FormData bdAddPackage = new FormData();
+		bdAddPackage.left = new FormAttachment(0, 5);
+		bdAddPackage.top = new FormAttachment(0, 5);
+		bdAddPackage.right = new FormAttachment(0, 70);
+		bAddPackage.setLayoutData(bdAddPackage);
+
+		FormData bdRemovePackage = new FormData();
+		bdRemovePackage.left = new FormAttachment(0, 5);
+		bdRemovePackage.top = new FormAttachment(bAddPackage, 5);
+		bdRemovePackage.right = new FormAttachment(0, 70);
+		bRemovePackage.setLayoutData(bdRemovePackage);
+
+		listViewerPackage = new ListViewer(
+				detailPackageDependenciesModuleComposite, SWT.BORDER
+						| SWT.V_SCROLL);
+		List list = listViewerPackage.getList();
+		FormData dListViewerPackage = new FormData();
+		dListViewerPackage.top = new FormAttachment(0, 5);
+		dListViewerPackage.left = new FormAttachment(bAddPackage, 5);
+		dListViewerPackage.right = new FormAttachment(100, -5);
+		dListViewerPackage.bottom = new FormAttachment(100, -5);
+		list.setLayoutData(dListViewerPackage);
+		listViewerPackage.setContentProvider(new PackageListContentProvider());
+		listViewerPackage.setLabelProvider(new LabelProvider() {
+			public Image getImage(Object element) {
+				return null;
+			}
+
+			public String getText(Object element) {
+				return ((PackageModule) element).toString();
+			}
+		});
+		listViewerPackage.setInput(module.getPackages());
+
+		rightComposite.layout();
 	}
 
 	private void createDetailVariability(Variability variability) {
@@ -287,7 +432,6 @@ public class OverviewPage extends ProductLineFormPage {
 		tVariabilityDescription.setLayoutData(tdDescription);
 
 		detailComposite.layout();
-
 	}
 
 	private void createDetailElement(Element element) {
@@ -315,14 +459,21 @@ public class OverviewPage extends ProductLineFormPage {
 		detailComposite.layout();
 	}
 
-	private void createDetailSection(Composite sashForm, FormToolkit toolkit) {
+	private void createRightSection(Composite sashForm, FormToolkit toolkit) {
+		rightComposite = toolkit.createComposite(sashForm);
+		rightComposite.setLayout(new GridLayout(1, false));
+		createDetailSection();
+	}
 
-		detailSection = toolkit.createSection(sashForm,
+	private void createDetailSection() {
+		detailSection = toolkit.createSection(rightComposite,
 				ExpandableComposite.TITLE_BAR);
 		detailSection.marginHeight = 1;
-		GridData gd_detailSection = new GridData(SWT.FILL, SWT.FILL, true, true);
-		gd_detailSection.widthHint = 100;
-		gd_detailSection.minimumWidth = 100;
+		GridData gd_detailSection = new GridData(SWT.FILL, SWT.TOP, true, false);
+		/*
+		 * gd_detailSection.widthHint = 100; gd_detailSection.minimumWidth =
+		 * 100;
+		 */
 		detailSection.setLayoutData(gd_detailSection);
 		detailSection.setText("Product Line Hiearchy");
 		toolkit.paintBordersFor(detailSection);
@@ -330,7 +481,26 @@ public class OverviewPage extends ProductLineFormPage {
 		detailComposite = toolkit.createComposite(detailSection, SWT.NONE);
 		detailComposite.setLayout(new GridLayout(4, true));
 		detailSection.setClient(detailComposite);
+	}
 
+	private void createDependenciesPackageSection() {
+		detailPackageDependenciesModuleSection = toolkit.createSection(
+				rightComposite, ExpandableComposite.TITLE_BAR);
+		detailPackageDependenciesModuleSection.marginHeight = 1;
+		GridData gd_detailListSection = new GridData(SWT.FILL, SWT.FILL, true,
+				true);
+		gd_detailListSection.widthHint = 100;
+		gd_detailListSection.minimumWidth = 100;
+		detailPackageDependenciesModuleSection
+				.setLayoutData(gd_detailListSection);
+		detailPackageDependenciesModuleSection.setText("Package dependencies");
+		toolkit.paintBordersFor(detailPackageDependenciesModuleSection);
+
+		detailPackageDependenciesModuleComposite = toolkit.createComposite(
+				detailPackageDependenciesModuleSection, SWT.NONE);
+		detailPackageDependenciesModuleComposite.setLayout(new FormLayout());
+		detailPackageDependenciesModuleSection
+				.setClient(detailPackageDependenciesModuleComposite);
 	}
 
 	private void createSearchBar(IManagedForm managedForm) {
@@ -349,7 +519,8 @@ public class OverviewPage extends ProductLineFormPage {
 				.createFromImage(PlatformUI.getWorkbench().getSharedImages()
 						.getImage(ISharedImages.IMG_ELCL_SYNCED))) {
 			public void run() {
-				treeViewer.setInput(loadData(true));
+				productLine = loadData(true);
+				treeViewer.setInput(productLine);
 			}
 		});
 
@@ -393,8 +564,6 @@ public class OverviewPage extends ProductLineFormPage {
 		treeViewer.expandAll();
 	}
 
-	
-
 	@Override
 	public boolean isDirty() {
 		// TODO Auto-generated method stub
@@ -432,17 +601,50 @@ public class OverviewPage extends ProductLineFormPage {
 				BaseProductLineEntity entity = (BaseProductLineEntity) ((TreeSelection) treeViewer
 						.getSelection()).getFirstElement();
 
-				AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-						"Title", "Message");
-				dialog.create();
-				if (dialog.open() == Window.OK) {
-					System.out.println(dialog.getFirstName());
-					System.out.println(dialog.getLastName());
+				if (entity instanceof ProductLine) {
+					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
+							entity, Module.class, project);
+					dialog.create();
+					if (dialog.open() == Window.OK) {
+						treeViewer.setInput(loadData(false));
+					}
+				}else if(entity instanceof VariabilityTreeContainer){
+					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
+							entity, Variability.class, project);
+					dialog.create();
+					if (dialog.open() == Window.OK) {
+						treeViewer.setInput(loadData(false));
+					}
+				}else if(entity instanceof ElementTreeContainer){
+					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
+							entity, Element.class, project);
+					dialog.create();
+					if (dialog.open() == Window.OK) {
+						treeViewer.setInput(loadData(false));
+					}
 				}
 			} else {
 
 			}
 		}
+	}
+
+	@Override
+	public void setPackageListInput(Set<IPackageFragment> elements) {
+		if (currentSelectedObject instanceof Module) {
+			Module m = (Module) currentSelectedObject;
+			Set<PackageModule> packages = new HashSet<>();
+
+			for (IPackageFragment pkg : elements) {
+				PackageModule p = new PackageModule();
+				p.setModule(m);
+				p.setName(pkg.getElementName());
+				packages.add(p);
+			}
+			((Module) currentSelectedObject).getPackages().addAll(packages);
+		}
+		listViewerPackage.setInput(((Module) currentSelectedObject)
+				.getPackages());
 	}
 
 }

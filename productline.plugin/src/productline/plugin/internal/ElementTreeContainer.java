@@ -5,11 +5,13 @@ import java.util.Set;
 
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
+import diploma.productline.entity.Module;
 
 public class ElementTreeContainer implements BaseProductLineEntity {
 
 	private final String name = "Elements";
 	private Set<Element> elements;
+	private Module parent;
 	
 	@Override
 	public String getName() {
@@ -22,6 +24,14 @@ public class ElementTreeContainer implements BaseProductLineEntity {
 
 	public void setElements(Set<Element> elements) {
 		this.elements = elements;
+	}
+
+	public Module getParent() {
+		return parent;
+	}
+
+	public void setParent(Module parent) {
+		this.parent = parent;
 	}
 
 	

@@ -32,7 +32,9 @@ public class ProductLineTreeContentProvider implements ITreeContentProvider {
 			return ((ProductLine) parentElement).getModules().toArray();
 		}else if(parentElement instanceof Module){
 			VariabilityTreeContainer variabilityContainer = new VariabilityTreeContainer();
+			variabilityContainer.setParent((Module)parentElement);
 			ElementTreeContainer elementContainer = new ElementTreeContainer();
+			elementContainer.setParent((Module)parentElement);
 			
 			variabilityContainer.setVariabilities(((Module)parentElement).getVariabilities());
 			elementContainer.setElements(((Module)parentElement).getElements());
@@ -67,11 +69,7 @@ public class ProductLineTreeContentProvider implements ITreeContentProvider {
 				return false;
 			}
 		}else if(element instanceof Module){
-			Module m = ((Module)element);
-			boolean hasVariables = (m.getVariabilities() != null) ? m.getVariabilities().size() > 0 : false;
-			boolean hasElements = (m.getElements() != null) ? m.getElements().size() > 0 : false;
-			
-			return hasElements || hasVariables;
+			return true;
 		}else if(element instanceof VariabilityTreeContainer){
 			VariabilityTreeContainer variabilityContainer = (VariabilityTreeContainer)element;
 			if(variabilityContainer.getVariabilities() != null){

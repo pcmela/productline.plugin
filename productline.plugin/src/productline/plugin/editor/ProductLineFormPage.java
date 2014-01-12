@@ -16,12 +16,14 @@ import org.hibernate.Session;
 import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DatabaseUtil;
 import diploma.productline.HibernateUtil;
+import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.ProductLine;
 
 public class ProductLineFormPage extends FormPage {
 
 	protected IFile source;
 	protected FormEditor editor;
+	protected BaseProductLineEntity currentSelectedObject;
 	
 	public ProductLineFormPage(FormEditor editor, String id, String title) {
 		super(editor, id, title);
@@ -46,7 +48,9 @@ public class ProductLineFormPage extends FormPage {
 
 	protected void disposeActiveElements(Control[] active) {
 		for (Control c : active) {
-			c.dispose();
+			if(!c.isDisposed()){
+				c.dispose();
+			}
 		}
 
 	}
@@ -109,6 +113,10 @@ public class ProductLineFormPage extends FormPage {
 		 */
 		return null;
 
+	}
+	
+	protected void resetCurrentSelectedObject(){
+		currentSelectedObject = null;
 	}
 
 }

@@ -1,6 +1,5 @@
 package productline.plugin.ui;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -8,12 +7,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
-import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -37,7 +32,6 @@ import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
-import productline.plugin.ui.PackageListDialog;
 
 public class AddEntityDialog extends TitleAreaDialog implements
 		IPackageListViewer {
@@ -56,6 +50,8 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	private Text tDescition;
 	
 	//Module Section
+	private Label lIsVariable;
+	private Button bIsVariable;
 	private Button btnAddPackage;
 	private List list;
 	private ListViewer listViewer;
@@ -126,6 +122,17 @@ public class AddEntityDialog extends TitleAreaDialog implements
 
 	private void createModuleSection(Composite container) {
 		createGeneralSection(container);
+		
+		lIsVariable = new Label(container, SWT.NONE);
+		lIsVariable.setText("Is Variable:");
+
+		GridData dataName = new GridData();
+		dataName.grabExcessHorizontalSpace = true;
+		dataName.horizontalAlignment = GridData.FILL;
+
+		bIsVariable = new Button(container, SWT.CHECK);
+		bIsVariable.setLayoutData(dataName);
+		
 		new Label(container, SWT.NONE);
 
 		btnAddPackage = new Button(container, SWT.NONE);
@@ -220,13 +227,13 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	
 	private void saveModuleInput(){
 		Object obj = listViewer.getInput();
+		Set<PackageModule> packages = null;
+		Module m = new Module();
+		
 		if (obj instanceof HashSet) {
-			Module m = new Module();
-			m.setName(tName.getText());
-			m.setDescription(tDescition.getText());
 
 			HashSet<IPackageFragment> list = ((HashSet<IPackageFragment>) obj);
-			Set<PackageModule> packages = new HashSet<>();
+			packages = new HashSet<>();
 
 			for (IPackageFragment pkg : list) {
 				PackageModule p = new PackageModule();
@@ -234,15 +241,19 @@ public class AddEntityDialog extends TitleAreaDialog implements
 				p.setName(pkg.getElementName());
 				packages.add(p);
 			}
-			m.setProductLine((ProductLine) parent);
-			m.setPackages(packages);
-
-			Session session = HibernateUtil.getSessionFactory()
-					.getCurrentSession();
-			session.beginTransaction();
-			session.save(m);
-			session.getTransaction().commit();
 		}
+		
+		
+		m.setName(tName.getText());
+		m.setDescription(tDescition.getText());
+		m.setProductLine((ProductLine) parent);
+		m.setPackages(packages);
+		
+		Session session = HibernateUtil.getSessionFactory()
+				.getCurrentSession();
+		session.beginTransaction();
+		session.save(m);
+		session.getTransaction().commit();
 	}
 
 	@Override

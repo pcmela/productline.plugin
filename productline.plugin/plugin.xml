@@ -60,5 +60,48 @@
             name="Product Line">
       </wizard>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors.templates">
+      <template
+            autoinsert="true"
+            contextTypeId="java"
+            id="productline.plugin.template1"
+            name="variability">
+         <pattern>
+            /**
+ * @variability ${name}
+ */
+//TODO insert code of your variability
+/**
+ * @endVariability
+ */
+         </pattern>
+      </template>
+      <template
+            autoinsert="true"
+            contextTypeId="java"
+            id="productline.plugin.template2"
+            name="module">
+         <pattern>
+            /**
+ * @module ${name}
+ */
+//TODO insert code of your variability
+/**
+ * @endModule
+ */
+         </pattern>
+      </template>
+   </extension>
+   <extension
+         id="id2"
+         point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+      <javaCompletionProposalComputer
+            activate="true"
+            categoryId="org.eclipse.jdt.ui.defaultProposalCategory"
+            class="productline.plugin.contentassist.ProductLineProposalComputer"
+            needsSortingAfterFiltering="false">
+      </javaCompletionProposalComputer>
+   </extension>
 
 </plugin>

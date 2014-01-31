@@ -58,6 +58,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.VariabilityTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
+import productline.plugin.ui.CreateNewCustomLineDialog;
 import productline.plugin.ui.PackageListContentProvider;
 import productline.plugin.ui.PackageListDialog;
 import productline.plugin.ui.ProductLineTreeContentProvider;
@@ -80,7 +81,7 @@ public class OverviewPage extends ProductLineFormPage implements
 	DependencyFilter searchFilter;
 	TreeViewer treeViewer;
 	boolean isSettingSelection = false;
-
+	
 	// Elements for details of ProductLine
 	Label lProductLineName;
 	Text tProductLineName;
@@ -180,7 +181,7 @@ public class OverviewPage extends ProductLineFormPage implements
 		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
 		 * productLine = YamlExtractor.extract(path);
 		 */
-		productLine = loadData(false);
+		productLine = loadData(true);
 		treeViewer.setInput(new Object[] { productLine });
 		treeViewer.expandAll();
 
@@ -212,7 +213,10 @@ public class OverviewPage extends ProductLineFormPage implements
 
 		final AddAction actionAdd = new AddAction();
 		actionAdd.setText("Add");
-
+		
+		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction();
+		createCustomLine.setText("New Custom Line");
+		
 		final MenuManager mgr = new MenuManager();
 		mgr.setRemoveAllWhenShown(true);
 
@@ -226,12 +230,14 @@ public class OverviewPage extends ProductLineFormPage implements
 					Object o = selection.getFirstElement();
 					if (o instanceof ProductLine) {
 						mgr.add(actionAdd);
+						mgr.add(createCustomLine);
 					}
 					if (o instanceof VariabilityTreeContainer
 							|| o instanceof ElementTreeContainer) {
 						mgr.add(actionAdd);
 					}
-					if (o instanceof Variability || o instanceof Element || o instanceof Module) {
+					if (o instanceof Variability || o instanceof Element
+							|| o instanceof Module) {
 						mgr.add(actionRemove);
 					}
 				}
@@ -249,7 +255,7 @@ public class OverviewPage extends ProductLineFormPage implements
 				if (dialog.open() == Window.OK) {
 					System.out.println("Module Created");
 					productLine = loadData(false);
-					treeViewer.setInput(productLine);
+					treeViewer.setInput(new Object[] { productLine });
 				}
 			}
 		};
@@ -425,6 +431,7 @@ public class OverviewPage extends ProductLineFormPage implements
 
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
+		tdName.heightHint = 75;
 
 		GridData tdDescription = new GridData(SWT.FILL, SWT.FILL, true, true);
 		tdDescription.horizontalSpan = 3;
@@ -438,7 +445,7 @@ public class OverviewPage extends ProductLineFormPage implements
 	private void createDetailElement(Element element) {
 		disposeActiveElements(rightComposite.getChildren());
 		createDetailSection();
-		
+
 		lElementName = toolkit.createLabel(detailComposite, "Name", SWT.NONE);
 		tElementName = toolkit.createText(detailComposite, element.getName());
 
@@ -451,6 +458,7 @@ public class OverviewPage extends ProductLineFormPage implements
 
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
+		tdName.heightHint = 75;
 
 		GridData tdDescription = new GridData(SWT.FILL, SWT.FILL, true, true);
 		tdDescription.horizontalSpan = 3;
@@ -522,7 +530,7 @@ public class OverviewPage extends ProductLineFormPage implements
 						.getImage(ISharedImages.IMG_ELCL_SYNCED))) {
 			public void run() {
 				productLine = loadData(true);
-				treeViewer.setInput(productLine);
+				treeViewer.setInput(new Object[] { productLine });
 			}
 		});
 
@@ -596,6 +604,29 @@ public class OverviewPage extends ProductLineFormPage implements
 		}
 	}
 
+	class CreateCustomLineAction extends Action {
+
+		@Override
+		public void runWithEvent(Event event) {
+			super.runWithEvent(event);
+			Object input = treeViewer.getInput();
+			ProductLine productLine = null;
+			if(input instanceof Object[]){
+				if(((Object[])input)[0] instanceof ProductLine){
+					productLine = (ProductLine)((Object[])input)[0];
+				}
+			}else{
+				productLine = (ProductLine)input;
+			}
+			
+			CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(new Shell(),
+					productLine, "",
+					OverviewPage.this.project);
+			dialog.open();
+		}
+
+	}
+
 	class AddAction extends Action {
 		@Override
 		public void runWithEvent(Event event) {
@@ -608,21 +639,21 @@ public class OverviewPage extends ProductLineFormPage implements
 							entity, Module.class, project);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
-						treeViewer.setInput(loadData(false));
+						treeViewer.setInput(new Object[] { loadData(false) });
 					}
-				}else if(entity instanceof VariabilityTreeContainer){
+				} else if (entity instanceof VariabilityTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
 							entity, Variability.class, project);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
-						treeViewer.setInput(loadData(false));
+						treeViewer.setInput(new Object[] { loadData(false) });
 					}
-				}else if(entity instanceof ElementTreeContainer){
+				} else if (entity instanceof ElementTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
 							entity, Element.class, project);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
-						treeViewer.setInput(loadData(false));
+						treeViewer.setInput(new Object[] { loadData(false) });
 					}
 				}
 			} else {

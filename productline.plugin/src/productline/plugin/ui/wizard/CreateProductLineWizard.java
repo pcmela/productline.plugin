@@ -11,9 +11,14 @@ import java.util.Properties;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -122,9 +127,21 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		if(selection.getFirstElement() instanceof IJavaProject){
-			project = ((IJavaProject)selection.getFirstElement()).getProject();
+		Object element = selection.getFirstElement();
+		if(element instanceof IJavaElement){
+			project = ((IJavaElement)element).getJavaProject().getProject();
+		}else if(element instanceof IFile){
+			project = ((IFile)element).getProject();
 		}
+		
+		workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().getLocation();
+		/*else if(element instanceof IPackageFragment){
+			project = ((IPackageFragment)selection.getFirstElement()).getJavaProject().getProject();
+		}else if(element instanceof IPackageFragmentRoot){
+			project = ((IPackageFragmentRoot)selection.getFirstElement()).getJavaProject().getProject();
+		}else if(element instanceof ICompilationUnit){
+			project = ((ICompilationUnit)element).getJavaProject().getProject();
+		}*/
 		
 	}
 

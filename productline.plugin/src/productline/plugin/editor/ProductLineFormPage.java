@@ -64,7 +64,7 @@ public class ProductLineFormPage extends FormPage {
 
 			Properties hibernateProp = DatabaseUtil.getHibernateProperties(properties);
 
-			if (HibernateUtil.getSessionFactory() == null) {
+			if (HibernateUtil.getSessionFactory() == null || initial) {
 				HibernateUtil.initSessionFactory(hibernateProp);
 			}
 

@@ -272,7 +272,10 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 		dataPathExistingButton.right = new FormAttachment(100, -5);
 		bExistingDbPath.setLayoutData(dataPathExistingButton);
 		
-		
+		button.setSelection(true);
+		setEnableToExistingDbSection(false);
+		setEnableToNewDbSection(true);
+		createNewDB = false;
 	}
 
 

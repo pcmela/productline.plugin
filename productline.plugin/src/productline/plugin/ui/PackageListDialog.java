@@ -68,7 +68,6 @@ public class PackageListDialog extends Dialog {
 		area.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 		listViewer = new ListViewer(area, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
-		List list = listViewer.getList();
 
 		listViewer.setContentProvider(new PackageListContentProvider());
 		initData();

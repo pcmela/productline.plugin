@@ -14,6 +14,9 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 	protected final String BUTTON_DATA_VALUE_IMPORT_FROM_WEB = "IMPORT_FROM_WEB";
 	protected final String BUTTON_DATA_VALUE_IMPORT_FROM_FILE = "IMPORT_FROM_FILE";
 	
+	protected Button bImportFromDB;
+	protected Button bImportFromYAML;
+	
 	protected Label lWebUserName;
 	protected Text tWebUserName;
 	protected Label lWebPassword;
@@ -24,6 +27,12 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 	protected Label lFilePath;
 	protected Text tFilePath;
 	protected Button bFilePath;
+	
+	protected Button bImportData;
+	
+	protected void validateForm(){
+		
+	}
 	
 	protected CreateWizardImportPagePOJO(String pageName) {
 		super(pageName);
@@ -60,5 +69,7 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 	public void settFilePath(Text tFilePath) {
 		this.tFilePath = tFilePath;
 	}
+	
+	
 	
 }

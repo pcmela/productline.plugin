@@ -28,7 +28,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		FormLayout layout = new FormLayout();
 		container.setLayout(layout);
 		
-		Listener listener = new Listener() {
+		Listener typeOfImportListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
 				Control[] children = container.getChildren();
@@ -50,21 +50,42 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 				((Button) e.widget).setSelection(true);
 			}
 		};
+		
+		Listener importFileListener = new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				//((Button) e.widget).setSelection(true);
+				if(bImportData.getSelection()){
+					setEnableToAllSection(true);
+				}else{
+					setEnableToAllSection(false);
+				}
+			}
+		};
 
-		createElements(listener);
+		createElements(typeOfImportListener, importFileListener);
 
 		setControl(container);
 	}
 	
-	private void createElements(Listener listener){
+	private void createElements(Listener typeOfImportListener, Listener importFileListener){
+		bImportData = new Button(container, SWT.CHECK);
+		bImportData.addListener(SWT.Selection, importFileListener);
+		bImportData.setSelection(false);
+		FormData importData = new FormData();
+		importData.left = new FormAttachment(0, 5);
+		bImportData.setLayoutData(importData);
+		bImportData.setText("Import data");
+		
 		//New DB section
-		Button button = new Button(container, SWT.RADIO);
-		button.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_IMPORT_FROM_WEB);
+		bImportFromDB = new Button(container, SWT.RADIO);
+		bImportFromDB.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_IMPORT_FROM_WEB);
 		FormData buttonData = new FormData();
 		buttonData.left = new FormAttachment(0, 5);
-		button.setLayoutData(buttonData);
-		button.setText("Create new DB");
-		button.addListener(SWT.Selection, listener);		
+		buttonData.top = new FormAttachment(bImportData, 5);
+		bImportFromDB.setLayoutData(buttonData);
+		bImportFromDB.setText("Import from database");
+		bImportFromDB.addListener(SWT.Selection, typeOfImportListener);		
 		
 		lWebUserName = new Label(container, SWT.NONE);
 		lWebUserName.setText("Username:");		
@@ -75,7 +96,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		tWebPassword = new Text(container, SWT.PASSWORD | SWT.BORDER);
 		
 		lWebUrl = new Label(container, SWT.NONE);
-		lWebUrl.setText("URL:");		
+		lWebUrl.setText("Connection string:");		
 		tWebUrl = new Text(container, SWT.BORDER);
 		
 		
@@ -85,8 +106,8 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		lWebUserName.setLayoutData(dataUserName);
 		
 		FormData dataUserNameNewText = new FormData();
-		dataUserNameNewText.top = new FormAttachment(button, 5);
-		dataUserNameNewText.left = new FormAttachment(lWebUserName, 5);
+		dataUserNameNewText.top = new FormAttachment(bImportFromDB, 5);
+		dataUserNameNewText.left = new FormAttachment(lWebUrl, 5);
 		dataUserNameNewText.right = new FormAttachment(100, -5);
 		tWebUserName.setLayoutData(dataUserNameNewText);
 		
@@ -97,7 +118,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		
 		FormData dataPasswordNewText = new FormData();
 		dataPasswordNewText.top = new FormAttachment(tWebUserName, 5);
-		dataPasswordNewText.left = new FormAttachment(lWebUserName, 5);
+		dataPasswordNewText.left = new FormAttachment(lWebUrl, 5);
 		dataPasswordNewText.right = new FormAttachment(100, -5);
 		tWebPassword.setLayoutData(dataPasswordNewText);
 		
@@ -108,20 +129,20 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		
 		FormData dataUrlText = new FormData();
 		dataUrlText.top = new FormAttachment(tWebPassword, 5);
-		dataUrlText.left = new FormAttachment(lWebUserName, 5);
+		dataUrlText.left = new FormAttachment(lWebUrl, 5);
 		dataUrlText.right = new FormAttachment(100, -5);
 		tWebUrl.setLayoutData(dataUrlText);
 		
 		
 		//Existing DB section
-		Button button2 = new Button(container, SWT.RADIO);
-		button2.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_IMPORT_FROM_FILE);
+		bImportFromYAML = new Button(container, SWT.RADIO);
+		bImportFromYAML.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_IMPORT_FROM_FILE);
 		FormData button2Data = new FormData();
 		button2Data.top = new FormAttachment(tWebUrl, 5);
 		button2Data.left = new FormAttachment(0, 5);
-		button2.setLayoutData(button2Data);
-		button2.setText("Use existing DB");
-		button2.addListener(SWT.Selection, listener);
+		bImportFromYAML.setLayoutData(button2Data);
+		bImportFromYAML.setText("Import from YAML file:");
+		bImportFromYAML.addListener(SWT.Selection, typeOfImportListener);
 		
 		
 		lFilePath = new Label(container, SWT.NONE);
@@ -138,7 +159,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		lFilePath.setLayoutData(dataPathExistingLabel);
 		
 		FormData dataPathExistingText = new FormData();
-		dataPathExistingText.top = new FormAttachment(button2, 5);
+		dataPathExistingText.top = new FormAttachment(bImportFromYAML, 5);
 		dataPathExistingText.left = new FormAttachment(lWebUserName, 5);
 		dataPathExistingText.right = new FormAttachment(85, 0);
 		tFilePath.setLayoutData(dataPathExistingText);
@@ -148,6 +169,10 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		dataPathExistingButton.left = new FormAttachment(tFilePath, 5);
 		dataPathExistingButton.right = new FormAttachment(100, -5);
 		bFilePath.setLayoutData(dataPathExistingButton);
+		
+		bImportFromDB.setSelection(true);
+		bImportFromYAML.setSelection(false);
+		setEnableToAllSection(false);
 		
 	}
 	
@@ -160,6 +185,28 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 	private void setEnableToFileSection(boolean enable) {
 		tFilePath.setEnabled(enable);
 		bFilePath.setEnabled(enable);
+	}
+	
+	private void setEnableToAllSection(boolean enable) {
+		if(enable == false){
+			bImportFromDB.setEnabled(enable);
+			bImportFromYAML.setEnabled(enable);
+			tWebUserName.setEnabled(enable);
+			tWebPassword.setEnabled(enable);
+			tWebUrl.setEnabled(enable);
+			tFilePath.setEnabled(enable);
+			bFilePath.setEnabled(enable);
+		}else{
+			bImportFromDB.setEnabled(enable);
+			bImportFromYAML.setEnabled(enable);
+			if(bImportFromDB.getSelection()){
+				setEnableToFileSection(false);
+				setEnableToWebSection(true);
+			}else{
+				setEnableToFileSection(true);
+				setEnableToWebSection(false);
+			}
+		}
 	}
 	
 	private Listener createFileBrowserListener(){

@@ -5,7 +5,6 @@ import org.eclipse.jface.viewers.Viewer;
 
 import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.VariabilityTreeContainer;
-import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 

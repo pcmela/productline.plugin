@@ -1,6 +1,5 @@
 package productline.plugin.internal;
 
-import java.util.List;
 import java.util.Set;
 
 import diploma.productline.entity.BaseProductLineEntity;

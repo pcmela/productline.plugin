@@ -1,11 +1,7 @@
 package productline.plugin.ui.wizard;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Properties;
 
 import org.eclipse.core.resources.IFile;
@@ -14,12 +10,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
@@ -27,10 +18,10 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
 import org.hibernate.Session;
 
-import diploma.productline.HibernateUtil;
-import diploma.productline.entity.ProductLine;
 import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DatabaseUtil;
+import diploma.productline.HibernateUtil;
+import diploma.productline.entity.ProductLine;
 
 public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard {
 

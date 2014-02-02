@@ -1,11 +1,6 @@
 package productline.plugin.contentassist;
 
 import org.eclipse.jdt.core.CompletionProposal;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.eclipse.jface.text.contentassist.IContextInformation;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 
 public class ProductLineCompletionProposal extends CompletionProposal {
 

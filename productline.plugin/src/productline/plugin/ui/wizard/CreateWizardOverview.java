@@ -54,6 +54,7 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 					}
 				}
 				((Button) e.widget).setSelection(true);
+				validateForm();
 			}
 		};
 

@@ -55,7 +55,7 @@ public abstract class CreateWizardOverviewPOJO extends WizardPage{
 			return;
 		}
 		
-		if(!createNewDB){
+		if(createNewDB){
 			if(tNewDbUserName.getText().equals("")){
 				setDescription("Enter username for DB");
 				setPageComplete(false);

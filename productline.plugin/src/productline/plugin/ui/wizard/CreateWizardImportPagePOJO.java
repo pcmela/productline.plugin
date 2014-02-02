@@ -31,7 +31,36 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 	protected Button bImportData;
 	
 	protected void validateForm(){
+		if(bImportData.getSelection()){
+			if(bImportFromDB.getSelection()){
+				if(tWebUserName.getText().equals("")){
+					setPageComplete(false);
+					setDescription("Enter username");
+					return;
+				}
+				
+				if(tWebPassword.getText().equals("")){
+					setPageComplete(false);
+					setDescription("Enter password");
+					return;
+				}
+				
+				if(tWebUrl.getText().equals("")){
+					setPageComplete(false);
+					setDescription("Enter connection string");
+					return;
+				}
+			}else{
+				if(tFilePath.getText().equals("")){
+					setPageComplete(false);
+					setDescription("Enter file path");
+					return;
+				}
+			}
+		}
 		
+		setPageComplete(true);
+		setDescription("Create new Productline configuration file with data from existing yaml config/database");
 	}
 	
 	protected CreateWizardImportPagePOJO(String pageName) {

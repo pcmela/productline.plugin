@@ -1,6 +1,8 @@
 package productline.plugin.ui.wizard;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -48,6 +50,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 					}
 				}
 				((Button) e.widget).setSelection(true);
+				validateForm();
 			}
 		};
 		
@@ -173,7 +176,22 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		bImportFromDB.setSelection(true);
 		bImportFromYAML.setSelection(false);
 		setEnableToAllSection(false);
+		setModifyListener();
 		
+	}
+	
+	private void setModifyListener(){
+		ModifyListener listener = new ModifyListener() {
+		    /** {@inheritDoc} */
+		    public void modifyText(ModifyEvent e) {
+		        validateForm();
+		    }
+		};
+		tWebUserName.addModifyListener(listener);
+		tWebPassword.addModifyListener(listener);
+		tWebUrl.addModifyListener(listener);
+		
+		tFilePath.addModifyListener(listener);
 	}
 	
 	private void setEnableToWebSection(boolean enable) {
@@ -196,6 +214,8 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 			tWebUrl.setEnabled(enable);
 			tFilePath.setEnabled(enable);
 			bFilePath.setEnabled(enable);
+			setDescription("Create new Productline configuration file with data from existing yaml config/database");
+			setPageComplete(true);
 		}else{
 			bImportFromDB.setEnabled(enable);
 			bImportFromYAML.setEnabled(enable);
@@ -206,6 +226,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 				setEnableToFileSection(true);
 				setEnableToWebSection(false);
 			}
+			validateForm();
 		}
 	}
 	

@@ -1,6 +1,5 @@
 package productline.plugin.ui.wizard;
 
-import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -15,26 +14,9 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-public class CreateProductLineWizardPage2 extends WizardPage {
-
-	private Composite container;
+public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 	
-	private final String BUTTON_DATA_KEY_ID = "ID";
-	private final String BUTTON_DATA_VALUE_IMPORT_FROM_WEB = "IMPORT_FROM_WEB";
-	private final String BUTTON_DATA_VALUE_IMPORT_FROM_FILE = "IMPORT_FROM_FILE";
-	
-	private Label lWebUserName;
-	private Text tWebUserName;
-	private Label lWebPassword;
-	private Text tWebPassword;
-	private Label lWebUrl;
-	private Text tWebUrl;
-	
-	private Label lFilePath;
-	private Text tFilePath;
-	private Button bFilePath;
-	
-	protected CreateProductLineWizardPage2(String pageName) {
+	protected CreateWizardImportPage(String pageName) {
 		super(pageName);
 		setTitle("Import");
 		setMessage("Import product line either from web or from yaml configuration file.");
@@ -194,39 +176,6 @@ public class CreateProductLineWizardPage2 extends WizardPage {
 			}
 		};
 	}
-
-	public Text gettWebUserName() {
-		return tWebUserName;
-	}
-
-	public void settWebUserName(Text tWebUserName) {
-		this.tWebUserName = tWebUserName;
-	}
-
-	public Text gettWebPassword() {
-		return tWebPassword;
-	}
-
-	public void settWebPassword(Text tWebPassword) {
-		this.tWebPassword = tWebPassword;
-	}
-
-	public Text gettWebUrl() {
-		return tWebUrl;
-	}
-
-	public void settWebUrl(Text tWebUrl) {
-		this.tWebUrl = tWebUrl;
-	}
-
-	public Text gettFilePath() {
-		return tFilePath;
-	}
-
-	public void settFilePath(Text tFilePath) {
-		this.tFilePath = tFilePath;
-	}
-	
 	
 
 }

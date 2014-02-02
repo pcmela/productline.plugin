@@ -1,8 +1,8 @@
 package productline.plugin.ui.wizard;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -16,46 +16,13 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-public class CreateProductLineWizardPage1 extends WizardPage {
+public class CreateWizardOverview extends CreateWizardOverviewPOJO {	
 
-	private final String BUTTON_DATA_KEY_ID = "ID";
-	private final String BUTTON_DATA_VALUE_NEWDB = "NEW_DB";
-	private final String BUTTON_DATA_VALUE_EXISTINGDB = "EXISTING_DB";
-
-	private IPath projectLoacation;
-	
-	private Composite container;
-
-	private Label lDefaultPath;
-	private Text tDefaultPath;
-	
-	private Label lProductLineName;
-	private Text tProductLineName;
-	private Label lProductLineDescription;
-	private Text tProductLineDescription;
-	
-	private Label lNewDbUserName;
-	private Text tNewDbUserName;
-	private Label lNewDbPassword;
-	private Text tNewDbPassword;
-	private Label lNewDbPasswordConfirm;
-	private Text tNewDbPasswordConfirm;
-
-	private Label lExistingDbUserName;
-	private Text tExistingDbUserName;
-	private Label lExistingDbPassword;
-	private Text tExistingDbPassword;
-	private Label lExistingDbPath;
-	private Text tExistingDbPath;
-	private Button bExistingDbPath;
-	
-	private boolean createNewDB = true;
-	
-
-	protected CreateProductLineWizardPage1(String pageName) {
+	protected CreateWizardOverview(String pageName) {
 		super(pageName);
 		setTitle("Create database");
-		setDescription("Create database for storing specification of product line");
+		setDescription("Enter a product line name");
+		setPageComplete(false);
 	}
 
 	@Override
@@ -274,6 +241,25 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 		setEnableToExistingDbSection(false);
 		setEnableToNewDbSection(true);
 		createNewDB = false;
+		setModifyListener();
+	}
+	
+	private void setModifyListener(){
+		ModifyListener listener = new ModifyListener() {
+		    /** {@inheritDoc} */
+		    public void modifyText(ModifyEvent e) {
+		        validateForm();
+		    }
+		};
+		tProductLineName.addModifyListener(listener);
+		
+		tNewDbUserName.addModifyListener(listener);
+		tNewDbPassword.addModifyListener(listener);
+		tNewDbPasswordConfirm.addModifyListener(listener);
+		
+		tExistingDbUserName.addModifyListener(listener);
+		tExistingDbPassword.addModifyListener(listener);
+		tExistingDbPath.addModifyListener(listener);
 	}
 
 
@@ -304,87 +290,4 @@ public class CreateProductLineWizardPage1 extends WizardPage {
 			}
 		};
 	}
-
-	public Text gettNewDbUserName() {
-		return tNewDbUserName;
-	}
-
-	public void settNewDbUserName(Text tNewDbUserName) {
-		this.tNewDbUserName = tNewDbUserName;
-	}
-
-	public Text gettNewDbPassword() {
-		return tNewDbPassword;
-	}
-
-	public void settNewDbPassword(Text tNewDbPassword) {
-		this.tNewDbPassword = tNewDbPassword;
-	}
-
-	public Text gettNewDbPasswordConfirm() {
-		return tNewDbPasswordConfirm;
-	}
-
-	public void settNewDbPasswordConfirm(Text tNewDbPasswordConfirm) {
-		this.tNewDbPasswordConfirm = tNewDbPasswordConfirm;
-	}
-
-	public Text gettExistingDbUserName() {
-		return tExistingDbUserName;
-	}
-
-	public void settExistingDbUserName(Text tExistingDbUserName) {
-		this.tExistingDbUserName = tExistingDbUserName;
-	}
-
-	public Text gettExistingDbPassword() {
-		return tExistingDbPassword;
-	}
-
-	public void settExistingDbPassword(Text tExistingDbPassword) {
-		this.tExistingDbPassword = tExistingDbPassword;
-	}
-
-	public Text gettExistingDbPath() {
-		return tExistingDbPath;
-	}
-
-	public void settExistingDbPath(Text tExistingDbPath) {
-		this.tExistingDbPath = tExistingDbPath;
-	}
-
-	public boolean isCreateNewDB() {
-		return createNewDB;
-	}
-
-	public void setCreateNewDB(boolean createNewDB) {
-		this.createNewDB = createNewDB;
-	}
-
-	public IPath getProjectLoacation() {
-		return projectLoacation;
-	}
-
-	public void setProjectLoacation(IPath projectLoacation) {
-		this.projectLoacation = projectLoacation;
-	}
-
-	public Text gettProductLineName() {
-		return tProductLineName;
-	}
-
-	public void settProductLineName(Text tProductLineName) {
-		this.tProductLineName = tProductLineName;
-	}
-
-	public Text gettProductLineDescription() {
-		return tProductLineDescription;
-	}
-
-	public void settProductLineDescription(Text tProductLineDescription) {
-		this.tProductLineDescription = tProductLineDescription;
-	}
-
-	
-
 }

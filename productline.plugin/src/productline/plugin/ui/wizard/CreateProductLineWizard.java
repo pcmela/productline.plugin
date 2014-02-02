@@ -25,8 +25,8 @@ import diploma.productline.entity.ProductLine;
 
 public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard {
 
-	CreateProductLineWizardPage1 page1;
-	CreateProductLineWizardPage2 page2;
+	CreateWizardOverview page1;
+	CreateWizardImportPage page2;
 
 	private IProject project;
 	private IPath workspaceLocation;
@@ -34,10 +34,10 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 	@Override
 	public void addPages() {
-		page1 = new CreateProductLineWizardPage1("Create database");
+		page1 = new CreateWizardOverview("Create database");
 		page1.setProjectLoacation(project.getLocation());
 		addPage(page1);
-		page2 = new CreateProductLineWizardPage2("Import");
+		page2 = new CreateWizardImportPage("Import");
 		addPage(page2);
 	};
 

@@ -98,6 +98,30 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 	public void settFilePath(Text tFilePath) {
 		this.tFilePath = tFilePath;
 	}
+
+	public Button getbImportFromDB() {
+		return bImportFromDB;
+	}
+
+	public void setbImportFromDB(Button bImportFromDB) {
+		this.bImportFromDB = bImportFromDB;
+	}
+
+	public Button getbImportFromYAML() {
+		return bImportFromYAML;
+	}
+
+	public void setbImportFromYAML(Button bImportFromYAML) {
+		this.bImportFromYAML = bImportFromYAML;
+	}
+
+	public Button getbImportData() {
+		return bImportData;
+	}
+
+	public void setbImportData(Button bImportData) {
+		this.bImportData = bImportData;
+	}
 	
 	
 	

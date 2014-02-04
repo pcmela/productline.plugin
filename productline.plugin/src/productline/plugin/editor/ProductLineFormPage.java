@@ -1,6 +1,7 @@
 package productline.plugin.editor;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.Properties;
 
 import org.eclipse.core.resources.IFile;
@@ -15,7 +16,9 @@ import org.hibernate.Session;
 
 import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DatabaseUtil;
+import diploma.productline.DaoUtil;
 import diploma.productline.HibernateUtil;
+import diploma.productline.dao.ProductLineDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.ProductLine;
 
@@ -57,26 +60,35 @@ public class ProductLineFormPage extends FormPage {
 	
 	protected ProductLine loadData(final boolean initial) {
 		ProductLine productLine;
-
+		Properties properties = new Properties();
 		try {
-			Properties properties = new Properties();
 			properties.load(source.getContents());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (CoreException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		try (Connection con = DaoUtil.connect(properties);){
 
 			Properties hibernateProp = DatabaseUtil.getHibernateProperties(properties);
 
-			if (HibernateUtil.getSessionFactory() == null || initial) {
+			/*if (HibernateUtil.getSessionFactory() == null || initial) {
 				HibernateUtil.initSessionFactory(hibernateProp);
-			}
-
+			}*/
 			String id = properties
 					.getProperty(ConfigurationKeys.PRODUCTLINE_ID_KEY);
 			if (id != null && !id.equals("")) {
-				Session session = HibernateUtil.getSessionFactory()
+				/*Session session = HibernateUtil.getSessionFactory()
 						.getCurrentSession();
 				session.beginTransaction();
 				productLine = (ProductLine) session.get(
 						ProductLine.class, id);
-				session.getTransaction().commit();
+				session.getTransaction().commit();*/
+				ProductLineDAO plDao = new ProductLineDAO(properties);
+				productLine = plDao.getProductLineWithChilds(id,con);
 				
 
 				if (initial == false) {
@@ -95,18 +107,11 @@ public class ProductLineFormPage extends FormPage {
 						"You must set the product line ID!");
 			}
 
-		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 			MessageDialog.openError(this.getSite().getShell(),
 					"Synchronization error", e.getMessage());
 		}
-
 		/*
 		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
 		 * productLine = YamlExtractor.extract(path);

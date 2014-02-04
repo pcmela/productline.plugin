@@ -238,7 +238,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 				FileDialog fd = new FileDialog(new Shell(), SWT.OPEN);
 		        fd.setText("Open");
 		        fd.setFilterPath("C:/");
-		        String[] filterExt = { "*.h2.db" };
+		        String[] filterExt = { "*.yaml", "*.YAML" };
 		        fd.setFilterExtensions(filterExt);
 		        tFilePath.setText(fd.open());
 			}

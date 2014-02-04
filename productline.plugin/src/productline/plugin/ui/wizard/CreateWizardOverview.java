@@ -241,7 +241,7 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		button.setSelection(true);
 		setEnableToExistingDbSection(false);
 		setEnableToNewDbSection(true);
-		createNewDB = false;
+		createNewDB = true;
 		setModifyListener();
 	}
 	

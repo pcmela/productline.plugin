@@ -1,6 +1,9 @@
 package productline.plugin.ui;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -25,7 +28,11 @@ import org.hibernate.Session;
 import productline.plugin.editor.IPackageListViewer;
 import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.VariabilityTreeContainer;
+import diploma.productline.DaoUtil;
 import diploma.productline.HibernateUtil;
+import diploma.productline.dao.ElementDAO;
+import diploma.productline.dao.ModuleDAO;
+import diploma.productline.dao.VariabilityDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
@@ -55,17 +62,19 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	private Button btnAddPackage;
 	private List list;
 	private ListViewer listViewer;
+	private Properties properties;
 	
 
 	private IProject project;
 
 	public AddEntityDialog(Shell parentShell, BaseProductLineEntity parent,
-			Class className, IProject project) {
+			Class className, IProject project, Properties properties) {
 		super(parentShell);
 
 		this.project = project;
 		this.message = "Some message...";
 		this.parent = parent;
+		this.properties = properties;
 
 		this.className = className;
 		if (className == ProductLine.class) {
@@ -144,7 +153,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			@Override
 			public void handleEvent(Event event) {
 				PackageListDialog dialog = new PackageListDialog(new Shell(),
-						project, AddEntityDialog.this);
+						project, AddEntityDialog.this, (Module)parent, properties);
 				dialog.setStoredElements((Set<?>) listViewer.getInput());
 				dialog.open();
 
@@ -204,11 +213,16 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		v.setId(tName.getText());
 		v.setModule(((VariabilityTreeContainer)parent).getParent());
 		
-		Session session = HibernateUtil.getSessionFactory()
-				.getCurrentSession();
-		session.beginTransaction();
-		session.save(v);
-		session.getTransaction().commit();
+		try(Connection con = DaoUtil.connect(properties)){
+			VariabilityDAO vDao = new VariabilityDAO(properties);
+			vDao.save(v, con);
+		} catch (ClassNotFoundException err) {
+			// TODO Auto-generated catch block
+			err.printStackTrace();
+		} catch (SQLException err) {
+			// TODO Auto-generated catch block
+			err.printStackTrace();
+		}
 	}
 	
 	private void saveElementInput(){
@@ -218,11 +232,16 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		e.setDescription(tDescition.getText());
 		e.setModule(((ElementTreeContainer)parent).getParent());
 		
-		Session session = HibernateUtil.getSessionFactory()
-				.getCurrentSession();
-		session.beginTransaction();
-		session.save(e);
-		session.getTransaction().commit();
+		try(Connection con = DaoUtil.connect(properties)){
+			ElementDAO eDao = new ElementDAO(properties);
+			eDao.save(e, con);
+		} catch (ClassNotFoundException err) {
+			// TODO Auto-generated catch block
+			err.printStackTrace();
+		} catch (SQLException err) {
+			// TODO Auto-generated catch block
+			err.printStackTrace();
+		}
 	}
 	
 	private void saveModuleInput(){
@@ -249,11 +268,17 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		m.setProductLine((ProductLine) parent);
 		m.setPackages(packages);
 		
-		Session session = HibernateUtil.getSessionFactory()
-				.getCurrentSession();
-		session.beginTransaction();
-		session.save(m);
-		session.getTransaction().commit();
+		try(Connection con = DaoUtil.connect(properties)){
+			ModuleDAO mDao = new ModuleDAO(properties);
+			mDao.save(m, con);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	@Override

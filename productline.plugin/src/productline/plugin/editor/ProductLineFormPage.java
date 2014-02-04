@@ -10,8 +10,10 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.FormPage;
+import org.eclipse.ui.part.FileEditorInput;
 import org.hibernate.Session;
 
 import productline.plugin.internal.ConfigurationKeys;
@@ -27,9 +29,13 @@ public class ProductLineFormPage extends FormPage {
 	protected IFile source;
 	protected FormEditor editor;
 	protected BaseProductLineEntity currentSelectedObject;
+	protected Properties properties;
 	
 	public ProductLineFormPage(FormEditor editor, String id, String title) {
 		super(editor, id, title);
+		IEditorInput e = editor.getEditorInput();
+		source = ((FileEditorInput) e).getFile();
+		properties = getProperties();
 	}
 
 	static class DependencyFilter extends ViewerFilter {
@@ -60,16 +66,6 @@ public class ProductLineFormPage extends FormPage {
 	
 	protected ProductLine loadData(final boolean initial) {
 		ProductLine productLine;
-		Properties properties = new Properties();
-		try {
-			properties.load(source.getContents());
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (CoreException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 		
 		try (Connection con = DaoUtil.connect(properties);){
 
@@ -122,6 +118,20 @@ public class ProductLineFormPage extends FormPage {
 	
 	protected void resetCurrentSelectedObject(){
 		currentSelectedObject = null;
+	}
+	
+	private Properties getProperties(){
+		Properties properties = new Properties();
+		try {
+			properties.load(source.getContents());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (CoreException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return properties;
 	}
 
 }

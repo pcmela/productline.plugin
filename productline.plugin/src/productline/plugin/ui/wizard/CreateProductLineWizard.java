@@ -1,10 +1,8 @@
 package productline.plugin.ui.wizard;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Connection;
@@ -26,12 +24,9 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
-import org.hibernate.Session;
 
 import productline.plugin.internal.ConfigurationKeys;
-import productline.plugin.internal.DatabaseUtil;
 import diploma.productline.DaoUtil;
-import diploma.productline.HibernateUtil;
 import diploma.productline.configuration.YamlExtractor;
 import diploma.productline.dao.ProductLineDAO;
 import diploma.productline.entity.ProductLine;
@@ -90,19 +85,6 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 				}
 			}
 
-			/*
-			 * Properties hibernateProp =
-			 * DatabaseUtil.getHibernateProperties(properties);
-			 * HibernateUtil.initSessionFactory(hibernateProp);
-			 * 
-			 * ProductLine productLine = new ProductLine();
-			 * productLine.setName(page1.gettProductLineName().getText());
-			 * productLine
-			 * .setDescription(page1.gettProductLineDescription().getText());
-			 * Session session = HibernateUtil.getSessionFactory()
-			 * .getCurrentSession(); session.beginTransaction();
-			 * session.save(productLine); session.getTransaction().commit();
-			 */
 		} catch (CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

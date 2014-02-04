@@ -1,5 +1,7 @@
 package productline.plugin.editor;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,6 +17,7 @@ import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -44,7 +47,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
@@ -53,7 +55,6 @@ import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.part.FileEditorInput;
 
 import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.VariabilityTreeContainer;
@@ -63,6 +64,8 @@ import productline.plugin.ui.PackageListContentProvider;
 import productline.plugin.ui.PackageListDialog;
 import productline.plugin.ui.ProductLineTreeContentProvider;
 import productline.plugin.ui.ProductLineTreeLabelProvider;
+import diploma.productline.DaoUtil;
+import diploma.productline.dao.PackageDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
@@ -81,7 +84,7 @@ public class OverviewPage extends ProductLineFormPage implements
 	DependencyFilter searchFilter;
 	TreeViewer treeViewer;
 	boolean isSettingSelection = false;
-	
+
 	// Elements for details of ProductLine
 	Label lProductLineName;
 	Text tProductLineName;
@@ -122,8 +125,6 @@ public class OverviewPage extends ProductLineFormPage implements
 	public OverviewPage(FormEditor editor, String id, String title,
 			IProject project) {
 		super(editor, id, title);
-		IEditorInput e = editor.getEditorInput();
-		source = ((FileEditorInput) e).getFile();
 		this.editor = editor;
 		this.project = project;
 	}
@@ -213,10 +214,10 @@ public class OverviewPage extends ProductLineFormPage implements
 
 		final AddAction actionAdd = new AddAction();
 		actionAdd.setText("Add");
-		
+
 		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction();
 		createCustomLine.setText("New Custom Line");
-		
+
 		final MenuManager mgr = new MenuManager();
 		mgr.setRemoveAllWhenShown(true);
 
@@ -250,7 +251,7 @@ public class OverviewPage extends ProductLineFormPage implements
 		Action newModuleElementAction = new Action("Create new Module", null) {
 			public void run() {
 				AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-						productLine, Module.class, project);
+						productLine, Module.class, project, properties);
 				dialog.create();
 				if (dialog.open() == Window.OK) {
 					System.out.println("Module Created");
@@ -354,7 +355,7 @@ public class OverviewPage extends ProductLineFormPage implements
 			@Override
 			public void handleEvent(Event event) {
 				PackageListDialog dialog = new PackageListDialog(new Shell(),
-						project, OverviewPage.this);
+						project, OverviewPage.this, module, properties);
 				dialog.setStoredElements(module.getPackages());
 				dialog.open();
 
@@ -368,11 +369,32 @@ public class OverviewPage extends ProductLineFormPage implements
 
 			@Override
 			public void handleEvent(Event event) {
-				/*
-				 * PackageListDialog dialog = new PackageListDialog(new Shell(),
-				 * project); dialog.open();
-				 */
-
+				// MessageDialog.openConfirm(new Shell(), "Remove package", );
+				PackageModule pkg = (PackageModule) ((IStructuredSelection) listViewerPackage
+						.getSelection()).getFirstElement();
+				boolean ok = MessageDialog.openConfirm(
+						new Shell(),
+						"Remove package",
+						"Are you sure that you want to remove package "
+								+ pkg.getName() + "?");
+				if (ok) {
+					try (Connection con = DaoUtil.connect(properties)) {
+						PackageDAO pDao = new PackageDAO(properties);
+						pDao.delete(pkg.getId(), con);
+						Set<PackageModule> packages = pDao
+								.getPackagesWhithChildsByModule(module, con);
+						listViewerPackage.setInput(packages);
+						((Module) ((IStructuredSelection) treeViewer
+								.getSelection()).getFirstElement())
+								.setPackages(packages);
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 			}
 		});
 
@@ -611,17 +633,16 @@ public class OverviewPage extends ProductLineFormPage implements
 			super.runWithEvent(event);
 			Object input = treeViewer.getInput();
 			ProductLine productLine = null;
-			if(input instanceof Object[]){
-				if(((Object[])input)[0] instanceof ProductLine){
-					productLine = (ProductLine)((Object[])input)[0];
+			if (input instanceof Object[]) {
+				if (((Object[]) input)[0] instanceof ProductLine) {
+					productLine = (ProductLine) ((Object[]) input)[0];
 				}
-			}else{
-				productLine = (ProductLine)input;
+			} else {
+				productLine = (ProductLine) input;
 			}
-			
-			CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(new Shell(),
-					productLine, "",
-					OverviewPage.this.project);
+
+			CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(
+					new Shell(), productLine, "", OverviewPage.this.project);
 			dialog.open();
 		}
 
@@ -636,21 +657,21 @@ public class OverviewPage extends ProductLineFormPage implements
 
 				if (entity instanceof ProductLine) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-							entity, Module.class, project);
+							entity, Module.class, project, properties);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
 						treeViewer.setInput(new Object[] { loadData(false) });
 					}
 				} else if (entity instanceof VariabilityTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-							entity, Variability.class, project);
+							entity, Variability.class, project, properties);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
 						treeViewer.setInput(new Object[] { loadData(false) });
 					}
 				} else if (entity instanceof ElementTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-							entity, Element.class, project);
+							entity, Element.class, project, properties);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
 						treeViewer.setInput(new Object[] { loadData(false) });

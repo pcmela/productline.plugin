@@ -1,7 +1,10 @@
 package productline.plugin.ui;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFolder;
@@ -26,10 +29,12 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 
 import productline.plugin.editor.IPackageListViewer;
+import diploma.productline.DaoUtil;
+import diploma.productline.dao.PackageDAO;
+import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
 
 public class PackageListDialog extends Dialog {
@@ -40,8 +45,10 @@ public class PackageListDialog extends Dialog {
 	private IPackageListViewer parentDialog;
 	private IStructuredSelection listSelection;
 	private Set<?> storedElements;
-	
-	public void setStoredElements(Set<?> elements){
+	private Module parent;
+	private Properties properties;
+
+	public void setStoredElements(Set<?> elements) {
 		storedElements = elements;
 	}
 
@@ -50,11 +57,15 @@ public class PackageListDialog extends Dialog {
 	 * 
 	 * @param parentShell
 	 */
-	public PackageListDialog(Shell parentShell, IProject project, IPackageListViewer parentDialog) {
+	public PackageListDialog(Shell parentShell, IProject project,
+			IPackageListViewer parentDialog, Module module,
+			Properties properties) {
 		super(parentShell);
 		this.project = project;
 		packages = new HashSet<>();
 		this.parentDialog = parentDialog;
+		this.parent = module;
+		this.properties = properties;
 	}
 
 	/**
@@ -81,14 +92,13 @@ public class PackageListDialog extends Dialog {
 				return ((IPackageFragment) element).getElementName();
 			}
 		});
-		
+
 		listViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			  @Override
-			  public void selectionChanged(SelectionChangedEvent event) {
-			    listSelection = (IStructuredSelection) event
-			      .getSelection();
-			  }
-			}); 
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				listSelection = (IStructuredSelection) event.getSelection();
+			}
+		});
 
 		return null;
 	}
@@ -108,29 +118,35 @@ public class PackageListDialog extends Dialog {
 							if (pkg != null && !pkg.getElementName().equals("")
 									&& pkg instanceof IPackageFragment) {
 								if (!(pkg instanceof IFolder)) {
-									if(storedElements == null || storedElements.size() == 0){
+									if (storedElements == null
+											|| storedElements.size() == 0) {
 										packages.add((IPackageFragment) pkg);
-									}else{
+									} else {
 										boolean exist = false;
-										for(Object p : storedElements){
-											if(p instanceof String){
-												if(pkg.getElementName().equals((String)p)){
+										for (Object p : storedElements) {
+											if (p instanceof String) {
+												if (pkg.getElementName()
+														.equals((String) p)) {
 													exist = true;
 													break;
 												}
-											}else if(p instanceof IPackageFragment){
-												if(pkg.getElementName().equals(((IPackageFragment)p).getElementName())){
+											} else if (p instanceof IPackageFragment) {
+												if (pkg.getElementName()
+														.equals(((IPackageFragment) p)
+																.getElementName())) {
 													exist = true;
 													break;
 												}
-											}else if(p instanceof PackageModule){
-												if(pkg.getElementName().equals(((PackageModule)p).getName())){
+											} else if (p instanceof PackageModule) {
+												if (pkg.getElementName()
+														.equals(((PackageModule) p)
+																.getName())) {
 													exist = true;
 													break;
 												}
 											}
 										}
-										if(!exist){
+										if (!exist) {
 											packages.add((IPackageFragment) pkg);
 										}
 									}
@@ -173,30 +189,48 @@ public class PackageListDialog extends Dialog {
 		super.okPressed();
 
 		Set<IPackageFragment> selectedObjects = new HashSet<>();
-		
-		if(listSelection != null){
-			for (Iterator iterator = listSelection.iterator(); iterator.hasNext();) {
+
+		if (listSelection != null) {
+			for (Iterator iterator = listSelection.iterator(); iterator
+					.hasNext();) {
 				Object obj = iterator.next();
 				if (obj instanceof IPackageFragment) {
 					selectedObjects.add((IPackageFragment) obj);
 				}
 			}
 		}
-		if(selectedObjects.size() > 0){
+
+		if (selectedObjects.size() > 0) {
+			for (IPackageFragment fragment : selectedObjects) {
+				PackageModule pkg = new PackageModule();
+				pkg.setName(fragment.getElementName());
+				pkg.setModule(parent);
+				try (Connection con = DaoUtil.connect(properties)) {
+					PackageDAO pDao = new PackageDAO(properties);
+					pDao.save(pkg, con);
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
 			parentDialog.setPackageListInput(selectedObjects);
 		}
 	}
-	
-	static Set<String> createSetOfPackageName(Set<?> set){
+
+	static Set<String> createSetOfPackageName(Set<?> set) {
 		Set<String> result = new HashSet<>();
-		for(Object frg : set){
-			if(frg instanceof IPackageFragment){
-				result.add(((IPackageFragment)frg).getElementName());
-			}else if(frg instanceof PackageModule){
-				result.add(((PackageModule)frg).getName());
+		for (Object frg : set) {
+			if (frg instanceof IPackageFragment) {
+				result.add(((IPackageFragment) frg).getElementName());
+			} else if (frg instanceof PackageModule) {
+				result.add(((PackageModule) frg).getName());
 			}
 		}
-		
+
 		return result;
 	}
 

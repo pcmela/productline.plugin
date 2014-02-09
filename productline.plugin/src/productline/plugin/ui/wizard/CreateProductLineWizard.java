@@ -62,7 +62,7 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 			Properties properties = new Properties();
 			properties.load(file.getContents());
-			ProductLineDAO plDao = new ProductLineDAO(properties);
+			ProductLineDAO plDao = new ProductLineDAO();
 			try (Connection con = DaoUtil.connect(properties)) {
 				ProductLineDAO.createDatabaseStructure(properties,
 						loadDdlScript(), con);

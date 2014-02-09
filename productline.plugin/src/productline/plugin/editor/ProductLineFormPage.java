@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.util.Properties;
 
+import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -30,12 +31,16 @@ public class ProductLineFormPage extends FormPage {
 	protected FormEditor editor;
 	protected BaseProductLineEntity currentSelectedObject;
 	protected Properties properties;
+	protected boolean isDirty;
+	protected DataBindingContext dataBindingContext;
 	
 	public ProductLineFormPage(FormEditor editor, String id, String title) {
 		super(editor, id, title);
 		IEditorInput e = editor.getEditorInput();
 		source = ((FileEditorInput) e).getFile();
 		properties = getProperties();
+		isDirty = false;
+		dataBindingContext = new DataBindingContext();
 	}
 
 	static class DependencyFilter extends ViewerFilter {
@@ -61,6 +66,7 @@ public class ProductLineFormPage extends FormPage {
 				c.dispose();
 			}
 		}
+		dataBindingContext.dispose();
 
 	}
 	
@@ -83,7 +89,7 @@ public class ProductLineFormPage extends FormPage {
 				productLine = (ProductLine) session.get(
 						ProductLine.class, id);
 				session.getTransaction().commit();*/
-				ProductLineDAO plDao = new ProductLineDAO(properties);
+				ProductLineDAO plDao = new ProductLineDAO();
 				productLine = plDao.getProductLineWithChilds(id,con);
 				
 
@@ -120,7 +126,15 @@ public class ProductLineFormPage extends FormPage {
 		currentSelectedObject = null;
 	}
 	
-	private Properties getProperties(){
+	public Properties getProperties(){
+		if(properties == null){
+			return propertiesFactory(false);
+		}
+		
+		return properties;
+	}
+	
+	private Properties propertiesFactory(boolean changed){
 		Properties properties = new Properties();
 		try {
 			properties.load(source.getContents());
@@ -134,4 +148,7 @@ public class ProductLineFormPage extends FormPage {
 		return properties;
 	}
 
+	public void setDirty(boolean isDirty){
+		this.isDirty = isDirty;
+	}
 }

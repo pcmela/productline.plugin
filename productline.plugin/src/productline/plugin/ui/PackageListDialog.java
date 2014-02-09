@@ -206,7 +206,7 @@ public class PackageListDialog extends Dialog {
 				pkg.setName(fragment.getElementName());
 				pkg.setModule(parent);
 				try (Connection con = DaoUtil.connect(properties)) {
-					PackageDAO pDao = new PackageDAO(properties);
+					PackageDAO pDao = new PackageDAO();
 					pDao.save(pkg, con);
 				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block

@@ -41,12 +41,11 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
@@ -73,54 +72,8 @@ import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
-public class OverviewPage extends ProductLineFormPage implements
+public class OverviewPage extends OverViewPagePOJO implements
 		IPackageListViewer {
-
-	private SearchControl searchControl;
-	private SearchMatcher searchMatcher;
-	private Composite currentComposite;
-	private ProductLine productLine;
-
-	DependencyFilter searchFilter;
-	TreeViewer treeViewer;
-	boolean isSettingSelection = false;
-
-	// Elements for details of ProductLine
-	Label lProductLineName;
-	Text tProductLineName;
-	Label lProductLineDescription;
-	Text tProductLineDescription;
-
-	// Elements for details of Module
-	Label lModuleName;
-	Text tModuleName;
-	Label lModuleDescription;
-	Text tModuleDescription;
-	private ListViewer listViewerPackage;
-	private Label lPackage;
-	private Button bAddPackage;
-	private Button bRemovePackage;
-
-	// Elements for details of Variability
-	Label lVariabilityName;
-	Text tVariabilityName;
-	Label lVariabilityDescription;
-	Text tVariabilityDescription;
-
-	// Elements for details of Element
-	Label lElementName;
-	Text tElementName;
-	Label lElementDescription;
-	Text tElementDescription;
-
-	FormToolkit toolkit;
-	Composite detailComposite;
-	Section detailSection;
-	Section detailPackageDependenciesModuleSection;
-	Composite detailPackageDependenciesModuleComposite;
-	Composite rightComposite;
-
-	IProject project;
 
 	public OverviewPage(FormEditor editor, String id, String title,
 			IProject project) {
@@ -191,18 +144,35 @@ public class OverviewPage extends ProductLineFormPage implements
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 
-				Object selection = ((TreeSelection) treeViewer.getSelection())
-						.getFirstElement();
+				final Object selection = ((TreeSelection) treeViewer
+						.getSelection()).getFirstElement();
+
+				ModifyListener modifyListener = new ModifyListener() {
+					@Override
+					public void modifyText(ModifyEvent e) {
+						BaseProductLineEntity o = (BaseProductLineEntity) selection;
+						if (!o.isDirty()) {
+							o.setDirty(true);
+						}
+						if (!isDirty) {
+							isDirty = true;
+							firePropertyChange(IEditorPart.PROP_DIRTY);
+							editor.editorDirtyStateChanged();
+						}
+					}
+				};
 
 				if (selection instanceof ProductLine) {
-					createDetailProductLine((ProductLine) selection);
+					createDetailProductLine((ProductLine) selection,
+							modifyListener);
 				}
 				if (selection instanceof Module) {
-					createDetailModule((Module) selection);
+					createDetailModule((Module) selection, modifyListener);
 				} else if (selection instanceof Variability) {
-					createDetailVariability((Variability) selection);
+					createDetailVariability((Variability) selection,
+							modifyListener);
 				} else if (selection instanceof Element) {
-					createDetailElement((Element) selection);
+					createDetailElement((Element) selection, modifyListener);
 				} else {
 					return;
 				}
@@ -275,7 +245,8 @@ public class OverviewPage extends ProductLineFormPage implements
 		hierarchySection.setTextClient(toolbarComposite);
 	}
 
-	private void createDetailProductLine(ProductLine productLine) {
+	private void createDetailProductLine(ProductLine productLine,
+			ModifyListener modifyListener) {
 		disposeActiveElements(rightComposite.getChildren());
 		resetCurrentSelectedObject();
 
@@ -288,6 +259,7 @@ public class OverviewPage extends ProductLineFormPage implements
 				SWT.NONE);
 		tProductLineName = toolkit.createText(detailComposite,
 				productLine.getName());
+		tProductLineName.addModifyListener(modifyListener);
 
 		lProductLineDescription = toolkit.createLabel(detailComposite,
 				"Description");
@@ -295,6 +267,7 @@ public class OverviewPage extends ProductLineFormPage implements
 				false, false));
 		tProductLineDescription = toolkit.createText(detailComposite, null,
 				SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		tProductLineDescription.addModifyListener(modifyListener);
 
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
@@ -307,9 +280,12 @@ public class OverviewPage extends ProductLineFormPage implements
 		tProductLineDescription.setLayoutData(tdDescription);
 
 		rightComposite.layout();
+
+		// tProductLineName.addModifyListener(listener);
 	}
 
-	private void createDetailModule(final Module module) {
+	private void createDetailModule(final Module module,
+			ModifyListener modifyListener) {
 		disposeActiveElements(rightComposite.getChildren());
 		resetCurrentSelectedObject();
 
@@ -329,6 +305,11 @@ public class OverviewPage extends ProductLineFormPage implements
 		tModuleDescription = toolkit.createText(detailComposite,
 				module.getDescription(), SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
 
+		lModuleIsVariable = toolkit
+				.createLabel(detailComposite, "Is variable:");
+		bModuleIsVariable = toolkit
+				.createButton(detailComposite, "", SWT.CHECK);
+
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
 
@@ -336,8 +317,12 @@ public class OverviewPage extends ProductLineFormPage implements
 		tdDescription.horizontalSpan = 3;
 		tdDescription.heightHint = 75;
 
+		GridData bdIsVariable = new GridData(SWT.LEFT, SWT.TOP, true, false);
+		bdIsVariable.horizontalSpan = 3;
+
 		tModuleName.setLayoutData(tdName);
 		tModuleDescription.setLayoutData(tdDescription);
+		bModuleIsVariable.setLayoutData(bdIsVariable);
 
 		tModuleName.addModifyListener(new ModifyListener() {
 
@@ -379,7 +364,7 @@ public class OverviewPage extends ProductLineFormPage implements
 								+ pkg.getName() + "?");
 				if (ok) {
 					try (Connection con = DaoUtil.connect(properties)) {
-						PackageDAO pDao = new PackageDAO(properties);
+						PackageDAO pDao = new PackageDAO();
 						pDao.delete(pkg.getId(), con);
 						Set<PackageModule> packages = pDao
 								.getPackagesWhithChildsByModule(module, con);
@@ -432,10 +417,26 @@ public class OverviewPage extends ProductLineFormPage implements
 		});
 		listViewerPackage.setInput(module.getPackages());
 
+		addDataBindingModule(module);
+		tModuleName.addModifyListener(modifyListener);
+		tModuleDescription.addModifyListener(modifyListener);		
+		bModuleIsVariable.addListener(SWT.Selection, new Listener() {
+			
+			@Override
+			public void handleEvent(Event event) {
+				if(!isDirty){
+					isDirty = true;
+					firePropertyChange(IEditorPart.PROP_DIRTY);
+					editor.editorDirtyStateChanged();
+				}
+			}
+		});
+		
 		rightComposite.layout();
 	}
-
-	private void createDetailVariability(Variability variability) {
+	
+	private void createDetailVariability(Variability variability,
+			ModifyListener modifyListener) {
 		disposeActiveElements(rightComposite.getChildren());
 		createDetailSection();
 
@@ -453,18 +454,22 @@ public class OverviewPage extends ProductLineFormPage implements
 
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
-		tdName.heightHint = 75;
 
 		GridData tdDescription = new GridData(SWT.FILL, SWT.FILL, true, true);
 		tdDescription.horizontalSpan = 3;
+		tdDescription.heightHint = 75;
 
 		tVariabilityName.setLayoutData(tdName);
 		tVariabilityDescription.setLayoutData(tdDescription);
 
+		addDataBindingVariable(variability);
+		tVariabilityDescription.addModifyListener(modifyListener);
+		tVariabilityName.addModifyListener(modifyListener);
 		rightComposite.layout();
 	}
 
-	private void createDetailElement(Element element) {
+	private void createDetailElement(Element element,
+			ModifyListener modifyListener) {
 		disposeActiveElements(rightComposite.getChildren());
 		createDetailSection();
 
@@ -480,14 +485,17 @@ public class OverviewPage extends ProductLineFormPage implements
 
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
-		tdName.heightHint = 75;
 
 		GridData tdDescription = new GridData(SWT.FILL, SWT.FILL, true, true);
 		tdDescription.horizontalSpan = 3;
+		tdDescription.heightHint = 75;
 
 		tElementName.setLayoutData(tdName);
 		tElementDescription.setLayoutData(tdDescription);
 
+		addDataBindingElement(element);
+		tElementName.addModifyListener(modifyListener);
+		tElementDescription.addModifyListener(modifyListener);
 		rightComposite.layout();
 	}
 
@@ -594,12 +602,6 @@ public class OverviewPage extends ProductLineFormPage implements
 		// treeLabelProvider.setMatcher(matcher);
 		treeViewer.refresh();
 		treeViewer.expandAll();
-	}
-
-	@Override
-	public boolean isDirty() {
-		// TODO Auto-generated method stub
-		return true;
 	}
 
 	class RemoveAction extends Action {

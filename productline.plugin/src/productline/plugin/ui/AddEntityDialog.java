@@ -214,7 +214,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		v.setModule(((VariabilityTreeContainer)parent).getParent());
 		
 		try(Connection con = DaoUtil.connect(properties)){
-			VariabilityDAO vDao = new VariabilityDAO(properties);
+			VariabilityDAO vDao = new VariabilityDAO();
 			vDao.save(v, con);
 		} catch (ClassNotFoundException err) {
 			// TODO Auto-generated catch block
@@ -233,7 +233,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		e.setModule(((ElementTreeContainer)parent).getParent());
 		
 		try(Connection con = DaoUtil.connect(properties)){
-			ElementDAO eDao = new ElementDAO(properties);
+			ElementDAO eDao = new ElementDAO();
 			eDao.save(e, con);
 		} catch (ClassNotFoundException err) {
 			// TODO Auto-generated catch block
@@ -269,7 +269,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		m.setPackages(packages);
 		
 		try(Connection con = DaoUtil.connect(properties)){
-			ModuleDAO mDao = new ModuleDAO(properties);
+			ModuleDAO mDao = new ModuleDAO();
 			mDao.save(m, con);
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block

@@ -65,6 +65,7 @@
       <template
             autoinsert="true"
             contextTypeId="java"
+            description="block of code for Variability"
             id="productline.plugin.template1"
             name="variability">
          <pattern>
@@ -80,6 +81,7 @@
       <template
             autoinsert="true"
             contextTypeId="java"
+            description="block of code for Module"
             id="productline.plugin.template2"
             name="module">
          <pattern>

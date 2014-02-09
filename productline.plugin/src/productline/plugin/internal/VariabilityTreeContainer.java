@@ -6,7 +6,7 @@ import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.Variability;
 
-public class VariabilityTreeContainer implements BaseProductLineEntity {
+public class VariabilityTreeContainer extends BaseProductLineEntity {
 
 	private final String name = "Variabilities";
 	private Set<Variability> variabilities;

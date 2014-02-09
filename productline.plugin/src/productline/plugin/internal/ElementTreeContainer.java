@@ -6,7 +6,7 @@ import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 
-public class ElementTreeContainer implements BaseProductLineEntity {
+public class ElementTreeContainer extends BaseProductLineEntity {
 
 	private final String name = "Elements";
 	private Set<Element> elements;

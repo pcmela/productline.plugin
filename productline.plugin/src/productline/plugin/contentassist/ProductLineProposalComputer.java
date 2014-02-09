@@ -15,14 +15,12 @@ public class ProductLineProposalComputer implements
 	private final ProductLineProposalProcessor processor = new ProductLineProposalProcessor();
 
 	public ProductLineProposalComputer() {
-		System.out.println("Completition initialize");
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public void sessionStarted() {
 		// TODO Auto-generated method stub
-		System.out.println("Completetion started");
 	}
 
 	@Override
@@ -41,14 +39,12 @@ public class ProductLineProposalComputer implements
 	@Override
 	public String getErrorMessage() {
 		// TODO Auto-generated method stub
-		System.out.println("Completition error");
 		return null;
 	}
 
 	@Override
 	public void sessionEnded() {
 		// TODO Auto-generated method stub
-		System.out.println("Completition ended");
 
 	}
 

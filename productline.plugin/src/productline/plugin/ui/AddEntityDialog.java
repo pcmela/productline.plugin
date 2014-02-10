@@ -26,8 +26,8 @@ import org.eclipse.swt.widgets.Text;
 import org.hibernate.Session;
 
 import productline.plugin.editor.IPackageListViewer;
-import productline.plugin.internal.ElementTreeContainer;
-import productline.plugin.internal.VariabilityTreeContainer;
+import productline.plugin.internal.ElementSetTreeContainer;
+import productline.plugin.internal.VariabilitySetTreeContainer;
 import diploma.productline.DaoUtil;
 import diploma.productline.HibernateUtil;
 import diploma.productline.dao.ElementDAO;
@@ -211,7 +211,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		Variability v = new Variability();
 		v.setName(tName.getText());
 		v.setId(tName.getText());
-		v.setModule(((VariabilityTreeContainer)parent).getParent());
+		v.setModule(((VariabilitySetTreeContainer)parent).getParent());
 		
 		try(Connection con = DaoUtil.connect(properties)){
 			VariabilityDAO vDao = new VariabilityDAO();
@@ -230,7 +230,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		e.setName(tName.getText());
 		e.setId(tName.getText());
 		e.setDescription(tDescition.getText());
-		e.setModule(((ElementTreeContainer)parent).getParent());
+		e.setModule(((ElementSetTreeContainer)parent).getParent());
 		
 		try(Connection con = DaoUtil.connect(properties)){
 			ElementDAO eDao = new ElementDAO();

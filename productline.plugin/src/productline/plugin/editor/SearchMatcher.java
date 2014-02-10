@@ -4,8 +4,8 @@ import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
-import productline.plugin.internal.ElementTreeContainer;
-import productline.plugin.internal.VariabilityTreeContainer;
+import productline.plugin.internal.ElementSetTreeContainer;
+import productline.plugin.internal.VariabilitySetTreeContainer;
 
 public class SearchMatcher {
 
@@ -48,9 +48,9 @@ public class SearchMatcher {
 			}
 
 			return false;
-		} else if (element instanceof VariabilityTreeContainer) {
-			if (((VariabilityTreeContainer) element).getVariabilities() != null) {
-				for (Variability v : ((VariabilityTreeContainer) element)
+		} else if (element instanceof VariabilitySetTreeContainer) {
+			if (((VariabilitySetTreeContainer) element).getVariabilities() != null) {
+				for (Variability v : ((VariabilitySetTreeContainer) element)
 						.getVariabilities()) {
 					result = (v.getName() != null && v.getName().indexOf(text) > -1);
 					if (result)
@@ -58,9 +58,9 @@ public class SearchMatcher {
 				}
 			}
 			return false;
-		} else if (element instanceof ElementTreeContainer) {
-			if (((ElementTreeContainer) element).getElements() != null) {
-				for (Element e : ((ElementTreeContainer) element).getElements()) {
+		} else if (element instanceof ElementSetTreeContainer) {
+			if (((ElementSetTreeContainer) element).getElements() != null) {
+				for (Element e : ((ElementSetTreeContainer) element).getElements()) {
 					result = (e.getName() != null && e.getName().indexOf(text) > -1);
 					if (result)
 						return result;

@@ -12,7 +12,7 @@ public class ProductLineTreeLabelProvider extends LabelProvider {
 		if(element instanceof BaseProductLineEntity){
 			if(element instanceof Module){
 				Module m = (Module) element;
-				if(m.isVariable()){
+				if(!m.isVariable()){
 					return m.getName() + " [mandatory]";
 				}
 			}

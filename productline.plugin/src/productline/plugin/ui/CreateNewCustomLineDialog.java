@@ -1,7 +1,9 @@
 package productline.plugin.ui;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -11,6 +13,9 @@ import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.ITreeSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
@@ -18,13 +23,16 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 
 import productline.plugin.internal.CreateCustomeLine;
+import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
@@ -122,8 +130,6 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		new Label(container, SWT.NONE);
 
 		checkboxTreeViewer = new CheckboxTreeViewer(container, SWT.BORDER);
-		Tree tree = checkboxTreeViewer.getTree();
-		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
 		checkboxTreeViewer.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
@@ -151,8 +157,88 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 				.setContentProvider(new ProductLineTreeContentProvider());
 		checkboxTreeViewer.setLabelProvider(new ProductLineTreeLabelProvider());
 		checkboxTreeViewer.setInput(this.productLine);
+		checkboxTreeViewer.expandAll();
+		final Tree tree = checkboxTreeViewer.getTree();
+		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+
+		checkboxTreeViewer.getTree().addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				if (event.detail == SWT.CHECK) {
+					if ((event.item.getData() instanceof Module)
+							&& !(((Module) event.item.getData())).isVariable()) {
+						event.detail = SWT.NONE;
+						event.type = SWT.None;
+						event.doit = false;
+						try {
+							tree.setRedraw(false);
+							TreeItem item = (TreeItem) event.item;
+							item.setChecked(!item.getChecked());
+						} finally {
+							tree.setRedraw(true);
+						}
+					}else{
+						//ITreeSelection selection = ((ITreeSelection)event.item);
+						ITreeContentProvider tcp =(ITreeContentProvider)checkboxTreeViewer.getContentProvider();
+						Object child = event.item.getData();
+						Object parent = tcp.getParent(child);
+						if(parent != null){
+							checkboxTreeViewer.setChecked(parent, true);
+							parent = tcp.getParent(parent);
+							if(parent != null){
+								checkboxTreeViewer.setChecked(parent, true);
+							}
+						}
+					}
+				}
+
+			}
+		});
+
+		setBackgroundAndCheckedForMandatoryFields(tree);
 
 		return area;
+	}
+	
+	private void setBackgroundAndCheckedForMandatoryFields(Tree tree){
+		List<TreeItem> allItems = new ArrayList<TreeItem>();
+
+		getAllItems(tree, allItems);
+		for (Module m : productLine.getModules()) {
+			for (TreeItem i : allItems) {
+				BaseProductLineEntity obj = (BaseProductLineEntity) i.getData();
+				if (obj instanceof Module) {
+					if (obj.getName().equals(m.getName()) && !m.isVariable()) {
+						i.setBackground(Display.getDefault().getSystemColor(
+								SWT.COLOR_GRAY));
+					}
+				}
+			}
+		}
+		
+		for (Module m : productLine.getModules()) {
+			if (!m.isVariable()) {
+				checkboxTreeViewer.setChecked(m, true);
+			}
+		}
+	}
+
+	private void getAllItems(Tree tree, List<TreeItem> allItems) {
+		for (TreeItem item : tree.getItems()) {
+			allItems.add(item);
+			getAllItems(item, allItems);
+		}
+	}
+
+	private void getAllItems(TreeItem currentItem, List<TreeItem> allItems) {
+		TreeItem[] children = currentItem.getItems();
+
+		for (int i = 0; i < children.length; i++) {
+			allItems.add(children[i]);
+
+			getAllItems(children[i], allItems);
+		}
 	}
 
 	/**

@@ -55,8 +55,8 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 
-import productline.plugin.internal.ElementTreeContainer;
-import productline.plugin.internal.VariabilityTreeContainer;
+import productline.plugin.internal.ElementSetTreeContainer;
+import productline.plugin.internal.VariabilitySetTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
 import productline.plugin.ui.CreateNewCustomLineDialog;
 import productline.plugin.ui.PackageListContentProvider;
@@ -203,8 +203,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 						mgr.add(actionAdd);
 						mgr.add(createCustomLine);
 					}
-					if (o instanceof VariabilityTreeContainer
-							|| o instanceof ElementTreeContainer) {
+					if (o instanceof VariabilitySetTreeContainer
+							|| o instanceof ElementSetTreeContainer) {
 						mgr.add(actionAdd);
 					}
 					if (o instanceof Variability || o instanceof Element
@@ -664,14 +664,14 @@ public class OverviewPage extends OverViewPagePOJO implements
 					if (dialog.open() == Window.OK) {
 						treeViewer.setInput(new Object[] { loadData(false) });
 					}
-				} else if (entity instanceof VariabilityTreeContainer) {
+				} else if (entity instanceof VariabilitySetTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
 							entity, Variability.class, project, properties);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
 						treeViewer.setInput(new Object[] { loadData(false) });
 					}
-				} else if (entity instanceof ElementTreeContainer) {
+				} else if (entity instanceof ElementSetTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
 							entity, Element.class, project, properties);
 					dialog.create();

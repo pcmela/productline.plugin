@@ -1,11 +1,15 @@
 package productline.plugin.ui;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -31,7 +35,12 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
+import productline.plugin.ProductLineUtils;
 import productline.plugin.internal.CreateCustomeLine;
+import productline.plugin.ui.providers.ProductLineTreeContentProvider;
+import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
+import diploma.productline.DaoUtil;
+import diploma.productline.dao.ProductLineDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
@@ -44,6 +53,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	private String destinationPath;
 	private IProject project;
 	private CheckboxTreeViewer checkboxTreeViewer;
+	private Properties properties;
 
 	/**
 	 * Create the dialog.
@@ -51,11 +61,13 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	 * @param parentShell
 	 */
 	public CreateNewCustomLineDialog(Shell parentShell,
-			ProductLine productLine, String destinationPath, IProject project) {
+			ProductLine productLine, String destinationPath, IProject project,
+			Properties properties) {
 		super(parentShell);
 		this.productLine = productLine;
 		this.destinationPath = destinationPath;
 		this.project = project;
+		this.properties = properties;
 	}
 
 	/**
@@ -79,8 +91,10 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 			@Override
 			public void handleEvent(Event event) {
-				ProductLine productLine = (ProductLine) checkboxTreeViewer
-						.getInput();
+				ProductLine productLine = SerializationUtils
+						.clone((ProductLine) checkboxTreeViewer.getInput());
+				productLine.setParent((ProductLine) checkboxTreeViewer
+						.getInput());
 				productLine.getModules().clear();
 
 				Set<Module> modules = new HashSet<>();
@@ -117,10 +131,22 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 				productLine.getModules().addAll(modules);
 
+				productLine = ProductLineUtils.refreshRelations(productLine);
 				CreateCustomeLine custom = new CreateCustomeLine(productLine,
 						project, "C:\\Users\\IBM_ADMIN\\Desktop\\customeLine");
 				try {
 					custom.create();
+					ProductLineDAO pDao = new ProductLineDAO();
+					try (Connection con = DaoUtil.connect(properties)) {
+						pDao.createAll(productLine, con);
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 				} catch (JavaModelException | IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -178,15 +204,17 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 						} finally {
 							tree.setRedraw(true);
 						}
-					}else{
-						//ITreeSelection selection = ((ITreeSelection)event.item);
-						ITreeContentProvider tcp =(ITreeContentProvider)checkboxTreeViewer.getContentProvider();
+					} else {
+						// ITreeSelection selection =
+						// ((ITreeSelection)event.item);
+						ITreeContentProvider tcp = (ITreeContentProvider) checkboxTreeViewer
+								.getContentProvider();
 						Object child = event.item.getData();
 						Object parent = tcp.getParent(child);
-						if(parent != null){
+						if (parent != null) {
 							checkboxTreeViewer.setChecked(parent, true);
 							parent = tcp.getParent(parent);
-							if(parent != null){
+							if (parent != null) {
 								checkboxTreeViewer.setChecked(parent, true);
 							}
 						}
@@ -200,11 +228,11 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 		return area;
 	}
-	
-	private void setBackgroundAndCheckedForMandatoryFields(Tree tree){
+
+	private void setBackgroundAndCheckedForMandatoryFields(Tree tree) {
 		List<TreeItem> allItems = new ArrayList<TreeItem>();
 
-		getAllItems(tree, allItems);
+		getAllItemsFromTree(tree, allItems);
 		for (Module m : productLine.getModules()) {
 			for (TreeItem i : allItems) {
 				BaseProductLineEntity obj = (BaseProductLineEntity) i.getData();
@@ -216,7 +244,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 				}
 			}
 		}
-		
+
 		for (Module m : productLine.getModules()) {
 			if (!m.isVariable()) {
 				checkboxTreeViewer.setChecked(m, true);
@@ -224,20 +252,21 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		}
 	}
 
-	private void getAllItems(Tree tree, List<TreeItem> allItems) {
+	private void getAllItemsFromTree(Tree tree, List<TreeItem> allItems) {
 		for (TreeItem item : tree.getItems()) {
 			allItems.add(item);
-			getAllItems(item, allItems);
+			getAllItemsFromTree(item, allItems);
 		}
 	}
 
-	private void getAllItems(TreeItem currentItem, List<TreeItem> allItems) {
+	private void getAllItemsFromTree(TreeItem currentItem,
+			List<TreeItem> allItems) {
 		TreeItem[] children = currentItem.getItems();
 
 		for (int i = 0; i < children.length; i++) {
 			allItems.add(children[i]);
 
-			getAllItems(children[i], allItems);
+			getAllItemsFromTree(children[i], allItems);
 		}
 	}
 

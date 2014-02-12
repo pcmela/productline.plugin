@@ -23,13 +23,13 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.hibernate.Session;
 
 import productline.plugin.editor.IPackageListViewer;
 import productline.plugin.internal.ElementSetTreeContainer;
 import productline.plugin.internal.VariabilitySetTreeContainer;
+import productline.plugin.ui.providers.PackageListContentProvider;
+import productline.plugin.ui.providers.PackageListLabelProvider;
 import diploma.productline.DaoUtil;
-import diploma.productline.HibernateUtil;
 import diploma.productline.dao.ElementDAO;
 import diploma.productline.dao.ModuleDAO;
 import diploma.productline.dao.VariabilityDAO;
@@ -210,7 +210,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	private void saveVariabilityInput(){
 		Variability v = new Variability();
 		v.setName(tName.getText());
-		v.setId(tName.getText());
+		//v.setId(tName.getText());
 		v.setModule(((VariabilitySetTreeContainer)parent).getParent());
 		
 		try(Connection con = DaoUtil.connect(properties)){
@@ -228,7 +228,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	private void saveElementInput(){
 		Element e = new Element();
 		e.setName(tName.getText());
-		e.setId(tName.getText());
+		//e.setId(tName.getText());
 		e.setDescription(tDescition.getText());
 		e.setModule(((ElementSetTreeContainer)parent).getParent());
 		

@@ -1,4 +1,4 @@
-package productline.plugin.ui;
+package productline.plugin.ui.providers;
 
 import java.util.Set;
 

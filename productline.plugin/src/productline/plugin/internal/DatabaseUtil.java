@@ -1,4 +1,4 @@
-package productline.plugin.internal;
+/*package productline.plugin.internal;
 
 import java.util.Properties;
 
@@ -19,3 +19,4 @@ public class DatabaseUtil {
 		return hibernateProp;
 	}
 }
+*/

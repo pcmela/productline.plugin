@@ -40,6 +40,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -47,6 +48,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormEditor;
@@ -59,10 +62,12 @@ import productline.plugin.internal.ElementSetTreeContainer;
 import productline.plugin.internal.VariabilitySetTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
 import productline.plugin.ui.CreateNewCustomLineDialog;
-import productline.plugin.ui.PackageListContentProvider;
 import productline.plugin.ui.PackageListDialog;
-import productline.plugin.ui.ProductLineTreeContentProvider;
-import productline.plugin.ui.ProductLineTreeLabelProvider;
+import productline.plugin.ui.providers.PackageListContentProvider;
+import productline.plugin.ui.providers.ProductLineTreeContentProvider;
+import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
+import productline.plugin.view.BrowseProductLineView;
+import productline.plugin.view.WhereUsedView;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.PackageDAO;
 import diploma.productline.entity.BaseProductLineEntity;
@@ -102,6 +107,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 		createRightSection(sashForm, toolkit);
 
 		createSearchBar(managedForm);
+		getSite().setSelectionProvider(treeViewer);
 
 	}
 
@@ -181,9 +187,14 @@ public class OverviewPage extends OverViewPagePOJO implements
 
 		final RemoveAction actionRemove = new RemoveAction();
 		actionRemove.setText("Remove");
-
 		final AddAction actionAdd = new AddAction();
 		actionAdd.setText("Add");
+
+		final ViewChildAction viewChilrenAction = new ViewChildAction();
+		viewChilrenAction.setText("View children");
+		
+		final WhereUsedAction whereUsedAction = new WhereUsedAction();
+		whereUsedAction.setText("Where used");
 
 		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction();
 		createCustomLine.setText("New Custom Line");
@@ -202,6 +213,10 @@ public class OverviewPage extends OverViewPagePOJO implements
 					if (o instanceof ProductLine) {
 						mgr.add(actionAdd);
 						mgr.add(createCustomLine);
+						mgr.add(viewChilrenAction);
+					}
+					if(o instanceof Module){
+						mgr.add(whereUsedAction);
 					}
 					if (o instanceof VariabilitySetTreeContainer
 							|| o instanceof ElementSetTreeContainer) {
@@ -227,6 +242,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 					System.out.println("Module Created");
 					productLine = loadData(false);
 					treeViewer.setInput(new Object[] { productLine });
+					treeViewer.expandAll();
 				}
 			}
 		};
@@ -419,22 +435,22 @@ public class OverviewPage extends OverViewPagePOJO implements
 
 		addDataBindingModule(module);
 		tModuleName.addModifyListener(modifyListener);
-		tModuleDescription.addModifyListener(modifyListener);		
+		tModuleDescription.addModifyListener(modifyListener);
 		bModuleIsVariable.addListener(SWT.Selection, new Listener() {
-			
+
 			@Override
 			public void handleEvent(Event event) {
-				if(!isDirty){
+				if (!isDirty) {
 					isDirty = true;
 					firePropertyChange(IEditorPart.PROP_DIRTY);
 					editor.editorDirtyStateChanged();
 				}
 			}
 		});
-		
+
 		rightComposite.layout();
 	}
-	
+
 	private void createDetailVariability(Variability variability,
 			ModifyListener modifyListener) {
 		disposeActiveElements(rightComposite.getChildren());
@@ -561,6 +577,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 			public void run() {
 				productLine = loadData(true);
 				treeViewer.setInput(new Object[] { productLine });
+				treeViewer.expandAll();
 			}
 		});
 
@@ -638,13 +655,23 @@ public class OverviewPage extends OverViewPagePOJO implements
 			if (input instanceof Object[]) {
 				if (((Object[]) input)[0] instanceof ProductLine) {
 					productLine = (ProductLine) ((Object[]) input)[0];
+
+					for (Module m : productLine.getModules()) {
+						System.out.println(m);
+						for (Variability v : m.getVariabilities()) {
+							System.out.println(v);
+						}
+						for (Element e : m.getElements()) {
+							System.out.println(e);
+						}
+					}
 				}
 			} else {
 				productLine = (ProductLine) input;
 			}
-
 			CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(
-					new Shell(), productLine, "", OverviewPage.this.project);
+					new Shell(), productLine, "", OverviewPage.this.project,
+					properties);
 			dialog.open();
 		}
 
@@ -679,8 +706,53 @@ public class OverviewPage extends OverViewPagePOJO implements
 						treeViewer.setInput(new Object[] { loadData(false) });
 					}
 				}
+				treeViewer.expandAll();
 			} else {
+				MessageDialog.openError(new Shell(), "Error",
+						"Object doen't type of BaseProductLineEntity");
+			}
+		}
+	}
 
+	class ViewChildAction extends Action {
+		@Override
+		public void runWithEvent(Event event) {
+			try {
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+						.getActivePage()
+						.showView("productline.plugin.browseView");
+			} catch (PartInitException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	class WhereUsedAction extends Action {
+		@Override
+		public void runWithEvent(Event event) {
+			try {
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+						.getActivePage()
+						.showView("productline.plugin.viewWhereUsed");
+				final IViewPart p = PlatformUI.getWorkbench()
+						.getActiveWorkbenchWindow().getActivePage()
+						.findView("productline.plugin.viewWhereUsed");
+				if (p instanceof WhereUsedView) {
+					Display.getDefault().asyncExec(new Runnable() {
+
+						@Override
+						public void run() {
+							((WhereUsedView) p)
+									.refresh(((IStructuredSelection) treeViewer
+											.getSelection()).getFirstElement());
+						}
+					});
+				}
+				System.out.println(p);
+			} catch (PartInitException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}

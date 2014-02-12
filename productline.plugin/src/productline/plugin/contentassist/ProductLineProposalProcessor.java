@@ -273,7 +273,12 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 		try (Connection con = DaoUtil.connect(properties)) {
 			IPackageDeclaration pkg = getPackage();
 			ModuleDAO mDao = new ModuleDAO();
-			return mDao.getModuleByProductLine(con, properties.getProperty("productline_id"));
+			try{
+				return mDao.getModuleByProductLine(con, Integer.parseInt(properties.getProperty("productline_id")));
+			}catch (NumberFormatException e){
+				e.printStackTrace();
+				return new HashSet<>();
+			}
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

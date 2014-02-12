@@ -11,11 +11,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.ExpandBar;
 import org.eclipse.swt.widgets.ExpandItem;
-import org.hibernate.Session;
 
-import productline.plugin.ui.ProductLineTreeContentProvider;
-import productline.plugin.ui.ProductLineTreeLabelProvider;
-import diploma.productline.HibernateUtil;
+import productline.plugin.ui.providers.ProductLineTreeContentProvider;
+import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import diploma.productline.configuration.YamlExtractor;
 import diploma.productline.entity.ProductLine;
 
@@ -126,20 +124,13 @@ private TreeViewer viewer;
 	}
 	
 	protected ProductLine loadData(final boolean initial) {
-		ProductLine productLine;
+		ProductLine productLine = null;
 
 		try {
 			
 
 			String id = "ProductLine1";
-			if (id != null && !id.equals("")) {
-				Session session = HibernateUtil.getSessionFactory()
-						.getCurrentSession();
-				session.beginTransaction();
-				productLine = (ProductLine) session.get(
-						ProductLine.class, id);
-				session.getTransaction().commit();
-				
+			if (id != null && !id.equals("")) {				
 
 				if (initial == false) {
 					if (productLine == null) {

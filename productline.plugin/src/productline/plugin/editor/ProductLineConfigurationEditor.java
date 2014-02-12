@@ -5,11 +5,8 @@ import java.io.FileFilter;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.ValidationStatusProvider;
 import org.eclipse.core.databinding.observable.list.IObservableList;
-import org.eclipse.core.databinding.observable.map.IObservableMap;
-import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.observable.value.WritableValue;
 import org.eclipse.core.internal.databinding.BindingStatus;
 import org.eclipse.core.resources.IFile;
@@ -32,7 +29,6 @@ import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.part.FileEditorInput;
 
 import diploma.productline.DaoUtil;
-import diploma.productline.HibernateUtil;
 import diploma.productline.dao.ElementDAO;
 import diploma.productline.dao.ModuleDAO;
 import diploma.productline.dao.ProductLineDAO;
@@ -77,7 +73,6 @@ public class ProductLineConfigurationEditor extends FormEditor {
 	};
 
 	private void cleanUpDatasourceAndFiles() {
-		HibernateUtil.removeSessionFactory();
 		String path = project.getLocation().toString();
 		File projectDirectory = new File(path);
 		File[] filesToBeDeleted = projectDirectory.listFiles(new FileFilter() {

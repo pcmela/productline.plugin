@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 import productline.plugin.editor.IPackageListViewer;
+import productline.plugin.ui.providers.PackageListContentProvider;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.PackageDAO;
 import diploma.productline.entity.Module;

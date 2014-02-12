@@ -3,6 +3,9 @@ package productline.plugin.ui.wizard;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Connection;
@@ -55,10 +58,27 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		try {
 
 			String p = workspaceLocation.toString();
+
+			String pathToYaml = page2.gettFilePath().getText();
+			ProductLine plInsert = YamlExtractor.extract(pathToYaml);
+			if (!resolveNameImportFromYaml(plInsert, page1
+					.gettProductLineName().getText())) {
+				String[] names = new String[] { plInsert.getName(),
+						page1.gettProductLineName().getText() };
+				MessageDialog dialog = new MessageDialog(new Shell(),
+						"Conflict in name", null,
+						"Please choose which name you want to persist.",
+						MessageDialog.INFORMATION, names, 0);
+				int result = dialog.open();
+				plInsert.setName(names[result]);
+			}
+			System.out.println("Test");
 			IFile file = project.getFile("/"
 					+ ConfigurationKeys.NAME_OF_CONFIG_FILE);
-			file.create(new ByteArrayInputStream(createConfigurationContent()
-					.getBytes()), IResource.NONE, null);
+			file.create(
+					new ByteArrayInputStream(createConfigurationContent(
+							plInsert.getName()).getBytes()), IResource.NONE,
+					null);
 
 			Properties properties = new Properties();
 			properties.load(file.getContents());
@@ -71,10 +91,10 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 					if (page2.getbImportFromYAML().getSelection()) {
 						File f = new File(page2.gettFilePath().getText());
 						if (f.exists()) {
-							String pathToYaml = page2.gettFilePath().getText();
-							ProductLine plInsert = YamlExtractor
-									.extract(pathToYaml);
-							plDao.createAll(plInsert, con);
+							int plId = plDao.createAll(plInsert, con);
+							properties.setProperty(ConfigurationKeys.PRODUCTLINE_ID_KEY, String.valueOf(plId));
+							InputStream in = new ByteArrayInputStream(getPropertyAsString(properties).getBytes());
+							file.setContents(in, true, false, null);
 						} else {
 							MessageDialog.openError(new Shell(),
 									"ProductLine cannot be save", "File "
@@ -102,6 +122,14 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		return true;
 	}
 
+	private boolean resolveNameImportFromYaml(ProductLine yamlResult,
+			String name) {
+		if (yamlResult.getName().equals(name)) {
+			return true;
+		}
+		return false;
+	}
+
 	private File loadDdlScript() {
 		URL url;
 		try {
@@ -119,7 +147,7 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		return null;
 	}
 
-	private String createConfigurationContent() {
+	private String createConfigurationContent(String productLineName) {
 		StringBuilder result = new StringBuilder();
 		result.append(ConfigurationKeys.CONNECTION_URL_KEY)
 				.append(ConfigurationKeys.EQUAL)
@@ -136,7 +164,7 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 				.append(ConfigurationKeys.NEW_LINE)
 				.append(ConfigurationKeys.PRODUCTLINE_ID_KEY)
 				.append(ConfigurationKeys.EQUAL)
-				.append(page1.gettProductLineName().getText())
+				.append(productLineName)
 				.append(ConfigurationKeys.NEW_LINE)
 				// sync properties
 				.append(ConfigurationKeys.SYNC_URL_KEY)
@@ -154,6 +182,12 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 		return result.toString();
 	}
+	
+	private String getPropertyAsString(Properties prop) throws IOException {    
+		  StringWriter writer = new StringWriter();
+		  prop.store(writer, null);
+		  return writer.getBuffer().toString();
+		}
 
 	@Override
 	public IWizardPage getNextPage(IWizardPage page) {

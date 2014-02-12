@@ -15,12 +15,9 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.part.FileEditorInput;
-import org.hibernate.Session;
 
 import productline.plugin.internal.ConfigurationKeys;
-import productline.plugin.internal.DatabaseUtil;
 import diploma.productline.DaoUtil;
-import diploma.productline.HibernateUtil;
 import diploma.productline.dao.ProductLineDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.ProductLine;
@@ -33,7 +30,7 @@ public class ProductLineFormPage extends FormPage {
 	protected Properties properties;
 	protected boolean isDirty;
 	protected DataBindingContext dataBindingContext;
-	
+
 	public ProductLineFormPage(FormEditor editor, String id, String title) {
 		super(editor, id, title);
 		IEditorInput e = editor.getEditorInput();
@@ -62,52 +59,52 @@ public class ProductLineFormPage extends FormPage {
 
 	protected void disposeActiveElements(Control[] active) {
 		for (Control c : active) {
-			if(!c.isDisposed()){
+			if (!c.isDisposed()) {
 				c.dispose();
 			}
 		}
 		dataBindingContext.dispose();
 
 	}
-	
+
 	protected ProductLine loadData(final boolean initial) {
 		ProductLine productLine;
-		
-		try (Connection con = DaoUtil.connect(properties);){
 
-			Properties hibernateProp = DatabaseUtil.getHibernateProperties(properties);
+		try (Connection con = DaoUtil.connect(properties);) {
 
-			/*if (HibernateUtil.getSessionFactory() == null || initial) {
-				HibernateUtil.initSessionFactory(hibernateProp);
-			}*/
-			String id = properties
+			/*
+			 * if (HibernateUtil.getSessionFactory() == null || initial) {
+			 * HibernateUtil.initSessionFactory(hibernateProp); }
+			 */
+			String stringId = properties
 					.getProperty(ConfigurationKeys.PRODUCTLINE_ID_KEY);
-			if (id != null && !id.equals("")) {
-				/*Session session = HibernateUtil.getSessionFactory()
-						.getCurrentSession();
-				session.beginTransaction();
-				productLine = (ProductLine) session.get(
-						ProductLine.class, id);
-				session.getTransaction().commit();*/
-				ProductLineDAO plDao = new ProductLineDAO();
-				productLine = plDao.getProductLineWithChilds(id,con);
-				
-
-				if (initial == false) {
-					if (productLine == null) {
-						MessageDialog.openInformation(
-								this.getSite().getShell(),
-								"Product Line does not exist!",
-								"You must create product line with id: " + id);
-					}
-				}
-				
-				return productLine;
-			} else {
+			int id;
+			try {
+				id = Integer.parseInt(stringId);
+			} catch (NumberFormatException e) {
 				MessageDialog.openError(this.getSite().getShell(),
 						"Synchronization error",
-						"You must set the product line ID!");
+						"Product line id have not correct format! Id must be number. Actual id is: "
+								+ stringId);
+				e.printStackTrace();
+				return null;
 			}
+
+			ProductLineDAO plDao = new ProductLineDAO();
+			productLine = plDao.getProductLineWithChilds(id, con);
+			if(productLine != null){
+				productLine.setDatabaseProperties(properties);
+			}
+
+			if (initial == false) {
+				if (productLine == null) {
+					MessageDialog.openInformation(this.getSite().getShell(),
+							"Product Line does not exist!",
+							"You must create product line with id: " + id);
+				}
+			}
+
+			return productLine;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -121,20 +118,20 @@ public class ProductLineFormPage extends FormPage {
 		return null;
 
 	}
-	
-	protected void resetCurrentSelectedObject(){
+
+	protected void resetCurrentSelectedObject() {
 		currentSelectedObject = null;
 	}
-	
-	public Properties getProperties(){
-		if(properties == null){
+
+	public Properties getProperties() {
+		if (properties == null) {
 			return propertiesFactory(false);
 		}
-		
+
 		return properties;
 	}
-	
-	private Properties propertiesFactory(boolean changed){
+
+	private Properties propertiesFactory(boolean changed) {
 		Properties properties = new Properties();
 		try {
 			properties.load(source.getContents());
@@ -148,7 +145,7 @@ public class ProductLineFormPage extends FormPage {
 		return properties;
 	}
 
-	public void setDirty(boolean isDirty){
+	public void setDirty(boolean isDirty) {
 		this.isDirty = isDirty;
 	}
 }

@@ -30,6 +30,8 @@ public abstract class CreateWizardOverviewPOJO extends CreateWizardPageBase{
 	protected Label lProductLineDescription;
 	protected Text tProductLineDescription;
 	
+	protected Button bCreateDb;
+	protected Button bExistingDb;
 	protected Label lNewDbUserName;
 	protected Text tNewDbUserName;
 	protected Label lNewDbPassword;
@@ -196,6 +198,23 @@ public abstract class CreateWizardOverviewPOJO extends CreateWizardPageBase{
 		this.tExistingId = tExistingId;
 	}
 
+	public Button getbCreateDb() {
+		return bCreateDb;
+	}
+
+	public void setbCreateDb(Button bCreateOrExistingDb) {
+		this.bCreateDb = bCreateOrExistingDb;
+	}
+
+	public Button getbExistingDb() {
+		return bExistingDb;
+	}
+
+	public void setbExistingDb(Button bExistingDb) {
+		this.bExistingDb = bExistingDb;
+	}
+	
+	
 	
 
 }

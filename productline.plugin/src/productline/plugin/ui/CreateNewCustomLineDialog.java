@@ -21,6 +21,8 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -47,6 +49,8 @@ import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
+import org.eclipse.swt.widgets.Text;
+
 public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 	private ProductLine productLine;
@@ -54,6 +58,9 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	private IProject project;
 	private CheckboxTreeViewer checkboxTreeViewer;
 	private Properties properties;
+	private Text tNewName;
+	private String newName = "";
+	private Button okButton;
 
 	/**
 	 * Create the dialog.
@@ -82,77 +89,33 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		container.setLayout(new GridLayout(2, false));
 		container.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-		Label lblNewLabel = new Label(container, SWT.NONE);
-		lblNewLabel.setText("Product Line: " + this.productLine.getName());
+		Label lblParentNameStatic = new Label(container, SWT.NONE);
+		lblParentNameStatic.setText("Product Line:");
 
-		Button b = new Button(container, SWT.NONE);
-		b.setText("Call get Elements");
-		b.addListener(SWT.Selection, new Listener() {
+		Label lblParentName = new Label(container, SWT.NONE);
+		lblParentName.setText(this.productLine.getName());
 
+		Label lblNewName = new Label(container, SWT.NONE);
+		lblNewName.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false,
+				false, 1, 1));
+		lblNewName.setText("New name:");
+
+		tNewName = new Text(container, SWT.BORDER);
+		tNewName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		tNewName.addModifyListener(new ModifyListener() {
+			
 			@Override
-			public void handleEvent(Event event) {
-				ProductLine productLine = SerializationUtils
-						.clone((ProductLine) checkboxTreeViewer.getInput());
-				productLine.setParent((ProductLine) checkboxTreeViewer
-						.getInput());
-				productLine.getModules().clear();
-
-				Set<Module> modules = new HashSet<>();
-				Object[] elements = checkboxTreeViewer.getCheckedElements();
-
-				for (Object o : elements) {
-					if (o instanceof Module) {
-						Module m = (Module) o;
-						m.getVariabilities().clear();
-						m.getElements().clear();
-						modules.add(m);
-					}
+			public void modifyText(ModifyEvent e) {
+				newName = tNewName.getText();
+				if(tNewName.getText().trim().equals("")){
+					okButton.setEnabled(false);
+				}else{
+					okButton.setEnabled(true);
 				}
-
-				for (Object o : elements) {
-					if (o instanceof Variability) {
-						Variability v = (Variability) o;
-						for (Module m : modules) {
-							if (m.equals(v.getModule())) {
-								m.getVariabilities().add(v);
-								break;
-							}
-						}
-					} else if (o instanceof Element) {
-						Element e = (Element) o;
-						for (Module m : modules) {
-							if (m.equals(e.getModule())) {
-								m.getElements().add(e);
-								break;
-							}
-						}
-					}
-				}
-
-				productLine.getModules().addAll(modules);
-
-				productLine = ProductLineUtils.refreshRelations(productLine);
-				CreateCustomeLine custom = new CreateCustomeLine(productLine,
-						project, "C:\\Users\\IBM_ADMIN\\Desktop\\customeLine");
-				try {
-					custom.create();
-					ProductLineDAO pDao = new ProductLineDAO();
-					try (Connection con = DaoUtil.connect(properties)) {
-						pDao.createAll(productLine, con);
-					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-				} catch (JavaModelException | IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
+		new Label(container, SWT.NONE);
 		new Label(container, SWT.NONE);
 
 		checkboxTreeViewer = new CheckboxTreeViewer(container, SWT.BORDER);
@@ -277,8 +240,9 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	 */
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
+		okButton = createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
 				true);
+		okButton.setEnabled(false);
 		createButton(parent, IDialogConstants.CANCEL_ID,
 				IDialogConstants.CANCEL_LABEL, false);
 	}
@@ -288,12 +252,79 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	 */
 	@Override
 	protected Point getInitialSize() {
-		return new Point(450, 300);
+		return new Point(400, 600);
 	}
 
 	@Override
 	protected boolean isResizable() {
 		return true;
+	}
+
+	@Override
+	protected void okPressed() {		
+		ProductLine productLine = SerializationUtils
+				.clone((ProductLine) checkboxTreeViewer.getInput());
+		productLine.setName(newName);
+		productLine.setParent((ProductLine) checkboxTreeViewer.getInput());
+		productLine.getModules().clear();
+
+		Set<Module> modules = new HashSet<>();
+		Object[] elements = checkboxTreeViewer.getCheckedElements();
+
+		for (Object o : elements) {
+			if (o instanceof Module) {
+				Module m = (Module) o;
+				m.getVariabilities().clear();
+				m.getElements().clear();
+				modules.add(m);
+			}
+		}
+
+		for (Object o : elements) {
+			if (o instanceof Variability) {
+				Variability v = (Variability) o;
+				for (Module m : modules) {
+					if (m.equals(v.getModule())) {
+						m.getVariabilities().add(v);
+						break;
+					}
+				}
+			} else if (o instanceof Element) {
+				Element e = (Element) o;
+				for (Module m : modules) {
+					if (m.equals(e.getModule())) {
+						m.getElements().add(e);
+						break;
+					}
+				}
+			}
+		}
+
+		productLine.getModules().addAll(modules);
+
+		productLine = ProductLineUtils.refreshRelations(productLine);
+		CreateCustomeLine custom = new CreateCustomeLine(productLine, project,
+				"C:\\Users\\IBM_ADMIN\\Desktop\\customeLine");
+		try {
+			custom.create();
+			ProductLineDAO pDao = new ProductLineDAO();
+			try (Connection con = DaoUtil.connect(properties)) {
+				pDao.createAll(productLine, con);
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				super.okPressed();
+			}
+
+		} catch (JavaModelException | IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 	}
 
 }

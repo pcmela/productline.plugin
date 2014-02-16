@@ -2,6 +2,7 @@ package productline.plugin.ui.wizard;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -30,6 +31,7 @@ import org.eclipse.ui.IWorkbenchWizard;
 import org.eclipse.ui.PlatformUI;
 
 import productline.plugin.internal.ConfigurationKeys;
+import productline.plugin.internal.DefaultMessageDialog;
 import diploma.productline.DaoUtil;
 import diploma.productline.configuration.YamlExtractor;
 import diploma.productline.dao.ProductLineDAO;
@@ -56,7 +58,7 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 			dispose();
 			return;
 		}
-		
+
 		page1 = new CreateWizardOverview("Create database");
 		page1.setProjectLoacation(project.getLocation());
 		addPage(page1);
@@ -67,74 +69,158 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 	@Override
 	public boolean performFinish() {
 
+		int existingId;
+		String username;
+		String password;
+		String connectionString;
+		String productLineName;
+		String productLineDescription;
+		IFile configurationFile;
+
+		ProductLineDAO pDao = new ProductLineDAO();
 		try {
+			if (page1.getbCreateDb().getSelection()) {
+				username = page1.gettNewDbUserName().getText();
+				password = page1.gettNewDbPassword().getText();
+				productLineName = page1.gettProductLineName().getText();
+				productLineDescription = page1.gettProductLineDescription()
+						.getText();
+				connectionString = "jdbc:h2:"
+						+ project.getLocation().toString() + "/database";
 
-			String p = workspaceLocation.toString();
+				try (Connection con = DaoUtil.connect(username, password,
+						connectionString)) {
+					ProductLineDAO
+							.createDatabaseStructure(loadDdlScript(), con);
+					if (page2.getbImportData().getSelection()) {
+						// TODO import Data
 
-			String pathToYaml = page2.gettFilePath().getText();
-			ProductLine plInsert = YamlExtractor.extract(pathToYaml);
-			if (!resolveNameImportFromYaml(plInsert, page1
-					.gettProductLineName().getText())) {
-				String[] names = new String[] { plInsert.getName(),
-						page1.gettProductLineName().getText() };
-				MessageDialog dialog = new MessageDialog(new Shell(),
-						"Conflict in name", null,
-						"Please choose which name you want to persist.",
-						MessageDialog.INFORMATION, names, 0);
-				int result = dialog.open();
-				plInsert.setName(names[result]);
-			}
-			System.out.println("Test");
-			IFile file = project.getFile("/"
-					+ ConfigurationKeys.NAME_OF_CONFIG_FILE);
-			file.create(
-					new ByteArrayInputStream(createConfigurationContent(
-							plInsert.getName()).getBytes()), IResource.NONE,
-					null);
-
-			Properties properties = new Properties();
-			properties.load(file.getContents());
-			ProductLineDAO plDao = new ProductLineDAO();
-			try (Connection con = DaoUtil.connect(properties)) {
-				ProductLineDAO.createDatabaseStructure(properties,
-						loadDdlScript(), con);
-
-				if (page2.getbImportData().getSelection()) {
-					if (page2.getbImportFromYAML().getSelection()) {
-						File f = new File(page2.gettFilePath().getText());
-						if (f.exists()) {
-							int plId = plDao.createAll(plInsert, con);
-							properties.setProperty(
-									ConfigurationKeys.PRODUCTLINE_ID_KEY,
-									String.valueOf(plId));
-							InputStream in = new ByteArrayInputStream(
-									getPropertyAsString(properties).getBytes());
-							file.setContents(in, true, false, null);
+						if (page2.getbImportFromYAML().getSelection()) {
+							existingId = saveDataFromYaml(productLineName,
+									page2.gettFilePath().getText(), con, pDao);
 						} else {
-							MessageDialog.openError(new Shell(),
-									"ProductLine cannot be save", "File "
-											+ page2.gettFilePath().getText()
-											+ " does not exists.");
+							existingId = saveDataFromDB(pDao, username, password, connectionString);
 						}
+						configurationFile = createIFile(existingId, username,
+								password, connectionString);
+					} else {
+						existingId = createNewProductLine(productLineName,
+								productLineDescription, con, pDao);
+						configurationFile = createIFile(existingId, username,
+								password, connectionString);
 					}
+
+				}
+
+			} else {
+				username = page1.gettExistingDbUserName().getText();
+				password = page1.gettExistingDbPassword().getText();
+				connectionString = page1.gettExistingDbPath().getText();
+				if (page1.getbUseExistingProductLine().getSelection()) {
+					existingId = Integer.parseInt(page1.gettExistingId()
+							.getText());
+				}
+				existingId = Integer.parseInt(page1.gettExistingId().getText());
+
+				try (Connection con = DaoUtil.connect(username, password,
+						connectionString)) {
+					configurationFile = createIFile(existingId, username,
+							password, connectionString);
 				}
 			}
-
+		} catch (ClassNotFoundException e) {
+			DefaultMessageDialog.driversNotFoundDialog("H2");
+			e.printStackTrace();
+			return false;
+		} catch (SQLException e) {
+			DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
+			e.printStackTrace();
+			return false;
+		} catch (FileNotFoundException e) {
+			DefaultMessageDialog.ioException(e.getMessage());
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			DefaultMessageDialog.ioException(e.getMessage());
+			e.printStackTrace();
+			return false;
 		} catch (CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		}
+		
+		return true;
+	}
+
+	private IFile createIFile(int productLineId, String username,
+			String password, String connectionString) throws CoreException {
+		IFile file = project.getFile("/"
+				+ ConfigurationKeys.NAME_OF_CONFIG_FILE);
+		String configContent = createConfigurationContent(
+				String.valueOf(productLineId), username, password,
+				connectionString);
+		file.create(new ByteArrayInputStream(configContent.getBytes()),
+				IResource.NONE, null);
+		return file;
+	}
+
+	private int createNewProductLine(String productLineName,
+			String productLineDescription, Connection con, ProductLineDAO pDao)
+			throws ClassNotFoundException, SQLException {
+		ProductLine p = new ProductLine();
+		p.setName(productLineName);
+		p.setDescription(productLineDescription);
+		return pDao.save(p, con);
+	}
+
+	private int saveDataFromYaml(String productLineName, String path,
+			Connection con, ProductLineDAO pDao) throws ClassNotFoundException,
+			SQLException {
+		File yamlFile = new File(path);
+		if (yamlFile.exists()) {
+			if (yamlFile.isFile()) {
+				ProductLine p = YamlExtractor.extract(path);
+				if (!resolveNameImportFromYaml(p, productLineName)) {
+					String[] names = new String[] { p.getName(),
+							page1.gettProductLineName().getText() };
+					MessageDialog dialog = new MessageDialog(new Shell(),
+							"Conflict in name", null,
+							"Please choose which name you want to persist.",
+							MessageDialog.INFORMATION, names, 0);
+					int result = dialog.open();
+					p.setName(names[result]);
+				}
+				if (p != null) {
+					return pDao.createAll(p, con);
+				} else {
+					DefaultMessageDialog.yamlIsEmptyException(path);
+				}
+			} else {
+				DefaultMessageDialog.yamlIsNotFileException(path);
+			}
+		} else {
+			DefaultMessageDialog.fileNotFoundException(path);
 		}
 
-		return true;
+		return 0;
+	}
+
+	private int saveDataFromDB(ProductLineDAO pDao, String username, String password, String connectionString)
+			throws ClassNotFoundException, SQLException {
+		String sourceUsername = page2.gettWebUserName().getText();
+		String sourcePassword = page2.gettWebPassword().getText();
+		String sourceConnectionString = page2.gettWebUrl().getText();
+		int existingId = Integer.parseInt(page2.gettExistingId().getText());
+
+		ProductLine p;
+		try (Connection con = DaoUtil.connect(sourceUsername, sourcePassword,
+				sourceConnectionString)) {
+			p = pDao.getProductLineWithChilds(existingId, con);
+		}
+		p.setParent(null);
+		try(Connection con = DaoUtil.connect(username, password, connectionString)){
+			return pDao.createAll(p, con);
+		}
 	}
 
 	private boolean resolveNameImportFromYaml(ProductLine yamlResult,
@@ -162,20 +248,20 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		return null;
 	}
 
-	private String createConfigurationContent(String productLineName) {
+	private String createConfigurationContent(String productLineName,
+			String username, String password, String connectionString) {
 		StringBuilder result = new StringBuilder();
 		result.append(ConfigurationKeys.CONNECTION_URL_KEY)
 				.append(ConfigurationKeys.EQUAL)
-				.append("jdbc:h2:" + project.getLocation().toString()
-						+ "/database")
+				.append(connectionString)
 				.append(ConfigurationKeys.NEW_LINE)
 				.append(ConfigurationKeys.USERNAME_KEY)
 				.append(ConfigurationKeys.EQUAL)
-				.append(page1.gettNewDbUserName().getText())
+				.append(username)
 				.append(ConfigurationKeys.NEW_LINE)
 				.append(ConfigurationKeys.PASSWORD_KEY)
 				.append(ConfigurationKeys.EQUAL)
-				.append(page1.gettNewDbPassword().getText())
+				.append(password)
 				.append(ConfigurationKeys.NEW_LINE)
 				.append(ConfigurationKeys.PRODUCTLINE_ID_KEY)
 				.append(ConfigurationKeys.EQUAL)

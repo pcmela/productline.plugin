@@ -68,9 +68,9 @@ public class ProductLineFormPage extends FormPage {
 	}
 
 	protected ProductLine loadData(final boolean initial) {
-		ProductLine productLine;
+		ProductLine productLine = null;
 
-		try (Connection con = DaoUtil.connect(properties);) {
+		try (Connection con = DaoUtil.connect(properties)) {
 
 			/*
 			 * if (HibernateUtil.getSessionFactory() == null || initial) {

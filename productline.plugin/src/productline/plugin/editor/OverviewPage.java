@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.action.Action;
@@ -670,8 +671,9 @@ public class OverviewPage extends OverViewPagePOJO implements
 			} else {
 				productLine = (ProductLine) input;
 			}
+			ProductLine newCustomeLine = SerializationUtils.clone(productLine);
 			CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(
-					new Shell(), productLine, "", OverviewPage.this.project,
+					new Shell(), newCustomeLine, "", OverviewPage.this.project,
 					properties);
 			dialog.open();
 		}

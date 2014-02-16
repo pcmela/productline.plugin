@@ -19,6 +19,7 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.part.ViewPart;
 
+import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import diploma.productline.DaoUtil;
@@ -43,16 +44,16 @@ public class BrowseProductLineView extends ViewPart {
 			IStructuredSelection ss = (IStructuredSelection) sel;
 			Object o = ss.getFirstElement();
 			if (o instanceof ProductLine) {
-				if (parentProductLine == null) {
-					parentProductLine = (ProductLine) o;
-					ProductLine[] p = getProductLineChildren((ProductLine) o);
-					treeViewer.setInput(p);
-				} else if (parentProductLine.getId() != ((ProductLine) o)
-						.getId()) {
-					parentProductLine = (ProductLine) o;
-					ProductLine[] p = getProductLineChildren((ProductLine) o);
-					treeViewer.setInput(p);
-				}
+				// if (parentProductLine == null) {
+				parentProductLine = (ProductLine) o;
+				ProductLine[] p = getProductLineChildren((ProductLine) o);
+				treeViewer.setInput(p);
+				/*
+				 * } else if (parentProductLine.getId() != ((ProductLine) o)
+				 * .getId()) { parentProductLine = (ProductLine) o;
+				 * ProductLine[] p = getProductLineChildren((ProductLine) o);
+				 * treeViewer.setInput(p); }
+				 */
 			}
 		}
 	};
@@ -85,10 +86,10 @@ public class BrowseProductLineView extends ViewPart {
 				.getDatabaseProperties())) {
 			return plDao.getProductLineByParent(productLine.getId(), con);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			DefaultMessageDialog.driversNotFoundDialog("H2");
 			e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
 			e.printStackTrace();
 		}
 		return new ProductLine[0];

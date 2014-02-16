@@ -93,10 +93,10 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		tProductLineDescription = new Text(container, SWT.SINGLE | SWT.BORDER);
 
 		// New DB section
-		Button button = new Button(container, SWT.RADIO);
-		button.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_NEWDB);
-		button.setText("Create new DB");
-		button.addListener(SWT.Selection, listener);
+		bCreateDb = new Button(container, SWT.RADIO);
+		bCreateDb.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_NEWDB);
+		bCreateDb.setText("Create new DB");
+		bCreateDb.addListener(SWT.Selection, listener);
 
 		lDefaultPath = new Label(container, SWT.NONE);
 		lDefaultPath.setText("Default path:");
@@ -158,7 +158,7 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		FormData buttonData = new FormData();
 		buttonData.top = new FormAttachment(tProductLineDescription, 15);
 		buttonData.left = new FormAttachment(0, 5);
-		button.setLayoutData(buttonData);
+		bCreateDb.setLayoutData(buttonData);
 
 		FormData dataUserName = new FormData();
 		dataUserName.top = new FormAttachment(tNewDbUserName, 5, SWT.CENTER);
@@ -166,7 +166,7 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		lNewDbUserName.setLayoutData(dataUserName);
 
 		FormData dataUserNameNewText = new FormData();
-		dataUserNameNewText.top = new FormAttachment(button, 5);
+		dataUserNameNewText.top = new FormAttachment(bCreateDb, 5);
 		dataUserNameNewText.left = new FormAttachment(lNewDbPasswordConfirm, 5);
 		dataUserNameNewText.right = new FormAttachment(100, -5);
 		tNewDbUserName.setLayoutData(dataUserNameNewText);
@@ -197,14 +197,14 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		tNewDbPasswordConfirm.setLayoutData(dataPasswordConfirmNewText);
 
 		// Existing DB section
-		Button button2 = new Button(container, SWT.RADIO);
-		button2.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_EXISTINGDB);
+		bExistingDb = new Button(container, SWT.RADIO);
+		bExistingDb.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_EXISTINGDB);
 		FormData button2Data = new FormData();
 		button2Data.top = new FormAttachment(tNewDbPasswordConfirm, 5);
 		button2Data.left = new FormAttachment(0, 5);
-		button2.setLayoutData(button2Data);
-		button2.setText("Use existing DB");
-		button2.addListener(SWT.Selection, listener);
+		bExistingDb.setLayoutData(button2Data);
+		bExistingDb.setText("Use existing DB");
+		bExistingDb.addListener(SWT.Selection, listener);
 
 		lExistingDbUserName = new Label(container, SWT.NONE);
 		lExistingDbUserName.setText("Username:");
@@ -275,7 +275,7 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		lExistingDbUserName.setLayoutData(dataUserNameExistingLabel);
 
 		FormData dataUserNameExistingText = new FormData();
-		dataUserNameExistingText.top = new FormAttachment(button2, 5);
+		dataUserNameExistingText.top = new FormAttachment(bExistingDb, 5);
 		dataUserNameExistingText.left = new FormAttachment(
 				lNewDbPasswordConfirm, 5);
 		dataUserNameExistingText.right = new FormAttachment(100, -5);
@@ -350,7 +350,7 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		 * bExistingDbPath.setLayoutData(dataPathExistingButton);
 		 */
 
-		button.setSelection(true);
+		bCreateDb.setSelection(true);
 		setEnableToExistingDbSection(false);
 		setEnableToNewDbSection(true);
 		createNewDB = true;

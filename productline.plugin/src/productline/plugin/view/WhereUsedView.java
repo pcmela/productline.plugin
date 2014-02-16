@@ -55,9 +55,29 @@ public class WhereUsedView extends ViewPart {
 				e.printStackTrace();
 			}
 		}else if(obj instanceof Variability){
-			
+			Variability v = (Variability)obj;
+			try(Connection con = DaoUtil.connect(v.getModule().getProductLine().getDatabaseProperties())){
+				Set<WhereUsedRecord> records = wDao.getVariabilities(v.getModule().getProductLine(), v, con);
+				listViewer.setInput(records);
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}else if(obj instanceof Element){
-			
+			Element el = (Element)obj;
+			try(Connection con = DaoUtil.connect(el.getModule().getProductLine().getDatabaseProperties())){
+				Set<WhereUsedRecord> records = wDao.getElements(el.getModule().getProductLine(), el, con);
+				listViewer.setInput(records);
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 

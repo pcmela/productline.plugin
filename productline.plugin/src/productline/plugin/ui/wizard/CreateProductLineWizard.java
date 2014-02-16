@@ -27,6 +27,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
+import org.eclipse.ui.PlatformUI;
 
 import productline.plugin.internal.ConfigurationKeys;
 import diploma.productline.DaoUtil;
@@ -45,6 +46,17 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 	@Override
 	public void addPages() {
+		if (checkIfConfigExist(project)) {
+			MessageDialog
+					.openError(
+							PlatformUI.getWorkbench()
+									.getActiveWorkbenchWindow().getShell(),
+							"Config already exist",
+							"Configuration file for product line already exist in your project. If you want to create new file, delete the old first.");
+			dispose();
+			return;
+		}
+		
 		page1 = new CreateWizardOverview("Create database");
 		page1.setProjectLoacation(project.getLocation());
 		addPage(page1);
@@ -92,8 +104,11 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 						File f = new File(page2.gettFilePath().getText());
 						if (f.exists()) {
 							int plId = plDao.createAll(plInsert, con);
-							properties.setProperty(ConfigurationKeys.PRODUCTLINE_ID_KEY, String.valueOf(plId));
-							InputStream in = new ByteArrayInputStream(getPropertyAsString(properties).getBytes());
+							properties.setProperty(
+									ConfigurationKeys.PRODUCTLINE_ID_KEY,
+									String.valueOf(plId));
+							InputStream in = new ByteArrayInputStream(
+									getPropertyAsString(properties).getBytes());
 							file.setContents(in, true, false, null);
 						} else {
 							MessageDialog.openError(new Shell(),
@@ -182,12 +197,12 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 		return result.toString();
 	}
-	
-	private String getPropertyAsString(Properties prop) throws IOException {    
-		  StringWriter writer = new StringWriter();
-		  prop.store(writer, null);
-		  return writer.getBuffer().toString();
-		}
+
+	private String getPropertyAsString(Properties prop) throws IOException {
+		StringWriter writer = new StringWriter();
+		prop.store(writer, null);
+		return writer.getBuffer().toString();
+	}
 
 	@Override
 	public IWizardPage getNextPage(IWizardPage page) {
@@ -221,17 +236,14 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 		workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()
 				.getLocation();
-		/*
-		 * else if(element instanceof IPackageFragment){ project =
-		 * ((IPackageFragment
-		 * )selection.getFirstElement()).getJavaProject().getProject(); }else
-		 * if(element instanceof IPackageFragmentRoot){ project =
-		 * ((IPackageFragmentRoot
-		 * )selection.getFirstElement()).getJavaProject().getProject(); }else
-		 * if(element instanceof ICompilationUnit){ project =
-		 * ((ICompilationUnit)element).getJavaProject().getProject(); }
-		 */
-
 	}
 
+	private boolean checkIfConfigExist(IProject project) {
+		IFile file = project.getFile("/"
+				+ ConfigurationKeys.NAME_OF_CONFIG_FILE);
+		if (file.exists()) {
+			return true;
+		}
+		return false;
+	}
 }

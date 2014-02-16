@@ -3,6 +3,8 @@ package productline.plugin.ui.wizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -80,7 +82,6 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		bImportData.setLayoutData(importData);
 		bImportData.setText("Import data");
 		
-		//New DB section
 		bImportFromDB = new Button(container, SWT.RADIO);
 		bImportFromDB.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_IMPORT_FROM_WEB);
 		FormData buttonData = new FormData();
@@ -102,6 +103,23 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		lWebUrl.setText("Connection string:");		
 		tWebUrl = new Text(container, SWT.BORDER);
 		
+		lExistingId = new Label(container, SWT.NONE);
+		lExistingId.setText("Existing Id:");
+		tExistingId = new Text(container, SWT.SINGLE | SWT.BORDER);
+		tExistingId.setEnabled(false); 
+		
+		bExistingProductLines = new Button(container, SWT.PUSH);
+		bExistingProductLines.setText("Get Id");
+		bExistingProductLines.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				openExistingProductLinesDialog(tWebUserName.getText(),
+						tWebPassword.getText(),
+						tWebUrl.getText(),
+						tExistingId);
+			}
+		});
+		
 		
 		FormData dataUserName = new FormData();
 		dataUserName.top = new FormAttachment(tWebUserName, 5, SWT.CENTER);
@@ -114,6 +132,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		dataUserNameNewText.right = new FormAttachment(100, -5);
 		tWebUserName.setLayoutData(dataUserNameNewText);
 		
+		//Password
 		FormData dataPasswordNewLabel = new FormData();
 		dataPasswordNewLabel.top = new FormAttachment(tWebPassword, 5, SWT.CENTER);
 		dataPasswordNewLabel.left = new FormAttachment(0, 30);
@@ -125,6 +144,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		dataPasswordNewText.right = new FormAttachment(100, -5);
 		tWebPassword.setLayoutData(dataPasswordNewText);
 		
+		//Connection String
 		FormData dataUrlLabel = new FormData();
 		dataUrlLabel.top = new FormAttachment(tWebUrl, 5, SWT.CENTER);
 		dataUrlLabel.left = new FormAttachment(0, 30);
@@ -136,12 +156,30 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		dataUrlText.right = new FormAttachment(100, -5);
 		tWebUrl.setLayoutData(dataUrlText);
 		
+		//Existing Id
+		FormData dataExistingIdLabel = new FormData();
+		dataExistingIdLabel.top = new FormAttachment(tExistingId, 5, SWT.CENTER);
+		dataExistingIdLabel.left = new FormAttachment(0, 30);
+		lExistingId.setLayoutData(dataExistingIdLabel);
+		
+		FormData dataExistingIdText = new FormData();
+		dataExistingIdText.top = new FormAttachment(tWebUrl, 5);
+		dataExistingIdText.left = new FormAttachment(lWebUrl, 5);
+		dataExistingIdText.right = new FormAttachment(80);
+		tExistingId.setLayoutData(dataExistingIdText);
+		
+		FormData dataPathExistingIdButton = new FormData();
+		dataPathExistingIdButton.top = new FormAttachment(tExistingId, 5, SWT.CENTER);
+		dataPathExistingIdButton.left = new FormAttachment(tExistingId, 5);
+		dataPathExistingIdButton.right = new FormAttachment(100, -5);
+		bExistingProductLines.setLayoutData(dataPathExistingIdButton);
+		
 		
 		//Existing DB section
 		bImportFromYAML = new Button(container, SWT.RADIO);
 		bImportFromYAML.setData(BUTTON_DATA_KEY_ID, BUTTON_DATA_VALUE_IMPORT_FROM_FILE);
 		FormData button2Data = new FormData();
-		button2Data.top = new FormAttachment(tWebUrl, 5);
+		button2Data.top = new FormAttachment(tExistingId, 5);
 		button2Data.left = new FormAttachment(0, 5);
 		bImportFromYAML.setLayoutData(button2Data);
 		bImportFromYAML.setText("Import from YAML file:");
@@ -198,6 +236,7 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 		tWebUserName.setEnabled(enable);
 		tWebPassword.setEnabled(enable);
 		tWebUrl.setEnabled(enable);
+		bExistingProductLines.setEnabled(enable);
 	}
 
 	private void setEnableToFileSection(boolean enable) {
@@ -214,6 +253,8 @@ public class CreateWizardImportPage extends CreateWizardImportPagePOJO {
 			tWebUrl.setEnabled(enable);
 			tFilePath.setEnabled(enable);
 			bFilePath.setEnabled(enable);
+			tExistingId.setEnabled(enable);
+			bExistingProductLines.setEnabled(enable);
 			setDescription("Create new Productline configuration file with data from existing yaml config/database");
 			setPageComplete(true);
 		}else{

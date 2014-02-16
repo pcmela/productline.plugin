@@ -224,6 +224,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 					}
 					if (o instanceof Variability || o instanceof Element
 							|| o instanceof Module) {
+						mgr.add(whereUsedAction);
 						mgr.add(actionRemove);
 					}
 				}

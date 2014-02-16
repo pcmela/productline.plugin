@@ -6,7 +6,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-public abstract class CreateWizardImportPagePOJO extends WizardPage{
+public abstract class CreateWizardImportPagePOJO extends CreateWizardPageBase{
 
 	protected Composite container;
 	
@@ -28,7 +28,16 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 	protected Text tFilePath;
 	protected Button bFilePath;
 	
+	protected Label lExistingId;
+	protected Text tExistingId;
+	
+	protected Button bExistingProductLines;
+	
 	protected Button bImportData;
+	
+	protected CreateWizardImportPagePOJO(String pageName) {
+		super(pageName);
+	}
 	
 	protected void validateForm(){
 		if(bImportData.getSelection()){
@@ -61,10 +70,6 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 		
 		setPageComplete(true);
 		setDescription("Create new Productline configuration file with data from existing yaml config/database");
-	}
-	
-	protected CreateWizardImportPagePOJO(String pageName) {
-		super(pageName);
 	}
 
 	public Text gettWebUserName() {
@@ -121,6 +126,14 @@ public abstract class CreateWizardImportPagePOJO extends WizardPage{
 
 	public void setbImportData(Button bImportData) {
 		this.bImportData = bImportData;
+	}
+
+	public Text gettExistingId() {
+		return tExistingId;
+	}
+
+	public void settExistingId(Text tExistingId) {
+		this.tExistingId = tExistingId;
 	}
 	
 	

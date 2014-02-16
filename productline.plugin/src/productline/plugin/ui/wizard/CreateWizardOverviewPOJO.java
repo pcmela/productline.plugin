@@ -7,7 +7,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-public abstract class CreateWizardOverviewPOJO extends WizardPage{
+public abstract class CreateWizardOverviewPOJO extends CreateWizardPageBase{
 
 	protected CreateWizardOverviewPOJO(String pageName) {
 		super(pageName);
@@ -44,6 +44,11 @@ public abstract class CreateWizardOverviewPOJO extends WizardPage{
 	protected Label lExistingDbPath;
 	protected Text tExistingDbPath;
 	protected Button bExistingDbPath;
+	protected Label lUseExistingProductLine;
+	protected Button bUseExistingProductLine;
+	protected Label lExistingId;
+	protected Text tExistingId;
+	protected Button bExistingProductLines;
 	
 	protected boolean createNewDB = true;
 	
@@ -175,5 +180,22 @@ public abstract class CreateWizardOverviewPOJO extends WizardPage{
 		this.tProductLineDescription = tProductLineDescription;
 	}
 
+	public Button getbUseExistingProductLine() {
+		return bUseExistingProductLine;
+	}
+
+	public void setbUseExistingProductLine(Button bUseExistingProductLine) {
+		this.bUseExistingProductLine = bUseExistingProductLine;
+	}
+
+	public Text gettExistingId() {
+		return tExistingId;
+	}
+
+	public void settExistingId(Text tExistingId) {
+		this.tExistingId = tExistingId;
+	}
+
+	
 
 }

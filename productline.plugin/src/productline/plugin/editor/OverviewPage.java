@@ -60,6 +60,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 
 import productline.plugin.internal.ElementSetTreeContainer;
+import productline.plugin.internal.ProductLineTreeComparator;
 import productline.plugin.internal.VariabilitySetTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
 import productline.plugin.ui.CreateNewCustomLineDialog;
@@ -137,13 +138,18 @@ public class OverviewPage extends OverViewPagePOJO implements
 		treeViewer = new TreeViewer(tree);
 		treeViewer.setContentProvider(new ProductLineTreeContentProvider());
 		treeViewer.setLabelProvider(new ProductLineTreeLabelProvider());
+		treeViewer.setComparator(new ProductLineTreeComparator());
 
 		/*
 		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
 		 * productLine = YamlExtractor.extract(path);
 		 */
 		productLine = loadData(true);
-		treeViewer.setInput(new Object[] { productLine });
+		if (productLine != null) {
+			treeViewer.setInput(new Object[] { productLine });
+		} else {
+			treeViewer.setInput(new Object[] {});
+		}
 		treeViewer.expandAll();
 
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -193,7 +199,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 
 		final ViewChildAction viewChilrenAction = new ViewChildAction();
 		viewChilrenAction.setText("View children");
-		
+
 		final WhereUsedAction whereUsedAction = new WhereUsedAction();
 		whereUsedAction.setText("Where used");
 
@@ -216,7 +222,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 						mgr.add(createCustomLine);
 						mgr.add(viewChilrenAction);
 					}
-					if(o instanceof Module){
+					if (o instanceof Module) {
 						mgr.add(whereUsedAction);
 					}
 					if (o instanceof VariabilitySetTreeContainer
@@ -243,7 +249,11 @@ public class OverviewPage extends OverViewPagePOJO implements
 				if (dialog.open() == Window.OK) {
 					System.out.println("Module Created");
 					productLine = loadData(false);
-					treeViewer.setInput(new Object[] { productLine });
+					if(productLine != null){
+						treeViewer.setInput(new Object[] { productLine });
+					}else{
+						treeViewer.setInput(new Object[]{});
+					}
 					treeViewer.expandAll();
 				}
 			}
@@ -560,6 +570,26 @@ public class OverviewPage extends OverViewPagePOJO implements
 		detailPackageDependenciesModuleSection
 				.setClient(detailPackageDependenciesModuleComposite);
 	}
+	
+	private void createResourcesSection() {
+		detailPackageDependenciesModuleSection = toolkit.createSection(
+				rightComposite, ExpandableComposite.TITLE_BAR);
+		detailPackageDependenciesModuleSection.marginHeight = 1;
+		GridData gd_detailListSection = new GridData(SWT.FILL, SWT.FILL, true,
+				true);
+		gd_detailListSection.widthHint = 100;
+		gd_detailListSection.minimumWidth = 100;
+		detailPackageDependenciesModuleSection
+				.setLayoutData(gd_detailListSection);
+		detailPackageDependenciesModuleSection.setText("Package dependencies");
+		toolkit.paintBordersFor(detailPackageDependenciesModuleSection);
+
+		detailPackageDependenciesModuleComposite = toolkit.createComposite(
+				detailPackageDependenciesModuleSection, SWT.NONE);
+		detailPackageDependenciesModuleComposite.setLayout(new FormLayout());
+		detailPackageDependenciesModuleSection
+				.setClient(detailPackageDependenciesModuleComposite);
+	}
 
 	private void createSearchBar(IManagedForm managedForm) {
 		searchControl = new SearchControl("Filter", managedForm);
@@ -578,7 +608,11 @@ public class OverviewPage extends OverViewPagePOJO implements
 						.getImage(ISharedImages.IMG_ELCL_SYNCED))) {
 			public void run() {
 				productLine = loadData(true);
-				treeViewer.setInput(new Object[] { productLine });
+				if(productLine != null){
+					treeViewer.setInput(new Object[] { productLine });
+				}else{
+					treeViewer.setInput(new Object[]{});
+				}
 				treeViewer.expandAll();
 			}
 		});
@@ -621,6 +655,15 @@ public class OverviewPage extends OverViewPagePOJO implements
 		// treeLabelProvider.setMatcher(matcher);
 		treeViewer.refresh();
 		treeViewer.expandAll();
+	}
+	
+	public void refreshTree(){
+		ProductLine p = loadData(true);
+		if(p != null){
+			treeViewer.setInput(new Object[] {p});
+		}else{
+			treeViewer.setInput(new Object[] {});
+		}
 	}
 
 	class RemoveAction extends Action {
@@ -692,21 +735,36 @@ public class OverviewPage extends OverViewPagePOJO implements
 							entity, Module.class, project, properties);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
-						treeViewer.setInput(new Object[] { loadData(false) });
+						productLine = loadData(false);
+						if(productLine != null){
+							treeViewer.setInput(new Object[] {productLine});
+						}else{
+							treeViewer.setInput(new Object[] {});
+						}
 					}
 				} else if (entity instanceof VariabilitySetTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
 							entity, Variability.class, project, properties);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
-						treeViewer.setInput(new Object[] { loadData(false) });
+						productLine = loadData(false);
+						if(productLine != null){
+							treeViewer.setInput(new Object[] {productLine});
+						}else{
+							treeViewer.setInput(new Object[] {});
+						}
 					}
 				} else if (entity instanceof ElementSetTreeContainer) {
 					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
 							entity, Element.class, project, properties);
 					dialog.create();
 					if (dialog.open() == Window.OK) {
-						treeViewer.setInput(new Object[] { loadData(false) });
+						productLine = loadData(false);
+						if(productLine != null){
+							treeViewer.setInput(new Object[] {productLine});
+						}else{
+							treeViewer.setInput(new Object[] {});
+						}
 					}
 				}
 				treeViewer.expandAll();

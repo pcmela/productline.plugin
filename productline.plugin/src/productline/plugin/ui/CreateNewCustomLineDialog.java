@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.TreeItem;
 
 import productline.plugin.ProductLineUtils;
 import productline.plugin.internal.CreateCustomeLine;
+import productline.plugin.internal.ProductLineTreeComparator;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import diploma.productline.DaoUtil;
@@ -145,6 +146,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		checkboxTreeViewer
 				.setContentProvider(new ProductLineTreeContentProvider());
 		checkboxTreeViewer.setLabelProvider(new ProductLineTreeLabelProvider());
+		checkboxTreeViewer.setComparator(new ProductLineTreeComparator());
 		checkboxTreeViewer.setInput(this.productLine);
 		checkboxTreeViewer.expandAll();
 		final Tree tree = checkboxTreeViewer.getTree();

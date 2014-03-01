@@ -78,7 +78,7 @@
             autoinsert="true"
             contextTypeId="java"
             description="block of code for Variability"
-            id="productline.plugin.template1"
+            id="productline.plugin.template.variabilityJava"
             name="variability">
          <pattern>
             /**
@@ -94,7 +94,7 @@
             autoinsert="true"
             contextTypeId="java"
             description="block of code for Module"
-            id="productline.plugin.template2"
+            id="productline.plugin.template.moduleJava"
             name="module">
          <pattern>
             /**
@@ -104,6 +104,65 @@
 /**
  * @endModule
  */
+         </pattern>
+      </template>
+      <template
+            autoinsert="true"
+            contextTypeId="xml_tag"
+            description="block of code for Variability"
+            id="productline.plugin.template.variabilityXmlStart"
+            name="variability_start">
+         <pattern>
+            &lt;!-- @variability ${name} --&gt;
+         </pattern>
+      </template>
+      <template
+            autoinsert="true"
+            contextTypeId="xml_tag"
+            id="productline.plugin.template.variabilityXmlEnd"
+            name="variability_end">
+         <pattern>
+            &lt;!-- @endvariability --&gt;
+         </pattern>
+      </template>
+      <template
+            autoinsert="true"
+            contextTypeId="xml_tag"
+            id="productline.plugin.template.variabilityXmlBlock"
+            name="variability_block">
+         <pattern>
+            &lt;!-- @variability ${name} --&gt;
+
+&lt;!-- @endvariability --&gt;
+         </pattern>
+      </template>
+      <template
+            autoinsert="true"
+            contextTypeId="xml_tag"
+            id="productline.plugin.template.moduleXmlStart"
+            name="module_start">
+         <pattern>
+            &lt;!-- @module ${name} --&gt;
+         </pattern>
+      </template>
+      <template
+            autoinsert="true"
+            contextTypeId="xml_tag"
+            id="productline.plugin.template.moduleXmlEnd"
+            name="module_end">
+         <pattern>
+            &lt;!-- @endmodule --&gt;
+         </pattern>
+      </template>
+      <template
+            autoinsert="true"
+            contextTypeId="xml_tag"
+            id="productline.plugin.template.moduleXmlBlock"
+            name="module_block">
+         <pattern>
+            &lt;!-- @module ${name} --&gt;
+
+&lt;!-- @endmodule --&gt;
          </pattern>
       </template>
    </extension>

@@ -16,6 +16,7 @@ import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.part.FileEditorInput;
 
+import productline.plugin.internal.Configuration;
 import productline.plugin.internal.ConfigurationKeys;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.ProductLineDAO;
@@ -28,6 +29,8 @@ public class ProductLineFormPage extends FormPage {
 	protected FormEditor editor;
 	protected BaseProductLineEntity currentSelectedObject;
 	protected Properties properties;
+	protected Configuration localDbConfiguration;
+	
 	protected boolean isDirty;
 	protected DataBindingContext dataBindingContext;
 
@@ -130,11 +133,18 @@ public class ProductLineFormPage extends FormPage {
 
 		return properties;
 	}
+	
+	public void setProperties(Properties properties) {
+		this.properties = properties;
+		localDbConfiguration.setDataLocal(properties);
+	}
 
 	private Properties propertiesFactory(boolean changed) {
 		Properties properties = new Properties();
 		try {
 			properties.load(source.getContents());
+			localDbConfiguration = new Configuration();
+			localDbConfiguration.setDataLocal(properties);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -148,4 +158,10 @@ public class ProductLineFormPage extends FormPage {
 	public void setDirty(boolean isDirty) {
 		this.isDirty = isDirty;
 	}
+
+	public Configuration getLocalDbConfiguration() {
+		return localDbConfiguration;
+	}
+	
+	
 }

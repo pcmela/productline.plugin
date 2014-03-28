@@ -1,5 +1,6 @@
 package productline.plugin.editor;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -22,8 +23,11 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -32,6 +36,8 @@ import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
@@ -40,9 +46,11 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
@@ -59,7 +67,9 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 
+import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.internal.ElementSetTreeContainer;
+import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.ProductLineTreeComparator;
 import productline.plugin.internal.VariabilitySetTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
@@ -68,15 +78,17 @@ import productline.plugin.ui.PackageListDialog;
 import productline.plugin.ui.providers.PackageListContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
-import productline.plugin.view.BrowseProductLineView;
 import productline.plugin.view.WhereUsedView;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.PackageDAO;
+import diploma.productline.dao.ResourceDao;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
+import diploma.productline.entity.ElementType;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
+import diploma.productline.entity.Resource;
 import diploma.productline.entity.Variability;
 
 public class OverviewPage extends OverViewPagePOJO implements
@@ -172,6 +184,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 							firePropertyChange(IEditorPart.PROP_DIRTY);
 							editor.editorDirtyStateChanged();
 						}
+						treeViewer.refresh();
+						treeViewer.expandAll();
 					}
 				};
 
@@ -184,8 +198,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 				} else if (selection instanceof Variability) {
 					createDetailVariability((Variability) selection,
 							modifyListener);
-				} else if (selection instanceof Element) {
-					createDetailElement((Element) selection, modifyListener);
+				} else if (selection instanceof ElementTreeContainer) {
+					createDetailElement(((ElementTreeContainer) selection).getSource(), modifyListener);
 				} else {
 					return;
 				}
@@ -249,10 +263,10 @@ public class OverviewPage extends OverViewPagePOJO implements
 				if (dialog.open() == Window.OK) {
 					System.out.println("Module Created");
 					productLine = loadData(false);
-					if(productLine != null){
+					if (productLine != null) {
 						treeViewer.setInput(new Object[] { productLine });
-					}else{
-						treeViewer.setInput(new Object[]{});
+					} else {
+						treeViewer.setInput(new Object[] {});
 					}
 					treeViewer.expandAll();
 				}
@@ -360,8 +374,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 			}
 		});
 
-		bAddPackage = new Button(detailPackageDependenciesModuleComposite,
-				SWT.NONE);
+		bAddPackage = new Button(detailResourcesDetailComposite, SWT.NONE);
 		bAddPackage.setText("Add");
 		bAddPackage.addListener(SWT.Selection, new Listener() {
 
@@ -375,8 +388,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 			}
 		});
 
-		bRemovePackage = new Button(detailPackageDependenciesModuleComposite,
-				SWT.NONE);
+		bRemovePackage = new Button(detailResourcesDetailComposite, SWT.NONE);
 		bRemovePackage.setText("Remove");
 		bRemovePackage.addListener(SWT.Selection, new Listener() {
 
@@ -423,9 +435,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 		bdRemovePackage.right = new FormAttachment(0, 70);
 		bRemovePackage.setLayoutData(bdRemovePackage);
 
-		listViewerPackage = new ListViewer(
-				detailPackageDependenciesModuleComposite, SWT.BORDER
-						| SWT.V_SCROLL);
+		listViewerPackage = new ListViewer(detailResourcesDetailComposite,
+				SWT.BORDER | SWT.V_SCROLL);
 		List list = listViewerPackage.getList();
 		FormData dListViewerPackage = new FormData();
 		dListViewerPackage.top = new FormAttachment(0, 5);
@@ -468,6 +479,11 @@ public class OverviewPage extends OverViewPagePOJO implements
 		disposeActiveElements(rightComposite.getChildren());
 		createDetailSection();
 
+		resetCurrentSelectedObject();
+
+		// Set current selected object in HiearchyTree
+		currentSelectedObject = variability;
+
 		lVariabilityName = toolkit.createLabel(detailComposite, "Name",
 				SWT.NONE);
 		tVariabilityName = toolkit.createText(detailComposite,
@@ -498,11 +514,54 @@ public class OverviewPage extends OverViewPagePOJO implements
 
 	private void createDetailElement(Element element,
 			ModifyListener modifyListener) {
+
+		final Element elementObject = element;
+
 		disposeActiveElements(rightComposite.getChildren());
 		createDetailSection();
+		createResourcesSection();
+
+		resetCurrentSelectedObject();
+
+		// Set current selected object in HiearchyTree
+		currentSelectedObject = element;
 
 		lElementName = toolkit.createLabel(detailComposite, "Name", SWT.NONE);
 		tElementName = toolkit.createText(detailComposite, element.getName());
+
+		lElementType = toolkit.createLabel(detailComposite, "Type", SWT.NONE);
+		cElementType = new Combo(detailComposite, SWT.READ_ONLY);
+		cElementType.setItems(ElementType.toArray());
+		if (element.getType() != null) {
+			cElementType.setText(element.getType().getName());
+		}
+		cElementType.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (elementObject.getType() == null) {
+					if (!cElementType.getText().equals("")) {
+						Object o = ((StructuredSelection) OverviewPage.this.treeViewer
+								.getSelection()).getFirstElement();
+						updateElementTypeValue(o);
+					}
+				} else {
+					if (!elementObject.getType().getName()
+							.equals(cElementType.getText())) {
+						Object o = ((StructuredSelection) OverviewPage.this.treeViewer
+								.getSelection()).getFirstElement();
+						updateElementTypeValue(o);
+						
+					}
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 
 		lElementDescription = toolkit.createLabel(detailComposite,
 				"Description");
@@ -518,8 +577,161 @@ public class OverviewPage extends OverViewPagePOJO implements
 		tdDescription.horizontalSpan = 3;
 		tdDescription.heightHint = 75;
 
+		GridData cdType = new GridData(SWT.FILL, SWT.TOP, true, false);
+		cdType.horizontalSpan = 3;
+
 		tElementName.setLayoutData(tdName);
 		tElementDescription.setLayoutData(tdDescription);
+		cElementType.setLayoutData(cdType);
+
+		bAddPackage = new Button(detailResourcesDetailComposite, SWT.NONE);
+		bAddPackage.setText("Add");
+
+		bRemovePackage = new Button(detailResourcesDetailComposite, SWT.NONE);
+		bRemovePackage.setText("Remove");
+
+		FormData bdAddPackage = new FormData();
+		bdAddPackage.left = new FormAttachment(0, 5);
+		bdAddPackage.top = new FormAttachment(0, 5);
+		bdAddPackage.right = new FormAttachment(0, 70);
+		bAddPackage.setLayoutData(bdAddPackage);
+
+		FormData bdRemovePackage = new FormData();
+		bdRemovePackage.left = new FormAttachment(0, 5);
+		bdRemovePackage.top = new FormAttachment(bAddPackage, 5);
+		bdRemovePackage.right = new FormAttachment(0, 70);
+		bRemovePackage.setLayoutData(bdRemovePackage);
+
+		listViewerPackage = new ListViewer(detailResourcesDetailComposite,
+				SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		List list = listViewerPackage.getList();
+		FormData dListViewerPackage = new FormData();
+		dListViewerPackage.top = new FormAttachment(0, 5);
+		dListViewerPackage.left = new FormAttachment(bAddPackage, 5);
+		dListViewerPackage.right = new FormAttachment(100, -5);
+		dListViewerPackage.bottom = new FormAttachment(100, -5);
+		list.setLayoutData(dListViewerPackage);
+		listViewerPackage.setContentProvider(new PackageListContentProvider());
+		listViewerPackage.setLabelProvider(new LabelProvider() {
+			public Image getImage(Object element) {
+				return null;
+			}
+
+			public String getText(Object element) {
+				return ((Resource) element).getRelativePath();
+			}
+		});
+		listViewerPackage.setComparator(new ViewerComparator() {
+			@Override
+			public int compare(Viewer viewer, Object e1, Object e2) {
+				Resource t1 = (Resource) e1;
+				Resource t2 = (Resource) e2;
+				return t1.getRelativePath().compareTo(t2.getRelativePath());
+			};
+		});
+		listViewerPackage.setInput(element.getResources());
+
+		bAddPackage.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				FileDialog fileDialog = new FileDialog(detailComposite
+						.getShell(), SWT.MULTI);
+				String workspaceLoc = project.getWorkspace().getRoot()
+						.getLocation().toOSString();
+				String projectLoc = project.getFullPath().toOSString();
+				fileDialog.setFilterPath(workspaceLoc + projectLoc);
+
+				Set<String> existingFiles = new HashSet<>();
+
+				if (fileDialog.open() != null) {
+					try (Connection con = DaoUtil.connect(properties)) {
+						ResourceDao rDao = new ResourceDao();
+
+						String[] names = fileDialog.getFileNames();
+						Element element = (Element) currentSelectedObject;
+						Set<Resource> resources = element.getResources();
+
+						for (int i = 0, n = names.length; i < n; i++) {
+							StringBuffer buf = new StringBuffer(fileDialog
+									.getFilterPath());
+							if (buf.charAt(buf.length() - 1) != File.separatorChar)
+								buf.append(File.separatorChar);
+							buf.append(names[i]);
+							Resource r = new Resource();
+							r.setName(names[i]);
+							CharSequence projectLocation = workspaceLoc
+									+ projectLoc;
+							r.setRelativePath(buf.toString().replace(
+									projectLocation, ""));
+							r.setFullPath(buf.toString());
+							r.setElement(element);
+							if (resources == null) {
+								resources = new HashSet<Resource>();
+							}
+
+							if (!rDao.save(r, con)) {
+								existingFiles.add(r.getRelativePath());
+							} else {
+								resources.add(r);
+							}
+
+						}
+						if (existingFiles.size() > 0) {
+							StringBuffer message = new StringBuffer(
+									"This files are already added:\n");
+							for (String f : existingFiles) {
+								message.append(f).append("\n");
+							}
+							MessageDialog.openInformation(
+									detailComposite.getShell(),
+									"Existing files", message.toString());
+						}
+						listViewerPackage.setInput(element.getResources());
+					} catch (ClassNotFoundException e) {
+						DefaultMessageDialog.driversNotFoundDialog("H2");
+						e.printStackTrace();
+					} catch (SQLException e) {
+						DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
+						e.printStackTrace();
+					}
+				}
+
+			}
+		});
+
+		bRemovePackage.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				// MessageDialog.openConfirm(new Shell(), "Remove package", );
+				Resource r = (Resource) ((IStructuredSelection) listViewerPackage
+						.getSelection()).getFirstElement();
+				boolean ok = MessageDialog.openConfirm(
+						new Shell(),
+						"Remove package",
+						"Are you sure that you want to remove package "
+								+ r.getName() + "?");
+				if (ok) {
+					ResourceDao rDao = new ResourceDao();
+					try (Connection con = DaoUtil.connect(properties)) {
+						rDao.delete(r.getId(), con);
+						Set<Resource> resources = rDao
+								.getResourceWhithChildsByElement(
+										(Element) currentSelectedObject, con);
+						((Element) currentSelectedObject)
+								.setResources(resources);
+						listViewerPackage.setInput(resources);
+					} catch (ClassNotFoundException e) {
+						DefaultMessageDialog.driversNotFoundDialog("H2");
+						e.printStackTrace();
+					} catch (SQLException e) {
+						DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
+						e.printStackTrace();
+					}
+				}
+			}
+		});
 
 		addDataBindingElement(element);
 		tElementName.addModifyListener(modifyListener);
@@ -552,43 +764,39 @@ public class OverviewPage extends OverViewPagePOJO implements
 	}
 
 	private void createDependenciesPackageSection() {
-		detailPackageDependenciesModuleSection = toolkit.createSection(
-				rightComposite, ExpandableComposite.TITLE_BAR);
-		detailPackageDependenciesModuleSection.marginHeight = 1;
+		detailResourcesDetailSection = toolkit.createSection(rightComposite,
+				ExpandableComposite.TITLE_BAR);
+		detailResourcesDetailSection.marginHeight = 1;
 		GridData gd_detailListSection = new GridData(SWT.FILL, SWT.FILL, true,
 				true);
 		gd_detailListSection.widthHint = 100;
 		gd_detailListSection.minimumWidth = 100;
-		detailPackageDependenciesModuleSection
-				.setLayoutData(gd_detailListSection);
-		detailPackageDependenciesModuleSection.setText("Package dependencies");
-		toolkit.paintBordersFor(detailPackageDependenciesModuleSection);
+		detailResourcesDetailSection.setLayoutData(gd_detailListSection);
+		detailResourcesDetailSection.setText("Package dependencies");
+		toolkit.paintBordersFor(detailResourcesDetailSection);
 
-		detailPackageDependenciesModuleComposite = toolkit.createComposite(
-				detailPackageDependenciesModuleSection, SWT.NONE);
-		detailPackageDependenciesModuleComposite.setLayout(new FormLayout());
-		detailPackageDependenciesModuleSection
-				.setClient(detailPackageDependenciesModuleComposite);
+		detailResourcesDetailComposite = toolkit.createComposite(
+				detailResourcesDetailSection, SWT.NONE);
+		detailResourcesDetailComposite.setLayout(new FormLayout());
+		detailResourcesDetailSection.setClient(detailResourcesDetailComposite);
 	}
-	
+
 	private void createResourcesSection() {
-		detailPackageDependenciesModuleSection = toolkit.createSection(
-				rightComposite, ExpandableComposite.TITLE_BAR);
-		detailPackageDependenciesModuleSection.marginHeight = 1;
+		detailResourcesDetailSection = toolkit.createSection(rightComposite,
+				ExpandableComposite.TITLE_BAR);
+		detailResourcesDetailSection.marginHeight = 1;
 		GridData gd_detailListSection = new GridData(SWT.FILL, SWT.FILL, true,
 				true);
 		gd_detailListSection.widthHint = 100;
 		gd_detailListSection.minimumWidth = 100;
-		detailPackageDependenciesModuleSection
-				.setLayoutData(gd_detailListSection);
-		detailPackageDependenciesModuleSection.setText("Package dependencies");
-		toolkit.paintBordersFor(detailPackageDependenciesModuleSection);
+		detailResourcesDetailSection.setLayoutData(gd_detailListSection);
+		detailResourcesDetailSection.setText("Resources");
+		toolkit.paintBordersFor(detailResourcesDetailSection);
 
-		detailPackageDependenciesModuleComposite = toolkit.createComposite(
-				detailPackageDependenciesModuleSection, SWT.NONE);
-		detailPackageDependenciesModuleComposite.setLayout(new FormLayout());
-		detailPackageDependenciesModuleSection
-				.setClient(detailPackageDependenciesModuleComposite);
+		detailResourcesDetailComposite = toolkit.createComposite(
+				detailResourcesDetailSection, SWT.NONE);
+		detailResourcesDetailComposite.setLayout(new FormLayout());
+		detailResourcesDetailSection.setClient(detailResourcesDetailComposite);
 	}
 
 	private void createSearchBar(IManagedForm managedForm) {
@@ -608,10 +816,10 @@ public class OverviewPage extends OverViewPagePOJO implements
 						.getImage(ISharedImages.IMG_ELCL_SYNCED))) {
 			public void run() {
 				productLine = loadData(true);
-				if(productLine != null){
+				if (productLine != null) {
 					treeViewer.setInput(new Object[] { productLine });
-				}else{
-					treeViewer.setInput(new Object[]{});
+				} else {
+					treeViewer.setInput(new Object[] {});
 				}
 				treeViewer.expandAll();
 			}
@@ -639,6 +847,16 @@ public class OverviewPage extends OverViewPagePOJO implements
 			}
 		});
 	}
+	
+	private void updateElementTypeValue(Object o){
+		if (o instanceof Element) {
+			Element elem = (Element)o;
+			elem.setType(ElementType
+					.getType(cElementType.getText()));
+			elem.setDirty(true);
+			setDirtyState();
+		}
+	}
 
 	protected void setTreeFilter(ViewerFilter filter, boolean force) {
 		// currentFilter = filter;
@@ -656,12 +874,12 @@ public class OverviewPage extends OverViewPagePOJO implements
 		treeViewer.refresh();
 		treeViewer.expandAll();
 	}
-	
-	public void refreshTree(){
+
+	public void refreshTree() {
 		ProductLine p = loadData(true);
-		if(p != null){
-			treeViewer.setInput(new Object[] {p});
-		}else{
+		if (p != null) {
+			treeViewer.setInput(new Object[] { p });
+		} else {
 			treeViewer.setInput(new Object[] {});
 		}
 	}
@@ -723,6 +941,12 @@ public class OverviewPage extends OverViewPagePOJO implements
 
 	}
 
+	private void setDirtyState() {
+		isDirty = true;
+		firePropertyChange(IEditorPart.PROP_DIRTY);
+		editor.editorDirtyStateChanged();
+	}
+
 	class AddAction extends Action {
 		@Override
 		public void runWithEvent(Event event) {
@@ -736,9 +960,9 @@ public class OverviewPage extends OverViewPagePOJO implements
 					dialog.create();
 					if (dialog.open() == Window.OK) {
 						productLine = loadData(false);
-						if(productLine != null){
-							treeViewer.setInput(new Object[] {productLine});
-						}else{
+						if (productLine != null) {
+							treeViewer.setInput(new Object[] { productLine });
+						} else {
 							treeViewer.setInput(new Object[] {});
 						}
 					}
@@ -748,9 +972,9 @@ public class OverviewPage extends OverViewPagePOJO implements
 					dialog.create();
 					if (dialog.open() == Window.OK) {
 						productLine = loadData(false);
-						if(productLine != null){
-							treeViewer.setInput(new Object[] {productLine});
-						}else{
+						if (productLine != null) {
+							treeViewer.setInput(new Object[] { productLine });
+						} else {
 							treeViewer.setInput(new Object[] {});
 						}
 					}
@@ -760,9 +984,9 @@ public class OverviewPage extends OverViewPagePOJO implements
 					dialog.create();
 					if (dialog.open() == Window.OK) {
 						productLine = loadData(false);
-						if(productLine != null){
-							treeViewer.setInput(new Object[] {productLine});
-						}else{
+						if (productLine != null) {
+							treeViewer.setInput(new Object[] { productLine });
+						} else {
 							treeViewer.setInput(new Object[] {});
 						}
 					}

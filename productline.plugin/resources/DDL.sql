@@ -59,6 +59,19 @@ CREATE TABLE IF NOT EXISTS element
 ) 
 ;
 
+CREATE TABLE IF NOT EXISTS resource
+(
+	resource_id INTEGER NOT NULL AUTO_INCREMENT,
+	name VARCHAR(50) NOT NULL,
+	relative_path VARCHAR(255),
+	full_path VARCHAR(255),
+	element_id INTEGER NOT NULL,
+	PRIMARY KEY (resource_id),
+	FOREIGN KEY (element_id) 
+    		REFERENCES element(element_id)
+) 
+;
+
 
 CREATE TABLE IF NOT EXISTS type
 (
@@ -67,5 +80,12 @@ CREATE TABLE IF NOT EXISTS type
 	PRIMARY KEY (type_id)
 ) 
 ;
+
+INSERT INTO type VALUES (1, 'Resources');
+INSERT INTO type VALUES (2, 'Tests');
+INSERT INTO type VALUES (3, 'Analysis');
+INSERT INTO type VALUES (4, 'Documents');
+INSERT INTO type VALUES (5, 'Diagrams');
+INSERT INTO type VALUES (6, 'Others');
 
 

@@ -16,6 +16,7 @@ import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -68,12 +69,14 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 	protected Text tElementName;
 	protected Label lElementDescription;
 	protected Text tElementDescription;
+	protected Label lElementType;
+	protected Combo cElementType;
 
 	protected FormToolkit toolkit;
 	protected Composite detailComposite;
 	protected Section detailSection;
-	protected Section detailPackageDependenciesModuleSection;
-	protected Composite detailPackageDependenciesModuleComposite;
+	protected Section detailResourcesDetailSection;
+	protected Composite detailResourcesDetailComposite;
 	protected Composite rightComposite;
 	
 	private IValidator nameValidator = null;
@@ -98,6 +101,8 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 			};
 			return nameValidator;
 		}
+		
+		
 		
 		return nameValidator;
 	}
@@ -153,10 +158,12 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 		IObservableValue name = PojoProperties.value("name").observe(element);
 		IObservableValue description = PojoProperties.value("description")
 				.observe(element);
+		
 		IObservableValue targetName = WidgetProperties.text(SWT.Modify)
 				.observe(tElementName);
 		IObservableValue targetDescription = WidgetProperties.text(SWT.Modify)
 				.observe(tElementDescription);
+		IObservableValue targetType = WidgetProperties.selection().observe(cElementType);
 
 
 		Binding bindName = dataBindingContext.bindValue(targetName, name, strategy, null);

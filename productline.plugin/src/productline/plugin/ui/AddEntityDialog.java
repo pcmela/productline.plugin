@@ -8,13 +8,19 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -23,8 +29,10 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.internal.ide.actions.LTKLauncher;
 
 import productline.plugin.editor.IPackageListViewer;
+import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.internal.ElementSetTreeContainer;
 import productline.plugin.internal.VariabilitySetTreeContainer;
 import productline.plugin.ui.providers.PackageListContentProvider;
@@ -35,9 +43,11 @@ import diploma.productline.dao.ModuleDAO;
 import diploma.productline.dao.VariabilityDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
+import diploma.productline.entity.ElementType;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
+import diploma.productline.entity.Type;
 import diploma.productline.entity.Variability;
 
 public class AddEntityDialog extends TitleAreaDialog implements
@@ -48,7 +58,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 
 	private BaseProductLineEntity parent;
 
-	private Class className;
+	protected Class className;
 
 	//General Section
 	private Label lName;
@@ -63,6 +73,10 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	private List list;
 	private ListViewer listViewer;
 	private Properties properties;
+	
+	//Element Section
+	private Label lElementType;
+	private Combo cElementType;
 	
 
 	private IProject project;
@@ -97,10 +111,13 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		super.create();
 		setTitle(title);
 		setMessage(message, IMessageProvider.INFORMATION);
+		getButton(IDialogConstants.OK_ID).setEnabled(false);
+		validateForm();
 	}
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
+		super.createDialogArea(parent);
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -108,6 +125,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		container.setLayout(layout);
 
+		
 		/*
 		 * createFirstName(container); createLastName(container);
 		 */
@@ -118,11 +136,35 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		}else if(className == Element.class){
 			createElementSection(container);
 		}
+	
 		return null;
 	}
 
 	private void createElementSection(Composite container) {
 		createGeneralSection(container);
+		
+		lElementType = new Label(container, SWT.NONE);
+		lElementType.setText("Type:");
+
+		GridData dataName = new GridData();
+		dataName.grabExcessHorizontalSpace = true;
+		dataName.horizontalAlignment = GridData.FILL;
+
+		cElementType = new Combo(container, SWT.READ_ONLY);
+		cElementType.setItems(ElementType.toArray());
+		cElementType.setLayoutData(dataName);
+		cElementType.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				validateForm();				
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				validateForm();				
+			}
+		});
 	}
 
 	private void createVariabilitySection(Composite container) {
@@ -181,6 +223,13 @@ public class AddEntityDialog extends TitleAreaDialog implements
 
 		tName = new Text(container, SWT.BORDER);
 		tName.setLayoutData(dataName);
+		tName.addModifyListener(new ModifyListener() {
+			
+			@Override
+			public void modifyText(ModifyEvent e) {
+				validateForm();
+			}
+		});
 
 		lDescription = new Label(container, SWT.NONE);
 		lDescription.setText("Description:");
@@ -190,6 +239,30 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		dataDescription.horizontalAlignment = GridData.FILL;
 		tDescition = new Text(container, SWT.BORDER);
 		tDescition.setLayoutData(dataDescription);
+	}
+	
+	private void validateForm(){
+		StringBuilder message = new StringBuilder();
+		boolean valid = true;
+		
+		if(tName.getText().equals("")){
+			valid = false;
+			message.append("You must enter valid name for new item!");
+		}
+		
+		if(AddEntityDialog.this.className == Element.class){
+			if(cElementType.getText().equals("")){
+				valid = false;
+				if(!message.toString().equals("")) message.append("\n"); 
+				message.append("You must select type of Element!");
+			}
+		}
+		if(!valid){
+			AddEntityDialog.this.setMessage(message.toString(), IMessageProvider.ERROR);
+		}else{
+			AddEntityDialog.this.setMessage("");
+		}
+		getButton(IDialogConstants.OK_ID).setEnabled(valid);
 	}
 
 	@Override
@@ -218,9 +291,11 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			vDao.save(v, con);
 		} catch (ClassNotFoundException err) {
 			// TODO Auto-generated catch block
+			DefaultMessageDialog.driversNotFoundDialog("H2");
 			err.printStackTrace();
 		} catch (SQLException err) {
 			// TODO Auto-generated catch block
+			DefaultMessageDialog.sqlExceptionDialog(err.getMessage());
 			err.printStackTrace();
 		}
 	}
@@ -228,9 +303,15 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	private void saveElementInput(){
 		Element e = new Element();
 		e.setName(tName.getText());
-		//e.setId(tName.getText());
 		e.setDescription(tDescition.getText());
 		e.setModule(((ElementSetTreeContainer)parent).getParent());
+		
+		String typeValue = cElementType.getText();
+		ElementType et = ElementType.get(typeValue);
+		Type t = new Type();
+		t.setId(et.getId());
+		t.setName(et.toString());
+		e.setType(t);
 		
 		try(Connection con = DaoUtil.connect(properties)){
 			ElementDAO eDao = new ElementDAO();

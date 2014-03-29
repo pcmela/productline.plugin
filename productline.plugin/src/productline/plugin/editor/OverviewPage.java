@@ -67,6 +67,11 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 
+import productline.plugin.actions.AddAction;
+import productline.plugin.actions.CreateCustomLineAction;
+import productline.plugin.actions.RemoveAction;
+import productline.plugin.actions.ViewChildAction;
+import productline.plugin.actions.WhereUsedAction;
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.internal.ElementSetTreeContainer;
 import productline.plugin.internal.ElementTreeContainer;
@@ -214,18 +219,18 @@ public class OverviewPage extends OverViewPagePOJO implements
 			}
 		});
 
-		final RemoveAction actionRemove = new RemoveAction();
+		final RemoveAction actionRemove = new RemoveAction(treeViewer);
 		actionRemove.setText("Remove");
-		final AddAction actionAdd = new AddAction();
+		final AddAction actionAdd = new AddAction(treeViewer, project, properties, this);
 		actionAdd.setText("Add");
 
 		final ViewChildAction viewChilrenAction = new ViewChildAction();
 		viewChilrenAction.setText("View children");
 
-		final WhereUsedAction whereUsedAction = new WhereUsedAction();
+		final WhereUsedAction whereUsedAction = new WhereUsedAction(treeViewer);
 		whereUsedAction.setText("Where used");
 
-		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction();
+		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction(treeViewer, properties, project);
 		createCustomLine.setText("New Custom Line");
 
 		final MenuManager mgr = new MenuManager();
@@ -896,180 +901,9 @@ public class OverviewPage extends OverViewPagePOJO implements
 		}
 	}
 
-	class RemoveAction extends Action {
-		@Override
-		public void runWithEvent(Event event) {
-
-			if (((TreeSelection) treeViewer.getSelection()).getFirstElement() instanceof BaseProductLineEntity) {
-				BaseProductLineEntity entity = (BaseProductLineEntity) ((TreeSelection) treeViewer
-						.getSelection()).getFirstElement();
-
-				boolean result = MessageDialog.openConfirm(new Shell(),
-						"Confirm", "Are you sure that you want to remove "
-								+ entity.getClass().getName() + " with name \""
-								+ entity.toString() + "\"?");
-
-				if (result) {
-					System.out.println("OK");
-				} else {
-					System.out.println("FAILED");
-				}
-			} else {
-
-			}
-		}
-	}
-
-	class CreateCustomLineAction extends Action {
-
-		@Override
-		public void runWithEvent(Event event) {
-			super.runWithEvent(event);
-			Object input = treeViewer.getInput();
-			ProductLine productLine = null;
-			if (input instanceof Object[]) {
-				if (((Object[]) input)[0] instanceof ProductLine) {
-					productLine = (ProductLine) ((Object[]) input)[0];
-
-					for (Module m : productLine.getModules()) {
-						System.out.println(m);
-						for (Variability v : m.getVariabilities()) {
-							System.out.println(v);
-						}
-						for (Element e : m.getElements()) {
-							System.out.println(e);
-						}
-					}
-				}
-			} else {
-				productLine = (ProductLine) input;
-			}
-			ProductLine newCustomeLine = SerializationUtils.clone(productLine);
-			CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(
-					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), newCustomeLine, "", OverviewPage.this.project,
-					properties);
-			dialog.open();
-		}
-
-	}
-
 	private void setDirtyState() {
 		isDirty = true;
 		firePropertyChange(IEditorPart.PROP_DIRTY);
 		editor.editorDirtyStateChanged();
 	}
-
-	class AddAction extends Action {
-		@Override
-		public void runWithEvent(Event event) {
-			if (((TreeSelection) treeViewer.getSelection()).getFirstElement() instanceof BaseProductLineEntity) {
-				BaseProductLineEntity entity = (BaseProductLineEntity) ((TreeSelection) treeViewer
-						.getSelection()).getFirstElement();
-
-				if (entity instanceof ProductLine) {
-					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-							entity, Module.class, project, properties);
-					dialog.create();
-					if (dialog.open() == Window.OK) {
-						productLine = loadData(false);
-						if (productLine != null) {
-							treeViewer.setInput(new Object[] { productLine });
-						} else {
-							treeViewer.setInput(new Object[] {});
-						}
-					}
-				} else if (entity instanceof VariabilitySetTreeContainer) {
-					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-							entity, Variability.class, project, properties);
-					dialog.create();
-					if (dialog.open() == Window.OK) {
-						productLine = loadData(false);
-						if (productLine != null) {
-							treeViewer.setInput(new Object[] { productLine });
-						} else {
-							treeViewer.setInput(new Object[] {});
-						}
-					}
-				} else if (entity instanceof ElementSetTreeContainer) {
-					AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-							entity, Element.class, project, properties);
-					dialog.create();
-					if (dialog.open() == Window.OK) {
-						productLine = loadData(false);
-						if (productLine != null) {
-							treeViewer.setInput(new Object[] { productLine });
-						} else {
-							treeViewer.setInput(new Object[] {});
-						}
-					}
-				}
-				treeViewer.expandAll();
-			} else {
-				MessageDialog.openError(new Shell(), "Error",
-						"Object doen't type of BaseProductLineEntity");
-			}
-		}
-	}
-
-	class ViewChildAction extends Action {
-		@Override
-		public void runWithEvent(Event event) {
-			try {
-				PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-						.getActivePage()
-						.showView("productline.plugin.browseView");
-			} catch (PartInitException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-
-	class WhereUsedAction extends Action {
-		@Override
-		public void runWithEvent(Event event) {
-			try {
-				PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-						.getActivePage()
-						.showView("productline.plugin.viewWhereUsed");
-				final IViewPart p = PlatformUI.getWorkbench()
-						.getActiveWorkbenchWindow().getActivePage()
-						.findView("productline.plugin.viewWhereUsed");
-				if (p instanceof WhereUsedView) {
-					Display.getDefault().asyncExec(new Runnable() {
-
-						@Override
-						public void run() {
-							((WhereUsedView) p)
-									.refresh(((IStructuredSelection) treeViewer
-											.getSelection()).getFirstElement());
-						}
-					});
-				}
-				System.out.println(p);
-			} catch (PartInitException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-
-	@Override
-	public void setPackageListInput(Set<IPackageFragment> elements) {
-		if (currentSelectedObject instanceof Module) {
-			Module m = (Module) currentSelectedObject;
-			Set<PackageModule> packages = new HashSet<>();
-
-			for (IPackageFragment pkg : elements) {
-				PackageModule p = new PackageModule();
-				p.setModule(m);
-				p.setName(pkg.getElementName());
-				packages.add(p);
-			}
-			((Module) currentSelectedObject).getPackages().addAll(packages);
-		}
-		listViewerPackage.setInput(((Module) currentSelectedObject)
-				.getPackages());
-	}
-
 }

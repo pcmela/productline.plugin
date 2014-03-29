@@ -1,5 +1,8 @@
 package productline.plugin.editor;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.UpdateValueStrategy;
@@ -9,6 +12,7 @@ import org.eclipse.core.databinding.validation.IValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.databinding.fieldassist.ControlDecorationSupport;
 import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
@@ -26,6 +30,7 @@ import org.eclipse.ui.forms.widgets.Section;
 
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
+import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
@@ -190,6 +195,23 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 
 	public void setDataBindingContext(DataBindingContext dataBindingContext) {
 		this.dataBindingContext = dataBindingContext;
+	}
+	
+	public void setPackageListInput(Set<IPackageFragment> elements) {
+		if (currentSelectedObject instanceof Module) {
+			Module m = (Module) currentSelectedObject;
+			Set<PackageModule> packages = new HashSet<>();
+
+			for (IPackageFragment pkg : elements) {
+				PackageModule p = new PackageModule();
+				p.setModule(m);
+				p.setName(pkg.getElementName());
+				packages.add(p);
+			}
+			((Module) currentSelectedObject).getPackages().addAll(packages);
+		}
+		listViewerPackage.setInput(((Module) currentSelectedObject)
+				.getPackages());
 	}
 	
 	

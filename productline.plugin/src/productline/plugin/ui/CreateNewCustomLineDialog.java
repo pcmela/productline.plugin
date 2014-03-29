@@ -1,6 +1,7 @@
 package productline.plugin.ui;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -11,9 +12,16 @@ import java.util.Set;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
@@ -23,12 +31,15 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -39,6 +50,7 @@ import org.eclipse.swt.widgets.TreeItem;
 
 import productline.plugin.ProductLineUtils;
 import productline.plugin.internal.CreateCustomeLine;
+import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.internal.ProductLineTreeComparator;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
@@ -51,6 +63,11 @@ import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 
 public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
@@ -62,6 +79,8 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	private Text tNewName;
 	private String newName = "";
 	private Button okButton;
+	private Text tPath;
+	private Button bPath;
 
 	/**
 	 * Create the dialog.
@@ -87,7 +106,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
-		container.setLayout(new GridLayout(2, false));
+		container.setLayout(new GridLayout(3, false));
 		container.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		Label lblParentNameStatic = new Label(container, SWT.NONE);
@@ -95,29 +114,61 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 		Label lblParentName = new Label(container, SWT.NONE);
 		lblParentName.setText(this.productLine.getName());
+		GridData dParentName = new GridData();
+		dParentName.horizontalSpan = 2;
+		lblParentName.setLayoutData(dParentName);
 
 		Label lblNewName = new Label(container, SWT.NONE);
 		lblNewName.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false,
 				false, 1, 1));
-		lblNewName.setText("New name:");
+		lblNewName.setText("Name of custome line:");
 
 		tNewName = new Text(container, SWT.BORDER);
-		tNewName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		tNewName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
+				2, 1));
 		tNewName.addModifyListener(new ModifyListener() {
-			
+
 			@Override
 			public void modifyText(ModifyEvent e) {
-				newName = tNewName.getText();
-				if(tNewName.getText().trim().equals("")){
-					okButton.setEnabled(false);
-				}else{
-					okButton.setEnabled(true);
-				}
-				
+				validateForm();
 			}
 		});
 		new Label(container, SWT.NONE);
-		new Label(container, SWT.NONE);
+		tPath = new Text(container, SWT.BORDER);
+		tPath.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1,
+				1));
+		tPath.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(ModifyEvent e) {
+				validateForm();
+			}
+		});
+
+		bPath = new Button(container, SWT.PUSH);
+		bPath.setText("Browse");
+		bPath.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+
+				DirectoryDialog dirDialog = new DirectoryDialog(new Shell());
+				dirDialog.setText("Select directory for Custome Line");
+				String selectedDir = dirDialog.open();
+				tPath.setText(selectedDir);
+
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		GridData dSpace = new GridData();
+		dSpace.horizontalSpan = 3;
+		new Label(container, SWT.NONE).setLayoutData(dSpace);
 
 		checkboxTreeViewer = new CheckboxTreeViewer(container, SWT.BORDER);
 
@@ -235,6 +286,24 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		}
 	}
 
+	private void validateForm() {
+		newName = tNewName.getText();
+		boolean valid = false;
+		if (tNewName.getText().trim().equals("")) {
+			valid = false;
+		} else {
+			valid = true;
+		}
+
+		if (tPath.getText().trim().equals("")) {
+			valid = false;
+		} else {
+			valid = true;
+		}
+
+		okButton.setEnabled(valid);
+	}
+
 	/**
 	 * Create contents of the button bar.
 	 * 
@@ -242,8 +311,8 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	 */
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		okButton = createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
-				true);
+		okButton = createButton(parent, IDialogConstants.OK_ID,
+				IDialogConstants.OK_LABEL, true);
 		okButton.setEnabled(false);
 		createButton(parent, IDialogConstants.CANCEL_ID,
 				IDialogConstants.CANCEL_LABEL, false);
@@ -254,7 +323,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	 */
 	@Override
 	protected Point getInitialSize() {
-		return new Point(400, 600);
+		return new Point(500, 600);
 	}
 
 	@Override
@@ -263,70 +332,112 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 	}
 
 	@Override
-	protected void okPressed() {		
-		ProductLine productLine = SerializationUtils
+	protected void okPressed() {
+
+		try {
+			Set<String> existingNames = ProductLineDAO.getNamesOfChild(
+					DaoUtil.connect(properties), productLine.getId());
+			if (existingNames.contains(tNewName.getText())) {
+				MessageDialog.openError(new Shell(), "Duplicate name",
+						"Name \"" + tNewName.getText()
+								+ "\" of Custome Line already exist.");
+				return;
+			}
+		} catch (ClassNotFoundException e) {
+			DefaultMessageDialog.driversNotFoundDialog("H2");
+			e.printStackTrace();
+		} catch (SQLException e) {
+			DefaultMessageDialog.ioException(e.getMessage());
+			e.printStackTrace();
+		}
+
+		Job job = createCustomeLineJob();
+
+		job.setUser(true);
+		job.schedule();
+
+		super.okPressed();
+	}
+
+	private Job createCustomeLineJob() {
+		final String path = tPath.getText();
+		final ProductLine productLine = SerializationUtils
 				.clone((ProductLine) checkboxTreeViewer.getInput());
 		productLine.setName(newName);
 		productLine.setParent((ProductLine) checkboxTreeViewer.getInput());
 		productLine.getModules().clear();
 
-		Set<Module> modules = new HashSet<>();
-		Object[] elements = checkboxTreeViewer.getCheckedElements();
+		final Set<Module> modules = new HashSet<>();
+		final Object[] elements = checkboxTreeViewer.getCheckedElements();
 
-		for (Object o : elements) {
-			if (o instanceof Module) {
-				Module m = (Module) o;
-				m.getVariabilities().clear();
-				m.getElements().clear();
-				modules.add(m);
-			}
-		}
+		Job job = new Job("About to say hello") {
+			protected IStatus run(IProgressMonitor monitor) {
 
-		for (Object o : elements) {
-			if (o instanceof Variability) {
-				Variability v = (Variability) o;
-				for (Module m : modules) {
-					if (m.equals(v.getModule())) {
-						m.getVariabilities().add(v);
-						break;
+				for (Object o : elements) {
+					if (o instanceof Module) {
+						Module m = (Module) o;
+						m.getVariabilities().clear();
+						m.getElements().clear();
+						modules.add(m);
 					}
 				}
-			} else if (o instanceof Element) {
-				Element e = (Element) o;
-				for (Module m : modules) {
-					if (m.equals(e.getModule())) {
-						m.getElements().add(e);
-						break;
+
+				for (Object o : elements) {
+					if (o instanceof Variability) {
+						Variability v = (Variability) o;
+						for (Module m : modules) {
+							if (m.equals(v.getModule())) {
+								m.getVariabilities().add(v);
+								break;
+							}
+						}
+					} else if (o instanceof Element) {
+						Element e = (Element) o;
+						for (Module m : modules) {
+							if (m.equals(e.getModule())) {
+								m.getElements().add(e);
+								break;
+							}
+						}
 					}
 				}
+
+				productLine.getModules().addAll(modules);
+
+				ProductLine refreshedProductLine = ProductLineUtils
+						.refreshRelations(productLine);
+				CreateCustomeLine custom = new CreateCustomeLine(
+						refreshedProductLine, project, path);
+				try {
+					custom.create();
+					ProductLineDAO pDao = new ProductLineDAO();
+					try (Connection con = DaoUtil.connect(properties)) {
+						pDao.createAll(refreshedProductLine, con);
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				} catch (JavaModelException | IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						MessageDialog.openInformation(null,
+								"Created Custome Line",
+								"Creation of new Custome Line is done!");
+					}
+				});
+				return Status.OK_STATUS;
 			}
-		}
+		};
 
-		productLine.getModules().addAll(modules);
-
-		productLine = ProductLineUtils.refreshRelations(productLine);
-		CreateCustomeLine custom = new CreateCustomeLine(productLine, project,
-				"C:\\Users\\IBM_ADMIN\\Desktop\\customeLine");
-		try {
-			custom.create();
-			ProductLineDAO pDao = new ProductLineDAO();
-			try (Connection con = DaoUtil.connect(properties)) {
-				pDao.createAll(productLine, con);
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				super.okPressed();
-			}
-
-		} catch (JavaModelException | IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
+		return job;
 	}
 
 }

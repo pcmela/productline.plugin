@@ -72,10 +72,12 @@ import productline.plugin.internal.ElementSetTreeContainer;
 import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.ProductLineTreeComparator;
 import productline.plugin.internal.VariabilitySetTreeContainer;
+import productline.plugin.internal.VariabilityTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
 import productline.plugin.ui.CreateNewCustomLineDialog;
 import productline.plugin.ui.PackageListDialog;
 import productline.plugin.ui.providers.PackageListContentProvider;
+import productline.plugin.ui.providers.ProductLineStyledLabelProvider;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import productline.plugin.view.WhereUsedView;
@@ -148,8 +150,9 @@ public class OverviewPage extends OverViewPagePOJO implements
 		hierarchySection.setClient(tree);
 
 		treeViewer = new TreeViewer(tree);
+		treeViewer.expandToLevel(4);
 		treeViewer.setContentProvider(new ProductLineTreeContentProvider());
-		treeViewer.setLabelProvider(new ProductLineTreeLabelProvider());
+		treeViewer.setLabelProvider(new ProductLineStyledLabelProvider());
 		treeViewer.setComparator(new ProductLineTreeComparator());
 
 		/*
@@ -176,6 +179,11 @@ public class OverviewPage extends OverViewPagePOJO implements
 					@Override
 					public void modifyText(ModifyEvent e) {
 						BaseProductLineEntity o = (BaseProductLineEntity) selection;
+						if(o instanceof ElementTreeContainer){
+							o = ((ElementTreeContainer)o).getSource();
+						}else if(o instanceof VariabilityTreeContainer){
+							o = ((VariabilityTreeContainer)o).getSource();
+						}
 						if (!o.isDirty()) {
 							o.setDirty(true);
 						}
@@ -195,8 +203,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 				}
 				if (selection instanceof Module) {
 					createDetailModule((Module) selection, modifyListener);
-				} else if (selection instanceof Variability) {
-					createDetailVariability((Variability) selection,
+				} else if (selection instanceof VariabilityTreeContainer) {
+					createDetailVariability(((VariabilityTreeContainer) selection).getSource(),
 							modifyListener);
 				} else if (selection instanceof ElementTreeContainer) {
 					createDetailElement(((ElementTreeContainer) selection).getSource(), modifyListener);
@@ -235,15 +243,13 @@ public class OverviewPage extends OverViewPagePOJO implements
 						mgr.add(actionAdd);
 						mgr.add(createCustomLine);
 						mgr.add(viewChilrenAction);
-					}
-					if (o instanceof Module) {
+					}else if (o instanceof Module) {
 						mgr.add(whereUsedAction);
-					}
-					if (o instanceof VariabilitySetTreeContainer
+						mgr.add(actionRemove);
+					}else if (o instanceof VariabilitySetTreeContainer
 							|| o instanceof ElementSetTreeContainer) {
 						mgr.add(actionAdd);
-					}
-					if (o instanceof Variability || o instanceof Element
+					}else if (o instanceof Variability || o instanceof Element
 							|| o instanceof Module) {
 						mgr.add(whereUsedAction);
 						mgr.add(actionRemove);
@@ -382,7 +388,15 @@ public class OverviewPage extends OverViewPagePOJO implements
 			public void handleEvent(Event event) {
 				PackageListDialog dialog = new PackageListDialog(new Shell(),
 						project, OverviewPage.this, module, properties);
-				dialog.setStoredElements(module.getPackages());
+				try {
+					dialog.setStoredElements(PackageDAO.getStoredPackages(DaoUtil.connect(properties), module.getProductLine().getId()));
+				} catch (ClassNotFoundException e) {
+					DefaultMessageDialog.driversNotFoundDialog("H2");
+					e.printStackTrace();
+				} catch(SQLException e2){
+					DefaultMessageDialog.sqlExceptionDialog(e2.getMessage());
+					e2.printStackTrace();
+				}
 				dialog.open();
 
 			}
@@ -541,16 +555,12 @@ public class OverviewPage extends OverViewPagePOJO implements
 			public void widgetSelected(SelectionEvent e) {
 				if (elementObject.getType() == null) {
 					if (!cElementType.getText().equals("")) {
-						Object o = ((StructuredSelection) OverviewPage.this.treeViewer
-								.getSelection()).getFirstElement();
-						updateElementTypeValue(o);
+						updateElementTypeValue(OverviewPage.this.currentSelectedObject);
 					}
 				} else {
 					if (!elementObject.getType().getName()
 							.equals(cElementType.getText())) {
-						Object o = ((StructuredSelection) OverviewPage.this.treeViewer
-								.getSelection()).getFirstElement();
-						updateElementTypeValue(o);
+						updateElementTypeValue(OverviewPage.this.currentSelectedObject);
 						
 					}
 				}
@@ -855,6 +865,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 					.getType(cElementType.getText()));
 			elem.setDirty(true);
 			setDirtyState();
+			treeViewer.refresh();
+			treeViewer.expandAll();
 		}
 	}
 
@@ -868,7 +880,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 	}
 
 	void selectTreeElements(SearchMatcher matcher) {
-		ProductLineTreeLabelProvider treeLabelProvider = (ProductLineTreeLabelProvider) treeViewer
+		ProductLineStyledLabelProvider treeLabelProvider = (ProductLineStyledLabelProvider) treeViewer
 				.getLabelProvider();
 		// treeLabelProvider.setMatcher(matcher);
 		treeViewer.refresh();
@@ -934,7 +946,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 			}
 			ProductLine newCustomeLine = SerializationUtils.clone(productLine);
 			CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(
-					new Shell(), newCustomeLine, "", OverviewPage.this.project,
+					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), newCustomeLine, "", OverviewPage.this.project,
 					properties);
 			dialog.open();
 		}

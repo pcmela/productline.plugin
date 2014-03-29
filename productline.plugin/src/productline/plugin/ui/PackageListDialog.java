@@ -23,16 +23,23 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 import productline.plugin.editor.IPackageListViewer;
 import productline.plugin.ui.providers.PackageListContentProvider;
+import productline.plugin.ui.providers.PackageListFilter;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.PackageDAO;
 import diploma.productline.entity.Module;
@@ -48,6 +55,10 @@ public class PackageListDialog extends Dialog {
 	private Set<?> storedElements;
 	private Module parent;
 	private Properties properties;
+	
+	private Label lFilter;
+	private Text tFilter;
+	private PackageListFilter filter;
 
 	public void setStoredElements(Set<?> elements) {
 		storedElements = elements;
@@ -67,6 +78,7 @@ public class PackageListDialog extends Dialog {
 		this.parentDialog = parentDialog;
 		this.parent = module;
 		this.properties = properties;
+		filter = new PackageListFilter();
 	}
 
 	/**
@@ -77,13 +89,34 @@ public class PackageListDialog extends Dialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		area.setLayout(new FillLayout(SWT.HORIZONTAL));
+		//area.setLayout(new FillLayout(SWT.HORIZONTAL));
+		area.setLayout(new GridLayout(2, false));
+		
+		lFilter = new Label(area, SWT.NONE);
+		lFilter.setText("Filter:");
+		
+		tFilter = new Text(area, SWT.BORDER);
+		tFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		tFilter.addModifyListener(new ModifyListener() {
+			
+			@Override
+			public void modifyText(ModifyEvent e) {
+				filter.setPattern(tFilter.getText());	
+				listViewer.refresh();
+			}
+		});
+		
 
+		GridData dList = new GridData(GridData.FILL_BOTH);
+		dList.horizontalSpan = 2;
+		
 		listViewer = new ListViewer(area, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
-
+		listViewer.getControl().setLayoutData(dList);
 		listViewer.setContentProvider(new PackageListContentProvider());
 		initData();
 		listViewer.setInput(packages);
+		listViewer.addFilter(filter);
+		
 		listViewer.setLabelProvider(new LabelProvider() {
 			public Image getImage(Object element) {
 				return null;
@@ -119,38 +152,7 @@ public class PackageListDialog extends Dialog {
 							if (pkg != null && !pkg.getElementName().equals("")
 									&& pkg instanceof IPackageFragment) {
 								if (!(pkg instanceof IFolder)) {
-									if (storedElements == null
-											|| storedElements.size() == 0) {
-										packages.add((IPackageFragment) pkg);
-									} else {
-										boolean exist = false;
-										for (Object p : storedElements) {
-											if (p instanceof String) {
-												if (pkg.getElementName()
-														.equals((String) p)) {
-													exist = true;
-													break;
-												}
-											} else if (p instanceof IPackageFragment) {
-												if (pkg.getElementName()
-														.equals(((IPackageFragment) p)
-																.getElementName())) {
-													exist = true;
-													break;
-												}
-											} else if (p instanceof PackageModule) {
-												if (pkg.getElementName()
-														.equals(((PackageModule) p)
-																.getName())) {
-													exist = true;
-													break;
-												}
-											}
-										}
-										if (!exist) {
-											packages.add((IPackageFragment) pkg);
-										}
-									}
+									addNonDuplicatedValues(pkg);
 								}
 							}
 						}
@@ -161,6 +163,41 @@ public class PackageListDialog extends Dialog {
 		} catch (CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	private void addNonDuplicatedValues(IJavaElement pkg){
+		if (storedElements == null
+				|| storedElements.size() == 0) {
+			packages.add((IPackageFragment) pkg);
+		} else {
+			boolean exist = false;
+			for (Object p : storedElements) {
+				if (p instanceof String) {
+					if (pkg.getElementName()
+							.equals((String) p)) {
+						exist = true;
+						break;
+					}
+				} else if (p instanceof IPackageFragment) {
+					if (pkg.getElementName()
+							.equals(((IPackageFragment) p)
+									.getElementName())) {
+						exist = true;
+						break;
+					}
+				} else if (p instanceof PackageModule) {
+					if (pkg.getElementName()
+							.equals(((PackageModule) p)
+									.getName())) {
+						exist = true;
+						break;
+					}
+				}
+			}
+			if (!exist) {
+				packages.add((IPackageFragment) pkg);
+			}
 		}
 	}
 

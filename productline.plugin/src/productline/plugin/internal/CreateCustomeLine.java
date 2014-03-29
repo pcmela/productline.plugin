@@ -26,9 +26,11 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
+import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
+import diploma.productline.entity.Resource;
 import diploma.productline.entity.Variability;
 
 public class CreateCustomeLine {
@@ -50,13 +52,14 @@ public class CreateCustomeLine {
 	}
 
 	public boolean create() throws IOException, JavaModelException {
+		String workspace = project.getLocation().toOSString()
+				.replace(javaProject.getPath().toOSString(), "");
 		this.packageElements = getPackageInJavaProject();
 		createDestinationFolders();
+		System.out.println("s");
 		copyDefaultProjectFiles();
-		System.out.println("ahoj");
-		createPackageStructure(project.getLocation().toOSString()
-				.replace(javaProject.getPath().toOSString(), ""));
-		// copyFiles();
+		createPackageStructure(workspace);
+		copyElementResources(project.getLocation().toOSString());
 		return true;
 	}
 
@@ -107,6 +110,9 @@ public class CreateCustomeLine {
 						System.out.println(destinationDirectory);
 						for (File f : new File(workspacePath + pkg.getPath())
 								.listFiles()) {
+							if(!f.isFile()){
+								continue;
+							}
 							File createFile = new File(destinationDirectory
 									+ "\\" + f.getName());
 							createFile.getParentFile().mkdirs();
@@ -214,5 +220,28 @@ public class CreateCustomeLine {
 			result.add(v.getName());
 		}
 		return result;
+	}
+	
+	
+	private void copyElementResources(String workspace) throws IOException{
+		for(Module m : productLine.getModules()){
+			for(Element e : m.getElements()){
+				for(Resource r : e.getResources()){
+					File f = new File(workspace + r.getRelativePath());
+					File newFile = new File(destinationPath + r.getRelativePath());
+					if(!newFile.exists()){
+						File parent = newFile.getParentFile();
+						if(!parent.exists()){
+							parent.mkdirs();
+						}
+						
+						Files.copy(
+								f.toPath(),
+								newFile.toPath(),
+								StandardCopyOption.REPLACE_EXISTING);
+					}
+				}
+			}
+		}
 	}
 }

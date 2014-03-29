@@ -20,6 +20,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.part.ViewPart;
 
 import productline.plugin.internal.DefaultMessageDialog;
+import productline.plugin.ui.providers.ProductLineStyledLabelProvider;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import diploma.productline.DaoUtil;
@@ -63,7 +64,7 @@ public class BrowseProductLineView extends ViewPart {
 		treeViewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL
 				| SWT.V_SCROLL);
 		treeViewer.setContentProvider(new ProductLineTreeContentProvider());
-		treeViewer.setLabelProvider(new ProductLineTreeLabelProvider());
+		treeViewer.setLabelProvider(new ProductLineStyledLabelProvider());
 
 		ISelectionService service = getSite().getWorkbenchWindow()
 				.getSelectionService();

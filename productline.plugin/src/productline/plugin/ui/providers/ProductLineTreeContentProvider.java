@@ -129,6 +129,7 @@ public class ProductLineTreeContentProvider implements ITreeContentProvider {
 			c.setDescription(v.getDescription());
 			c.setModule(v.getModule());
 			c.setParent(parent);
+			c.setSource(v);
 			cont.add(c);
 		}
 		

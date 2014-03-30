@@ -7,6 +7,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
@@ -26,6 +28,7 @@ import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.ProductLineDAO;
 import diploma.productline.entity.ProductLine;
+import diploma.productline.entity.Resource;
 
 public class BrowseProductLineView extends ViewPart {
 
@@ -49,12 +52,6 @@ public class BrowseProductLineView extends ViewPart {
 				parentProductLine = (ProductLine) o;
 				ProductLine[] p = getProductLineChildren((ProductLine) o);
 				treeViewer.setInput(p);
-				/*
-				 * } else if (parentProductLine.getId() != ((ProductLine) o)
-				 * .getId()) { parentProductLine = (ProductLine) o;
-				 * ProductLine[] p = getProductLineChildren((ProductLine) o);
-				 * treeViewer.setInput(p); }
-				 */
 			}
 		}
 	};
@@ -65,6 +62,12 @@ public class BrowseProductLineView extends ViewPart {
 				| SWT.V_SCROLL);
 		treeViewer.setContentProvider(new ProductLineTreeContentProvider());
 		treeViewer.setLabelProvider(new ProductLineStyledLabelProvider());
+		treeViewer.setComparator(new ViewerComparator() {
+			@Override
+			public int compare(Viewer viewer, Object e1, Object e2) {
+				return e1.toString().compareTo(e2.toString());
+			};
+		});
 
 		ISelectionService service = getSite().getWorkbenchWindow()
 				.getSelectionService();

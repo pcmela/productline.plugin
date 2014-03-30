@@ -18,12 +18,14 @@ import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -215,6 +217,31 @@ public class OverViewPagePOJO extends ProductLineFormPage implements
 		}
 		listViewerPackage.setInput(((Module) currentSelectedObject)
 				.getPackages());
+	}
+	
+	public void refreshTree() {
+		ProductLine p = loadData(true);
+		if (p != null) {
+			treeViewer.setInput(new Object[] { p });
+		} else {
+			treeViewer.setInput(new Object[] {});
+		}
+		treeViewer.expandAll();
+	}
+	
+	protected void setDirtyState() {
+		isDirty = true;
+		firePropertyChange(IEditorPart.PROP_DIRTY);
+		editor.editorDirtyStateChanged();
+	}
+	
+	protected void setTreeFilter(ViewerFilter filter, boolean force) {
+		// currentFilter = filter;
+		if (filter != null
+				&& (force || (treeViewer.getFilters().length > 0 && treeViewer
+						.getFilters()[0] != filter))) {
+			treeViewer.addFilter(filter);
+		}
 	}
 
 }

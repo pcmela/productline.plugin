@@ -229,17 +229,46 @@ public class CreateCustomeLine {
 				for(Resource r : e.getResources()){
 					File f = new File(workspace + r.getRelativePath());
 					File newFile = new File(destinationPath + r.getRelativePath());
+					
 					if(!newFile.exists()){
 						File parent = newFile.getParentFile();
 						if(!parent.exists()){
 							parent.mkdirs();
 						}
 						
-						Files.copy(
-								f.toPath(),
-								newFile.toPath(),
-								StandardCopyOption.REPLACE_EXISTING);
-					}
+						if(!f.toString().toLowerCase().endsWith(".xml")){
+							copyResourceFile(f, newFile);
+						}else{
+							copyResourceXmlFile(f, newFile, m);
+						}
+					}					
+				}
+			}
+		}
+	}
+	
+	private void copyResourceFile(File f, File newFile) throws IOException{			
+			Files.copy(
+					f.toPath(),
+					newFile.toPath(),
+					StandardCopyOption.REPLACE_EXISTING);
+	}
+	
+	private void copyResourceXmlFile(File f, File newFile, Module m) throws IOException{
+		newFile.createNewFile();
+
+		try (BufferedReader br = new BufferedReader(
+				new FileReader(f));
+				BufferedWriter bw = new BufferedWriter(
+						new FileWriter(newFile.getAbsolutePath()))) {
+					ResolveArtifactsXml ra = new ResolveArtifactsXml(
+					m.getName(),
+					getNamesOfVariabilities(m));
+			String line;
+			while ((line = br.readLine()) != null) {
+				line = ra.processLine(line);
+				if(line != null){
+					bw.write(line + "\n");
 				}
 			}
 		}

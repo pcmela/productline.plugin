@@ -229,7 +229,7 @@ public class OverviewPage extends OverViewPagePOJO {
 			}
 		});
 
-		final RemoveAction actionRemove = new RemoveAction(treeViewer);
+		final RemoveAction actionRemove = new RemoveAction(treeViewer,properties,this);
 		actionRemove.setText("Remove");
 		final AddAction actionAdd = new AddAction(treeViewer, project,
 				properties, this);
@@ -427,18 +427,18 @@ public class OverviewPage extends OverViewPagePOJO {
 
 			@Override
 			public void handleEvent(Event event) {
-				// MessageDialog.openConfirm(new Shell(), "Remove package", );
-				PackageModule pkg = (PackageModule) ((IStructuredSelection) listViewerPackage
-						.getSelection()).getFirstElement();
+				Iterator<PackageModule> it = ((IStructuredSelection)listViewerPackage.getSelection()).iterator();
 				boolean ok = MessageDialog.openConfirm(
 						new Shell(),
 						"Remove package",
-						"Are you sure that you want to remove package "
-								+ pkg.getName() + "?");
+						"Are you sure that you want to remove package?");
 				if (ok) {
 					try (Connection con = DaoUtil.connect(properties)) {
 						PackageDAO pDao = new PackageDAO();
-						pDao.delete(pkg.getId(), con);
+						while(it.hasNext()){
+							PackageModule pkg = it.next();
+							pDao.delete(pkg.getId(), con);
+						}
 						Set<PackageModule> packages = pDao
 								.getPackagesWhithChildsByModule(module, con);
 						listViewerPackage.setInput(packages);
@@ -469,7 +469,7 @@ public class OverviewPage extends OverViewPagePOJO {
 		bRemovePackage.setLayoutData(bdRemovePackage);
 
 		listViewerPackage = new ListViewer(detailResourcesDetailComposite,
-				SWT.BORDER | SWT.V_SCROLL);
+				SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
 		List list = listViewerPackage.getList();
 		FormData dListViewerPackage = new FormData();
 		dListViewerPackage.top = new FormAttachment(0, 5);
@@ -924,35 +924,11 @@ public class OverviewPage extends OverViewPagePOJO {
 		}
 	}
 
-	protected void setTreeFilter(ViewerFilter filter, boolean force) {
-		// currentFilter = filter;
-		if (filter != null
-				&& (force || (treeViewer.getFilters().length > 0 && treeViewer
-						.getFilters()[0] != filter))) {
-			treeViewer.addFilter(filter);
-		}
-	}
-
 	void selectTreeElements(SearchMatcher matcher) {
 		ProductLineStyledLabelProvider treeLabelProvider = (ProductLineStyledLabelProvider) treeViewer
 				.getLabelProvider();
 		// treeLabelProvider.setMatcher(matcher);
 		treeViewer.refresh();
 		treeViewer.expandAll();
-	}
-
-	public void refreshTree() {
-		ProductLine p = loadData(true);
-		if (p != null) {
-			treeViewer.setInput(new Object[] { p });
-		} else {
-			treeViewer.setInput(new Object[] {});
-		}
-	}
-
-	private void setDirtyState() {
-		isDirty = true;
-		firePropertyChange(IEditorPart.PROP_DIRTY);
-		editor.editorDirtyStateChanged();
 	}
 }

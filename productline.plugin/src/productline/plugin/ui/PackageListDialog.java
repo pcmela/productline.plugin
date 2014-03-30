@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import productline.plugin.editor.IPackageListViewer;
+import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.providers.PackageListContentProvider;
 import productline.plugin.ui.providers.PackageListFilter;
 import diploma.productline.DaoUtil;
@@ -55,10 +56,12 @@ public class PackageListDialog extends Dialog {
 	private Set<?> storedElements;
 	private Module parent;
 	private Properties properties;
-	
+
 	private Label lFilter;
 	private Text tFilter;
 	private PackageListFilter filter;
+
+	private boolean isStored;
 
 	public void setStoredElements(Set<?> elements) {
 		storedElements = elements;
@@ -79,6 +82,7 @@ public class PackageListDialog extends Dialog {
 		this.parent = module;
 		this.properties = properties;
 		filter = new PackageListFilter();
+		this.isStored = isStored;
 	}
 
 	/**
@@ -89,34 +93,33 @@ public class PackageListDialog extends Dialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		//area.setLayout(new FillLayout(SWT.HORIZONTAL));
+		// area.setLayout(new FillLayout(SWT.HORIZONTAL));
 		area.setLayout(new GridLayout(2, false));
-		
+
 		lFilter = new Label(area, SWT.NONE);
 		lFilter.setText("Filter:");
-		
+
 		tFilter = new Text(area, SWT.BORDER);
 		tFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		tFilter.addModifyListener(new ModifyListener() {
-			
+
 			@Override
 			public void modifyText(ModifyEvent e) {
-				filter.setPattern(tFilter.getText());	
+				filter.setPattern(tFilter.getText());
 				listViewer.refresh();
 			}
 		});
-		
 
 		GridData dList = new GridData(GridData.FILL_BOTH);
 		dList.horizontalSpan = 2;
-		
+
 		listViewer = new ListViewer(area, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
 		listViewer.getControl().setLayoutData(dList);
 		listViewer.setContentProvider(new PackageListContentProvider());
 		initData();
 		listViewer.setInput(packages);
 		listViewer.addFilter(filter);
-		
+
 		listViewer.setLabelProvider(new LabelProvider() {
 			public Image getImage(Object element) {
 				return null;
@@ -165,31 +168,27 @@ public class PackageListDialog extends Dialog {
 			e.printStackTrace();
 		}
 	}
-	
-	private void addNonDuplicatedValues(IJavaElement pkg){
-		if (storedElements == null
-				|| storedElements.size() == 0) {
+
+	private void addNonDuplicatedValues(IJavaElement pkg) {
+		if (storedElements == null || storedElements.size() == 0) {
 			packages.add((IPackageFragment) pkg);
 		} else {
 			boolean exist = false;
 			for (Object p : storedElements) {
 				if (p instanceof String) {
-					if (pkg.getElementName()
-							.equals((String) p)) {
+					if (pkg.getElementName().equals((String) p)) {
 						exist = true;
 						break;
 					}
 				} else if (p instanceof IPackageFragment) {
-					if (pkg.getElementName()
-							.equals(((IPackageFragment) p)
-									.getElementName())) {
+					if (pkg.getElementName().equals(
+							((IPackageFragment) p).getElementName())) {
 						exist = true;
 						break;
 					}
 				} else if (p instanceof PackageModule) {
-					if (pkg.getElementName()
-							.equals(((PackageModule) p)
-									.getName())) {
+					if (pkg.getElementName().equals(
+							((PackageModule) p).getName())) {
 						exist = true;
 						break;
 					}
@@ -227,36 +226,41 @@ public class PackageListDialog extends Dialog {
 		super.okPressed();
 
 		Set<IPackageFragment> selectedObjects = new HashSet<>();
+		Set<PackageModule> packages = new HashSet<>();
 
 		if (listSelection != null) {
 			for (Iterator iterator = listSelection.iterator(); iterator
 					.hasNext();) {
 				Object obj = iterator.next();
 				if (obj instanceof IPackageFragment) {
-					selectedObjects.add((IPackageFragment) obj);
+					// selectedObjects.add((IPackageFragment) obj);
+					IPackageFragment fragment = (IPackageFragment) obj;
+
+					PackageModule pkg = new PackageModule();
+					pkg.setName(fragment.getElementName());
+					pkg.setModule(parent);
+					if (parent != null) {
+						try (Connection con = DaoUtil.connect(properties)) {
+							PackageDAO pDao = new PackageDAO();
+							pkg.setId(pDao.save(pkg, con));
+							packages.add(pkg);
+						} catch (ClassNotFoundException e) {
+							DefaultMessageDialog.driversNotFoundDialog("H2");
+							e.printStackTrace();
+						} catch (SQLException e) {
+							DefaultMessageDialog.sqlExceptionDialog(e
+									.getMessage());
+							e.printStackTrace();
+						}
+					} else {
+						packages.add(pkg);
+					}
 				}
 			}
 		}
 
-		if (selectedObjects.size() > 0) {
-			for (IPackageFragment fragment : selectedObjects) {
-				PackageModule pkg = new PackageModule();
-				pkg.setName(fragment.getElementName());
-				pkg.setModule(parent);
-				try (Connection con = DaoUtil.connect(properties)) {
-					PackageDAO pDao = new PackageDAO();
-					pDao.save(pkg, con);
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+		parentDialog.setPackageListInput(packages);
 
-			parentDialog.setPackageListInput(selectedObjects);
-		}
 	}
 
 	static Set<String> createSetOfPackageName(Set<?> set) {

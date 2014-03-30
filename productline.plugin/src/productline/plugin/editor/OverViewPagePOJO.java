@@ -34,7 +34,8 @@ import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
-public class OverViewPagePOJO extends ProductLineFormPage{
+public class OverViewPagePOJO extends ProductLineFormPage implements
+		IPackageListViewer {
 
 	protected SearchControl searchControl;
 	protected SearchMatcher searchMatcher;
@@ -83,16 +84,16 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 	protected Section detailResourcesDetailSection;
 	protected Composite detailResourcesDetailComposite;
 	protected Composite rightComposite;
-	
+
 	private IValidator nameValidator = null;
 	protected IProject project;
-	
+
 	public OverViewPagePOJO(FormEditor editor, String id, String title) {
 		super(editor, id, title);
 	}
-	
-	protected IValidator getNameValidator(){
-		if(nameValidator == null){
+
+	protected IValidator getNameValidator() {
+		if (nameValidator == null) {
 			nameValidator = new IValidator() {
 				@Override
 				public IStatus validate(Object value) {
@@ -106,13 +107,11 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 			};
 			return nameValidator;
 		}
-		
-		
-		
+
 		return nameValidator;
 	}
-	
-	protected void addDataBindingModule(Module module){
+
+	protected void addDataBindingModule(Module module) {
 
 		// create UpdateValueStrategy and assign
 		// to the binding
@@ -128,21 +127,23 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 		IObservableValue isVariable = PojoProperties.value("variable").observe(
 				module);
 
-		Binding bindName = dataBindingContext.bindValue(targetName, name, strategy, null);
+		Binding bindName = dataBindingContext.bindValue(targetName, name,
+				strategy, null);
 		ControlDecorationSupport.create(bindName, SWT.TOP | SWT.LEFT);
 		dataBindingContext.bindValue(targetDescription, description);
-		dataBindingContext.bindValue(SWTObservables.observeSelection(bModuleIsVariable),
-				isVariable);
+		dataBindingContext.bindValue(
+				SWTObservables.observeSelection(bModuleIsVariable), isVariable);
 	}
-	
-	protected void addDataBindingVariable(Variability variability){
+
+	protected void addDataBindingVariable(Variability variability) {
 
 		// create UpdateValueStrategy and assign
 		// to the binding
 		UpdateValueStrategy strategy = new UpdateValueStrategy();
 		strategy.setBeforeSetValidator(getNameValidator());
 
-		IObservableValue name = PojoProperties.value("name").observe(variability);
+		IObservableValue name = PojoProperties.value("name").observe(
+				variability);
 		IObservableValue description = PojoProperties.value("description")
 				.observe(variability);
 		IObservableValue targetName = WidgetProperties.text(SWT.Modify)
@@ -150,12 +151,13 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 		IObservableValue targetDescription = WidgetProperties.text(SWT.Modify)
 				.observe(tVariabilityDescription);
 
-		Binding bindName = dataBindingContext.bindValue(targetName, name, strategy, null);
+		Binding bindName = dataBindingContext.bindValue(targetName, name,
+				strategy, null);
 		ControlDecorationSupport.create(bindName, SWT.TOP | SWT.LEFT);
 		dataBindingContext.bindValue(targetDescription, description);
 	}
-	
-	protected void addDataBindingElement(Element element){
+
+	protected void addDataBindingElement(Element element) {
 
 		UpdateValueStrategy strategy = new UpdateValueStrategy();
 		strategy.setBeforeSetValidator(getNameValidator());
@@ -163,15 +165,16 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 		IObservableValue name = PojoProperties.value("name").observe(element);
 		IObservableValue description = PojoProperties.value("description")
 				.observe(element);
-		
+
 		IObservableValue targetName = WidgetProperties.text(SWT.Modify)
 				.observe(tElementName);
 		IObservableValue targetDescription = WidgetProperties.text(SWT.Modify)
 				.observe(tElementDescription);
-		IObservableValue targetType = WidgetProperties.selection().observe(cElementType);
+		IObservableValue targetType = WidgetProperties.selection().observe(
+				cElementType);
 
-
-		Binding bindName = dataBindingContext.bindValue(targetName, name, strategy, null);
+		Binding bindName = dataBindingContext.bindValue(targetName, name,
+				strategy, null);
 		ControlDecorationSupport.create(bindName, SWT.TOP | SWT.LEFT);
 		dataBindingContext.bindValue(targetDescription, description);
 	}
@@ -196,10 +199,10 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 	public void setDataBindingContext(DataBindingContext dataBindingContext) {
 		this.dataBindingContext = dataBindingContext;
 	}
-	
-	public void setPackageListInput(Set<IPackageFragment> elements) {
+
+	public void setPackageListInput(Set<PackageModule> packages) {
 		if (currentSelectedObject instanceof Module) {
-			Module m = (Module) currentSelectedObject;
+			/*Module m = (Module) currentSelectedObject;
 			Set<PackageModule> packages = new HashSet<>();
 
 			for (IPackageFragment pkg : elements) {
@@ -207,12 +210,11 @@ public class OverViewPagePOJO extends ProductLineFormPage{
 				p.setModule(m);
 				p.setName(pkg.getElementName());
 				packages.add(p);
-			}
+			}*/
 			((Module) currentSelectedObject).getPackages().addAll(packages);
 		}
 		listViewerPackage.setInput(((Module) currentSelectedObject)
 				.getPackages());
 	}
-	
-	
+
 }

@@ -10,6 +10,6 @@ public class PackageListLabelProvider extends LabelProvider {
 	}
 
 	public String getText(Object element) {
-		return ((IPackageFragment) element).getElementName();
+		return element.toString();
 	}
 }

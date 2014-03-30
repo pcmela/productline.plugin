@@ -62,9 +62,9 @@ CREATE TABLE IF NOT EXISTS element
 CREATE TABLE IF NOT EXISTS resource
 (
 	resource_id INTEGER NOT NULL AUTO_INCREMENT,
-	name VARCHAR(50) NOT NULL,
+	name VARCHAR(255) NOT NULL,
 	relative_path VARCHAR(255),
-	full_path VARCHAR(255),
+	full_path VARCHAR(500),
 	element_id INTEGER NOT NULL,
 	PRIMARY KEY (resource_id),
 	FOREIGN KEY (element_id) 

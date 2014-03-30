@@ -40,6 +40,7 @@ import productline.plugin.ui.providers.PackageListLabelProvider;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.ElementDAO;
 import diploma.productline.dao.ModuleDAO;
+import diploma.productline.dao.PackageDAO;
 import diploma.productline.dao.VariabilityDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
@@ -102,7 +103,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		}
 	}
 
-	public void setPackageListInput(Set<IPackageFragment> elements) {
+	public void setPackageListInput(Set<PackageModule> elements) {
 		listViewer.setInput(elements);
 	}
 
@@ -195,7 +196,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			@Override
 			public void handleEvent(Event event) {
 				PackageListDialog dialog = new PackageListDialog(new Shell(),
-						project, AddEntityDialog.this, (Module)parent, properties);
+						project, AddEntityDialog.this, null, properties);
 				dialog.setStoredElements((Set<?>) listViewer.getInput());
 				dialog.open();
 
@@ -326,23 +327,8 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	}
 	
 	private void saveModuleInput(){
-		Object obj = listViewer.getInput();
-		Set<PackageModule> packages = null;
+		Set<PackageModule> packages = (Set<PackageModule>)listViewer.getInput();
 		Module m = new Module();
-		
-		if (obj instanceof HashSet) {
-
-			HashSet<IPackageFragment> list = ((HashSet<IPackageFragment>) obj);
-			packages = new HashSet<>();
-
-			for (IPackageFragment pkg : list) {
-				PackageModule p = new PackageModule();
-				p.setModule(m);
-				p.setName(pkg.getElementName());
-				packages.add(p);
-			}
-		}
-		
 		
 		m.setName(tName.getText());
 		m.setDescription(tDescition.getText());
@@ -351,12 +337,18 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		
 		try(Connection con = DaoUtil.connect(properties)){
 			ModuleDAO mDao = new ModuleDAO();
-			mDao.save(m, con);
+			m.setId(mDao.save(m, con));
+
+			for (PackageModule pkg : packages) {
+				pkg.setModule(m);
+					PackageDAO pDao = new PackageDAO();
+					pkg.setId(pDao.save(pkg, con));
+			}
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			DefaultMessageDialog.driversNotFoundDialog("H2");
 			e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			DefaultMessageDialog.driversNotFoundDialog("H2");
 			e.printStackTrace();
 		}
 		

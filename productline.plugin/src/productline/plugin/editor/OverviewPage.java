@@ -4,9 +4,12 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.lang3.SerializationUtils;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.action.Action;
@@ -18,6 +21,8 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -58,6 +63,8 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
@@ -66,6 +73,7 @@ import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
+import org.eclipse.ui.ide.IDE;
 
 import productline.plugin.actions.AddAction;
 import productline.plugin.actions.CreateCustomLineAction;
@@ -98,8 +106,7 @@ import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Resource;
 import diploma.productline.entity.Variability;
 
-public class OverviewPage extends OverViewPagePOJO implements
-		IPackageListViewer {
+public class OverviewPage extends OverViewPagePOJO {
 
 	public OverviewPage(FormEditor editor, String id, String title,
 			IProject project) {
@@ -184,10 +191,10 @@ public class OverviewPage extends OverViewPagePOJO implements
 					@Override
 					public void modifyText(ModifyEvent e) {
 						BaseProductLineEntity o = (BaseProductLineEntity) selection;
-						if(o instanceof ElementTreeContainer){
-							o = ((ElementTreeContainer)o).getSource();
-						}else if(o instanceof VariabilityTreeContainer){
-							o = ((VariabilityTreeContainer)o).getSource();
+						if (o instanceof ElementTreeContainer) {
+							o = ((ElementTreeContainer) o).getSource();
+						} else if (o instanceof VariabilityTreeContainer) {
+							o = ((VariabilityTreeContainer) o).getSource();
 						}
 						if (!o.isDirty()) {
 							o.setDirty(true);
@@ -209,10 +216,13 @@ public class OverviewPage extends OverViewPagePOJO implements
 				if (selection instanceof Module) {
 					createDetailModule((Module) selection, modifyListener);
 				} else if (selection instanceof VariabilityTreeContainer) {
-					createDetailVariability(((VariabilityTreeContainer) selection).getSource(),
+					createDetailVariability(
+							((VariabilityTreeContainer) selection).getSource(),
 							modifyListener);
 				} else if (selection instanceof ElementTreeContainer) {
-					createDetailElement(((ElementTreeContainer) selection).getSource(), modifyListener);
+					createDetailElement(
+							((ElementTreeContainer) selection).getSource(),
+							modifyListener);
 				} else {
 					return;
 				}
@@ -221,7 +231,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 
 		final RemoveAction actionRemove = new RemoveAction(treeViewer);
 		actionRemove.setText("Remove");
-		final AddAction actionAdd = new AddAction(treeViewer, project, properties, this);
+		final AddAction actionAdd = new AddAction(treeViewer, project,
+				properties, this);
 		actionAdd.setText("Add");
 
 		final ViewChildAction viewChilrenAction = new ViewChildAction();
@@ -230,7 +241,8 @@ public class OverviewPage extends OverViewPagePOJO implements
 		final WhereUsedAction whereUsedAction = new WhereUsedAction(treeViewer);
 		whereUsedAction.setText("Where used");
 
-		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction(treeViewer, properties, project);
+		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction(
+				treeViewer, properties, project);
 		createCustomLine.setText("New Custom Line");
 
 		final MenuManager mgr = new MenuManager();
@@ -248,13 +260,13 @@ public class OverviewPage extends OverViewPagePOJO implements
 						mgr.add(actionAdd);
 						mgr.add(createCustomLine);
 						mgr.add(viewChilrenAction);
-					}else if (o instanceof Module) {
+					} else if (o instanceof Module) {
 						mgr.add(whereUsedAction);
 						mgr.add(actionRemove);
-					}else if (o instanceof VariabilitySetTreeContainer
+					} else if (o instanceof VariabilitySetTreeContainer
 							|| o instanceof ElementSetTreeContainer) {
 						mgr.add(actionAdd);
-					}else if (o instanceof Variability || o instanceof Element
+					} else if (o instanceof Variability || o instanceof Element
 							|| o instanceof Module) {
 						mgr.add(whereUsedAction);
 						mgr.add(actionRemove);
@@ -394,11 +406,13 @@ public class OverviewPage extends OverViewPagePOJO implements
 				PackageListDialog dialog = new PackageListDialog(new Shell(),
 						project, OverviewPage.this, module, properties);
 				try {
-					dialog.setStoredElements(PackageDAO.getStoredPackages(DaoUtil.connect(properties), module.getProductLine().getId()));
+					dialog.setStoredElements(PackageDAO.getStoredPackages(
+							DaoUtil.connect(properties), module
+									.getProductLine().getId()));
 				} catch (ClassNotFoundException e) {
 					DefaultMessageDialog.driversNotFoundDialog("H2");
 					e.printStackTrace();
-				} catch(SQLException e2){
+				} catch (SQLException e2) {
 					DefaultMessageDialog.sqlExceptionDialog(e2.getMessage());
 					e2.printStackTrace();
 				}
@@ -566,7 +580,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 					if (!elementObject.getType().getName()
 							.equals(cElementType.getText())) {
 						updateElementTypeValue(OverviewPage.this.currentSelectedObject);
-						
+
 					}
 				}
 			}
@@ -618,7 +632,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 		bRemovePackage.setLayoutData(bdRemovePackage);
 
 		listViewerPackage = new ListViewer(detailResourcesDetailComposite,
-				SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+				SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.MULTI);
 		List list = listViewerPackage.getList();
 		FormData dListViewerPackage = new FormData();
 		dListViewerPackage.top = new FormAttachment(0, 5);
@@ -645,6 +659,32 @@ public class OverviewPage extends OverViewPagePOJO implements
 			};
 		});
 		listViewerPackage.setInput(element.getResources());
+		listViewerPackage.addDoubleClickListener(new IDoubleClickListener() {
+
+			@Override
+			public void doubleClick(DoubleClickEvent event) {
+				Object o = ((StructuredSelection) event.getSelection())
+						.getFirstElement();
+				if (o instanceof Resource) {
+					Resource r = (Resource) o;
+
+					File fileToOpen = new File(r.getFullPath());
+
+					if (fileToOpen.exists() && fileToOpen.isFile()) {
+						IFileStore fileStore = EFS.getLocalFileSystem()
+								.getStore(fileToOpen.toURI());
+						IWorkbenchPage page = PlatformUI.getWorkbench()
+								.getActiveWorkbenchWindow().getActivePage();
+
+						try {
+							IDE.openEditorOnFileStore(page, fileStore);
+						} catch (PartInitException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		});
 
 		bAddPackage.addListener(SWT.Selection, new Listener() {
 
@@ -684,10 +724,11 @@ public class OverviewPage extends OverViewPagePOJO implements
 							if (resources == null) {
 								resources = new HashSet<Resource>();
 							}
-
-							if (!rDao.save(r, con)) {
+							int rId = rDao.save(r, con);
+							if (rId == -1) {
 								existingFiles.add(r.getRelativePath());
 							} else {
+								r.setId(rId);
 								resources.add(r);
 							}
 
@@ -720,29 +761,38 @@ public class OverviewPage extends OverViewPagePOJO implements
 			@Override
 			public void handleEvent(Event event) {
 				// MessageDialog.openConfirm(new Shell(), "Remove package", );
-				Resource r = (Resource) ((IStructuredSelection) listViewerPackage
-						.getSelection()).getFirstElement();
-				boolean ok = MessageDialog.openConfirm(
-						new Shell(),
-						"Remove package",
-						"Are you sure that you want to remove package "
-								+ r.getName() + "?");
+				/*Resource r = (Resource) ((IStructuredSelection) listViewerPackage
+						.getSelection()).getFirstElement();*/
+				Iterator it = ((StructuredSelection) listViewerPackage
+						.getSelection()).iterator();
+				boolean ok = MessageDialog
+						.openConfirm(new Shell(), "Remove package",
+								"Are you sure that you want to remove selected packages?");
 				if (ok) {
-					ResourceDao rDao = new ResourceDao();
-					try (Connection con = DaoUtil.connect(properties)) {
-						rDao.delete(r.getId(), con);
-						Set<Resource> resources = rDao
-								.getResourceWhithChildsByElement(
-										(Element) currentSelectedObject, con);
-						((Element) currentSelectedObject)
-								.setResources(resources);
-						listViewerPackage.setInput(resources);
-					} catch (ClassNotFoundException e) {
-						DefaultMessageDialog.driversNotFoundDialog("H2");
-						e.printStackTrace();
-					} catch (SQLException e) {
-						DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-						e.printStackTrace();
+					while (it.hasNext()) {
+						Object o = it.next();
+						if (o instanceof Resource) {
+							Resource r = (Resource)o;
+							ResourceDao rDao = new ResourceDao();
+							try (Connection con = DaoUtil.connect(properties)) {
+								rDao.delete(r.getId(), con);
+								Set<Resource> resources = rDao
+										.getResourceWhithChildsByElement(
+												(Element) currentSelectedObject,
+												con);
+								((Element) currentSelectedObject)
+										.setResources(resources);
+								listViewerPackage.setInput(resources);
+							} catch (ClassNotFoundException e) {
+								DefaultMessageDialog
+										.driversNotFoundDialog("H2");
+								e.printStackTrace();
+							} catch (SQLException e) {
+								DefaultMessageDialog.sqlExceptionDialog(e
+										.getMessage());
+								e.printStackTrace();
+							}
+						}
 					}
 				}
 			}
@@ -862,12 +912,11 @@ public class OverviewPage extends OverViewPagePOJO implements
 			}
 		});
 	}
-	
-	private void updateElementTypeValue(Object o){
+
+	private void updateElementTypeValue(Object o) {
 		if (o instanceof Element) {
-			Element elem = (Element)o;
-			elem.setType(ElementType
-					.getType(cElementType.getText()));
+			Element elem = (Element) o;
+			elem.setType(ElementType.getType(cElementType.getText()));
 			elem.setDirty(true);
 			setDirtyState();
 			treeViewer.refresh();

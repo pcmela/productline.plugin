@@ -18,7 +18,13 @@
       <view
             class="productline.plugin.view.WhereUsedView"
             id="productline.plugin.viewWhereUsed"
-            name="Product Line - Where Used"
+            name="PL - Where Used (CL)"
+            restorable="true">
+      </view>
+      <view
+            class="productline.plugin.view.WhereUsedCodeView"
+            id="productline.plugin.viewWhereCodeUsed"
+            name="PL - Where Used (Code)"
             restorable="true">
       </view>
    </extension>

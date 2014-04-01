@@ -54,7 +54,7 @@ public class CreateCustomeLine {
 	public boolean create() throws IOException, JavaModelException {
 		String workspace = project.getLocation().toOSString()
 				.replace(javaProject.getPath().toOSString(), "");
-		this.packageElements = getPackageInJavaProject();
+		this.packageElements = Utils.getPackageInJavaProject(javaProject);
 		createDestinationFolders();
 		System.out.println("s");
 		copyDefaultProjectFiles();
@@ -156,28 +156,6 @@ public class CreateCustomeLine {
 				}
 			}
 		}
-	}
-
-	private Set<IPackageFragment> getPackageInJavaProject()
-			throws JavaModelException {
-		Set<IPackageFragment> elements = new HashSet<>();
-
-		final IPackageFragmentRoot[] packageFragmentRootArray = javaProject
-				.getAllPackageFragmentRoots();
-
-		for (final IPackageFragmentRoot packageFragmentRoot : packageFragmentRootArray) {
-			if (!packageFragmentRoot.isArchive()) {
-				for (final IJavaElement pkg : packageFragmentRoot.getChildren()) {
-					if (pkg != null && !pkg.getElementName().equals("")
-							&& pkg instanceof IPackageFragment) {
-						if (!(pkg instanceof IFolder)) {
-							elements.add((IPackageFragment) pkg);
-						}
-					}
-				}
-			}
-		}
-		return elements;
 	}
 
 	private void copyFiles() throws IOException {

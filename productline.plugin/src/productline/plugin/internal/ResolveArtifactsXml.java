@@ -62,7 +62,7 @@ public class ResolveArtifactsXml {
 					}
 				}
 				
-				if(exist){
+				if(!exist){
 					processingVariability = true;
 					processingElement = true;
 					beginOfComment = true;

@@ -80,6 +80,7 @@ import productline.plugin.actions.CreateCustomLineAction;
 import productline.plugin.actions.RemoveAction;
 import productline.plugin.actions.ViewChildAction;
 import productline.plugin.actions.WhereUsedAction;
+import productline.plugin.actions.WhereUsedInCodeAction;
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.internal.ElementSetTreeContainer;
 import productline.plugin.internal.ElementTreeContainer;
@@ -240,6 +241,9 @@ public class OverviewPage extends OverViewPagePOJO {
 
 		final WhereUsedAction whereUsedAction = new WhereUsedAction(treeViewer);
 		whereUsedAction.setText("Where used");
+		
+		final WhereUsedInCodeAction whereUsedCodeAction = new WhereUsedInCodeAction(treeViewer, project.getWorkspace().getRoot().getLocation().toOSString(), project); 
+		whereUsedCodeAction.setText("Where used (in source code)");
 
 		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction(
 				treeViewer, properties, project);
@@ -269,6 +273,7 @@ public class OverviewPage extends OverViewPagePOJO {
 					} else if (o instanceof Variability || o instanceof Element
 							|| o instanceof Module) {
 						mgr.add(whereUsedAction);
+						mgr.add(whereUsedCodeAction);
 						mgr.add(actionRemove);
 					}
 				}

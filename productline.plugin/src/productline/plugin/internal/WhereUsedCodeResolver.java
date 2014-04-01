@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 public class WhereUsedCodeResolver {
 
 	private final String START_VARIABILITY = "(\\s*+)(\\*)(\\s*+)@variability\\s";
+	private final String START_MODULE = "(\\s*+)(\\*)(\\s*+)@module\\s";
 
 	private Set<IPackageFragment> packages;
 	private String workspace;
@@ -41,9 +42,16 @@ public class WhereUsedCodeResolver {
 		return result;
 	}
 
-	public Set<WhereUsedCode> getModulesOccurences() {
+	public Set<WhereUsedCode> getModulesOccurences() 
+			throws FileNotFoundException, IOException {
 		Set<WhereUsedCode> result = new HashSet<>();
-
+		if(packages != null){
+			for (IPackageFragment pkg : packages) {
+				File f = new File(workspace + pkg.getPath().toOSString());
+				result.addAll(readFileAndGetModuleOccurences(f,
+						this.nameOfSearchItem));
+			}
+		}
 		return result;
 	}
 
@@ -51,6 +59,35 @@ public class WhereUsedCodeResolver {
 			String nameOfSearchItem) throws FileNotFoundException, IOException {
 		Set<WhereUsedCode> result = new HashSet<>();
 		String search = START_VARIABILITY + nameOfSearchItem;
+
+		if (file.isDirectory()) {
+			for (File f : file.listFiles()) {
+				if (f.isFile()) {
+					try (BufferedReader br = new BufferedReader(new FileReader(
+							f))) {
+
+						String lineText;
+						int lineCount = 0;
+						while ((lineText = br.readLine()) != null) {
+							lineCount++;
+							if (lineText.trim().matches(search)) {
+								result.add(new WhereUsedCode(f
+										.getAbsolutePath().replace(
+												this.workspace, ""), lineCount, project));
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+	
+	private Set<WhereUsedCode> readFileAndGetModuleOccurences(File file,
+			String nameOfSearchItem) throws FileNotFoundException, IOException {
+		Set<WhereUsedCode> result = new HashSet<>();
+		String search = START_MODULE + nameOfSearchItem;
 
 		if (file.isDirectory()) {
 			for (File f : file.listFiles()) {

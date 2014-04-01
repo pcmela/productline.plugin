@@ -230,7 +230,8 @@ public class OverviewPage extends OverViewPagePOJO {
 			}
 		});
 
-		final RemoveAction actionRemove = new RemoveAction(treeViewer,properties,this);
+		final RemoveAction actionRemove = new RemoveAction(treeViewer,
+				properties, this);
 		actionRemove.setText("Remove");
 		final AddAction actionAdd = new AddAction(treeViewer, project,
 				properties, this);
@@ -241,8 +242,10 @@ public class OverviewPage extends OverViewPagePOJO {
 
 		final WhereUsedAction whereUsedAction = new WhereUsedAction(treeViewer);
 		whereUsedAction.setText("Where used");
-		
-		final WhereUsedInCodeAction whereUsedCodeAction = new WhereUsedInCodeAction(treeViewer, project.getWorkspace().getRoot().getLocation().toOSString(), project); 
+
+		final WhereUsedInCodeAction whereUsedCodeAction = new WhereUsedInCodeAction(
+				treeViewer, project.getWorkspace().getRoot().getLocation()
+						.toOSString(), project);
 		whereUsedCodeAction.setText("Where used (in source code)");
 
 		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction(
@@ -266,6 +269,7 @@ public class OverviewPage extends OverViewPagePOJO {
 						mgr.add(viewChilrenAction);
 					} else if (o instanceof Module) {
 						mgr.add(whereUsedAction);
+						mgr.add(whereUsedCodeAction);
 						mgr.add(actionRemove);
 					} else if (o instanceof VariabilitySetTreeContainer
 							|| o instanceof ElementSetTreeContainer) {
@@ -273,7 +277,9 @@ public class OverviewPage extends OverViewPagePOJO {
 					} else if (o instanceof Variability || o instanceof Element
 							|| o instanceof Module) {
 						mgr.add(whereUsedAction);
-						mgr.add(whereUsedCodeAction);
+						if (o instanceof Variability) {
+							mgr.add(whereUsedCodeAction);
+						}
 						mgr.add(actionRemove);
 					}
 				}
@@ -432,15 +438,15 @@ public class OverviewPage extends OverViewPagePOJO {
 
 			@Override
 			public void handleEvent(Event event) {
-				Iterator<PackageModule> it = ((IStructuredSelection)listViewerPackage.getSelection()).iterator();
-				boolean ok = MessageDialog.openConfirm(
-						new Shell(),
+				Iterator<PackageModule> it = ((IStructuredSelection) listViewerPackage
+						.getSelection()).iterator();
+				boolean ok = MessageDialog.openConfirm(new Shell(),
 						"Remove package",
 						"Are you sure that you want to remove package?");
 				if (ok) {
 					try (Connection con = DaoUtil.connect(properties)) {
 						PackageDAO pDao = new PackageDAO();
-						while(it.hasNext()){
+						while (it.hasNext()) {
 							PackageModule pkg = it.next();
 							pDao.delete(pkg.getId(), con);
 						}
@@ -766,8 +772,10 @@ public class OverviewPage extends OverViewPagePOJO {
 			@Override
 			public void handleEvent(Event event) {
 				// MessageDialog.openConfirm(new Shell(), "Remove package", );
-				/*Resource r = (Resource) ((IStructuredSelection) listViewerPackage
-						.getSelection()).getFirstElement();*/
+				/*
+				 * Resource r = (Resource) ((IStructuredSelection)
+				 * listViewerPackage .getSelection()).getFirstElement();
+				 */
 				Iterator it = ((StructuredSelection) listViewerPackage
 						.getSelection()).iterator();
 				boolean ok = MessageDialog
@@ -777,7 +785,7 @@ public class OverviewPage extends OverViewPagePOJO {
 					while (it.hasNext()) {
 						Object o = it.next();
 						if (o instanceof Resource) {
-							Resource r = (Resource)o;
+							Resource r = (Resource) o;
 							ResourceDao rDao = new ResourceDao();
 							try (Connection con = DaoUtil.connect(properties)) {
 								rDao.delete(r.getId(), con);

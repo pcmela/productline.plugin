@@ -26,6 +26,8 @@ import productline.plugin.internal.WhereUsedCode;
 import productline.plugin.internal.WhereUsedCodeResolver;
 import productline.plugin.view.WhereUsedCodeView;
 import productline.plugin.view.WhereUsedView;
+import diploma.productline.entity.Element;
+import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.Variability;
 
@@ -91,6 +93,26 @@ public class WhereUsedInCodeAction extends Action {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}else if(selection instanceof Module){
+				Module v = (Module) selection;
+				try {
+					WhereUsedCodeResolver resolver = new WhereUsedCodeResolver(
+							workspace, getPackageFragments(this.javaProject, null), v.getName(), eclipseProject);
+					try {
+						result.addAll(resolver
+								.getModulesOccurences());
+						System.out.println("done");
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} catch (JavaModelException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			
 			if (p instanceof WhereUsedCodeView) {
@@ -124,6 +146,8 @@ public class WhereUsedInCodeAction extends Action {
 					}
 				}
 			}
+		}else{
+			return Utils.getPackageInJavaProject(javaProject);
 		}
 
 		return result;

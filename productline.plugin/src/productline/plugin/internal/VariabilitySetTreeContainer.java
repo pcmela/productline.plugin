@@ -32,8 +32,10 @@ public class VariabilitySetTreeContainer extends BaseProductLineEntity {
 	public void setParent(Module parent) {
 		this.parent = parent;
 	}
-	
-	
-	
+
+	@Override
+	public String toString() {
+		return getName();
+	}
 
 }

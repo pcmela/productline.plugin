@@ -35,6 +35,7 @@ public class BrowseProductLineView extends ViewPart {
 	private TreeViewer treeViewer;
 	private ProductLineDAO plDao;
 	private ProductLine parentProductLine;
+	private final String NO_DATA = "No data found";
 
 	public BrowseProductLineView() {
 		super();
@@ -51,7 +52,11 @@ public class BrowseProductLineView extends ViewPart {
 				// if (parentProductLine == null) {
 				parentProductLine = (ProductLine) o;
 				ProductLine[] p = getProductLineChildren((ProductLine) o);
-				treeViewer.setInput(p);
+				if(p != null && p.length > 0){
+					treeViewer.setInput(p);
+				}else{
+					treeViewer.setInput(NO_DATA);
+				}
 			}
 		}
 	};
@@ -78,7 +83,13 @@ public class BrowseProductLineView extends ViewPart {
 			if (selected instanceof ProductLine) {
 				ProductLine productLine = (ProductLine) selected;
 				parentProductLine = productLine;
-				treeViewer.setInput(getProductLineChildren(productLine));
+				ProductLine[] p = getProductLineChildren(productLine);
+				
+				if(p != null && p.length > 0){
+					treeViewer.setInput(p);
+				}else{
+					treeViewer.setInput(NO_DATA);
+				}
 			}
 		}
 		System.out.println("ahoj");

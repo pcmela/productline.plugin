@@ -23,7 +23,6 @@ public class ProductLineStyledLabelProvider extends StyledCellLabelProvider {
 				if (!m.isVariable()) {
 					text.append(m.getName());
 					text.append(" [mandatory]", StyledString.DECORATIONS_STYLER);
-					// return m.getName() + " [mandatory]";
 				}
 			}else if (element instanceof Element) {
 				Element e = (Element) element;
@@ -32,12 +31,11 @@ public class ProductLineStyledLabelProvider extends StyledCellLabelProvider {
 						.append(e.getType().getName(),
 								StyledString.DECORATIONS_STYLER)
 						.append("]", StyledString.DECORATIONS_STYLER);
-				// return new StringBuilder().append(e.getName()).append(" [")
-				// .append(e.getType().getName()).append("]").toString();
 			}else{
-				text.append(((BaseProductLineEntity)element).getName());
+				text.append(element.toString());
 			}
-			// return ((BaseProductLineEntity) element).getName();
+		}else{
+			text.append(element.toString());
 		}
 
 		// return "Error - invalid object type in LabelProvider";

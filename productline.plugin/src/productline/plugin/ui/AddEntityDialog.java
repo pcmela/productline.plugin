@@ -61,24 +61,23 @@ public class AddEntityDialog extends TitleAreaDialog implements
 
 	protected Class className;
 
-	//General Section
+	// General Section
 	private Label lName;
 	private Text tName;
 	private Label lDescription;
 	private Text tDescition;
-	
-	//Module Section
+
+	// Module Section
 	private Label lIsVariable;
 	private Button bIsVariable;
 	private Button btnAddPackage;
 	private List list;
 	private ListViewer listViewer;
 	private Properties properties;
-	
-	//Element Section
+
+	// Element Section
 	private Label lElementType;
 	private Combo cElementType;
-	
 
 	private IProject project;
 
@@ -126,24 +125,23 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		container.setLayout(layout);
 
-		
 		/*
 		 * createFirstName(container); createLastName(container);
 		 */
 		if (className == Module.class) {
 			createModuleSection(container);
-		}else if(className == Variability.class){
+		} else if (className == Variability.class) {
 			createVariabilitySection(container);
-		}else if(className == Element.class){
+		} else if (className == Element.class) {
 			createElementSection(container);
 		}
-	
+
 		return null;
 	}
 
 	private void createElementSection(Composite container) {
 		createGeneralSection(container);
-		
+
 		lElementType = new Label(container, SWT.NONE);
 		lElementType.setText("Type:");
 
@@ -155,15 +153,15 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		cElementType.setItems(ElementType.toArray());
 		cElementType.setLayoutData(dataName);
 		cElementType.addSelectionListener(new SelectionListener() {
-			
+
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				validateForm();				
+				validateForm();
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
-				validateForm();				
+				validateForm();
 			}
 		});
 	}
@@ -174,7 +172,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 
 	private void createModuleSection(Composite container) {
 		createGeneralSection(container);
-		
+
 		lIsVariable = new Label(container, SWT.NONE);
 		lIsVariable.setText("Is Variable:");
 
@@ -184,7 +182,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 
 		bIsVariable = new Button(container, SWT.CHECK);
 		bIsVariable.setLayoutData(dataName);
-		
+
 		new Label(container, SWT.NONE);
 
 		btnAddPackage = new Button(container, SWT.NONE);
@@ -213,8 +211,8 @@ public class AddEntityDialog extends TitleAreaDialog implements
 
 		listViewer.setLabelProvider(new PackageListLabelProvider());
 	}
-	
-	private void createGeneralSection(Composite container){
+
+	private void createGeneralSection(Composite container) {
 		lName = new Label(container, SWT.NONE);
 		lName.setText("Name:");
 
@@ -225,7 +223,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		tName = new Text(container, SWT.BORDER);
 		tName.setLayoutData(dataName);
 		tName.addModifyListener(new ModifyListener() {
-			
+
 			@Override
 			public void modifyText(ModifyEvent e) {
 				validateForm();
@@ -241,26 +239,28 @@ public class AddEntityDialog extends TitleAreaDialog implements
 		tDescition = new Text(container, SWT.BORDER);
 		tDescition.setLayoutData(dataDescription);
 	}
-	
-	private void validateForm(){
+
+	private void validateForm() {
 		StringBuilder message = new StringBuilder();
 		boolean valid = true;
-		
-		if(tName.getText().equals("")){
+
+		if (tName.getText().equals("")) {
 			valid = false;
 			message.append("You must enter valid name for new item!");
 		}
-		
-		if(AddEntityDialog.this.className == Element.class){
-			if(cElementType.getText().equals("")){
+
+		if (AddEntityDialog.this.className == Element.class) {
+			if (cElementType.getText().equals("")) {
 				valid = false;
-				if(!message.toString().equals("")) message.append("\n"); 
+				if (!message.toString().equals(""))
+					message.append("\n");
 				message.append("You must select type of Element!");
 			}
 		}
-		if(!valid){
-			AddEntityDialog.this.setMessage(message.toString(), IMessageProvider.ERROR);
-		}else{
+		if (!valid) {
+			AddEntityDialog.this.setMessage(message.toString(),
+					IMessageProvider.ERROR);
+		} else {
 			AddEntityDialog.this.setMessage("");
 		}
 		getButton(IDialogConstants.OK_ID).setEnabled(valid);
@@ -272,22 +272,22 @@ public class AddEntityDialog extends TitleAreaDialog implements
 	}
 
 	private void saveInput() {
-		if(className == Module.class){
+		if (className == Module.class) {
 			saveModuleInput();
-		}else if(className == Variability.class){
+		} else if (className == Variability.class) {
 			saveVariabilityInput();
-		}else if(className == Element.class){
+		} else if (className == Element.class) {
 			saveElementInput();
 		}
 	}
-	
-	private void saveVariabilityInput(){
+
+	private void saveVariabilityInput() {
 		Variability v = new Variability();
 		v.setName(tName.getText());
-		//v.setId(tName.getText());
-		v.setModule(((VariabilitySetTreeContainer)parent).getParent());
-		
-		try(Connection con = DaoUtil.connect(properties)){
+		// v.setId(tName.getText());
+		v.setModule(((VariabilitySetTreeContainer) parent).getParent());
+
+		try (Connection con = DaoUtil.connect(properties)) {
 			VariabilityDAO vDao = new VariabilityDAO();
 			vDao.save(v, con);
 		} catch (ClassNotFoundException err) {
@@ -300,21 +300,21 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			err.printStackTrace();
 		}
 	}
-	
-	private void saveElementInput(){
+
+	private void saveElementInput() {
 		Element e = new Element();
 		e.setName(tName.getText());
 		e.setDescription(tDescition.getText());
-		e.setModule(((ElementSetTreeContainer)parent).getParent());
-		
+		e.setModule(((ElementSetTreeContainer) parent).getParent());
+
 		String typeValue = cElementType.getText();
 		ElementType et = ElementType.get(typeValue);
 		Type t = new Type();
 		t.setId(et.getId());
 		t.setName(et.toString());
 		e.setType(t);
-		
-		try(Connection con = DaoUtil.connect(properties)){
+
+		try (Connection con = DaoUtil.connect(properties)) {
 			ElementDAO eDao = new ElementDAO();
 			eDao.save(e, con);
 		} catch (ClassNotFoundException err) {
@@ -325,24 +325,27 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			err.printStackTrace();
 		}
 	}
-	
-	private void saveModuleInput(){
-		Set<PackageModule> packages = (Set<PackageModule>)listViewer.getInput();
+
+	private void saveModuleInput() {
+		Set<PackageModule> packages = (Set<PackageModule>) listViewer
+				.getInput();
 		Module m = new Module();
-		
+
 		m.setName(tName.getText());
 		m.setDescription(tDescition.getText());
 		m.setProductLine((ProductLine) parent);
 		m.setPackages(packages);
-		
-		try(Connection con = DaoUtil.connect(properties)){
+
+		try (Connection con = DaoUtil.connect(properties)) {
 			ModuleDAO mDao = new ModuleDAO();
 			m.setId(mDao.save(m, con));
 
-			for (PackageModule pkg : packages) {
-				pkg.setModule(m);
+			if (packages != null) {
+				for (PackageModule pkg : packages) {
+					pkg.setModule(m);
 					PackageDAO pDao = new PackageDAO();
 					pkg.setId(pDao.save(pkg, con));
+				}
 			}
 		} catch (ClassNotFoundException e) {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
@@ -351,7 +354,7 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			DefaultMessageDialog.driversNotFoundDialog("H2");
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	@Override

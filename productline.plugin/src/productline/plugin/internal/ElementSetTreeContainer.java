@@ -33,5 +33,10 @@ public class ElementSetTreeContainer extends BaseProductLineEntity {
 		this.parent = parent;
 	}
 
+	@Override
+	public String toString() {
+		return getName();
+	}
+
 	
 }

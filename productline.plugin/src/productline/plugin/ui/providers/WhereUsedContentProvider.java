@@ -23,7 +23,10 @@ public class WhereUsedContentProvider implements IStructuredContentProvider {
 	public Object[] getElements(Object inputElement) {
 		if (inputElement instanceof Set<?>) {
 			return ((Set<?>) inputElement).toArray();
-		} else {
+		} else if(inputElement instanceof String){
+			return new String[] { (String)inputElement };
+		}
+		else {
 			return new Object[] {};
 		}
 	}

@@ -7,7 +7,12 @@ import diploma.productline.dao.WhereUsedRecord;
 public class WhereUsedLabelProvider extends LabelProvider {
 	@Override
 	public String getText(Object element) {
-		WhereUsedRecord rec = (WhereUsedRecord) element;
-		return rec.getName() + " - " + rec.getProductLine() + " (" + rec.getType() + ")";
+		if (element instanceof WhereUsedRecord) {
+			WhereUsedRecord rec = (WhereUsedRecord) element;
+			return rec.getName() + " - " + rec.getProductLine() + " ("
+					+ rec.getType() + ")";
+		}else{
+			return element.toString();
+		}
 	}
 }

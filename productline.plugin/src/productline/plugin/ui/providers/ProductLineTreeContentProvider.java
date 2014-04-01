@@ -27,7 +27,10 @@ public class ProductLineTreeContentProvider implements ITreeContentProvider {
 			return (Object[])inputElement;
 		}else if(inputElement instanceof ProductLine){
 			return ((ProductLine) inputElement).getModules().toArray();
-		}else {
+		}else if(inputElement instanceof String){
+			return new String[] { inputElement.toString() };
+		}
+		{
 			return new Object[0];
 		}
 	}

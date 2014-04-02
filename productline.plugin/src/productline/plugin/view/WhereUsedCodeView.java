@@ -6,6 +6,8 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.swt.SWT;
@@ -37,21 +39,16 @@ public class WhereUsedCodeView extends ViewPart {
 		List list = listViewer.getList();
 		listViewer.setContentProvider(new WhereUsedContentProvider());
 		listViewer.setLabelProvider(new WhereUsedLabelProvider());
-		list.addSelectionListener(new SelectionListener() {
-			
+		listViewer.addDoubleClickListener(new IDoubleClickListener() {
+
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Object obj = ((IStructuredSelection)listViewer.getSelection()).getFirstElement();
-				
-				if(obj instanceof WhereUsedCode){
-					openEditor((WhereUsedCode)obj);
+			public void doubleClick(DoubleClickEvent event) {
+				Object obj = ((IStructuredSelection) listViewer.getSelection())
+						.getFirstElement();
+
+				if (obj instanceof WhereUsedCode) {
+					openEditor((WhereUsedCode) obj);
 				}
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// TODO Auto-generated method stub
-				
 			}
 		});
 	}

@@ -507,11 +507,19 @@ public class OverviewPage extends OverViewPagePOJO {
 
 			@Override
 			public void handleEvent(Event event) {
+				BaseProductLineEntity o = (BaseProductLineEntity) ((IStructuredSelection) treeViewer
+						.getSelection()).getFirstElement();
+
+				if (!o.isDirty()) {
+					o.setDirty(true);
+				}
 				if (!isDirty) {
 					isDirty = true;
 					firePropertyChange(IEditorPart.PROP_DIRTY);
 					editor.editorDirtyStateChanged();
 				}
+				treeViewer.refresh();
+				treeViewer.expandAll();
 			}
 		});
 

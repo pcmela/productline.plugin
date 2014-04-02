@@ -5,6 +5,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -21,6 +22,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
 import productline.plugin.ui.ProductLineIdDialog;
+import productline.plugin.ui.ProjectListDialog;
 
 public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 
@@ -105,7 +107,24 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		if (projectLoacation != null) {
 			tDefaultPath.setText(projectLoacation.toString());
 		}
-
+		bDefaultPath = new Button(container, SWT.PUSH);
+		bDefaultPath.setText("Choose project");
+		bDefaultPath.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				ProjectListDialog dialog = new ProjectListDialog(new Shell(), tDefaultPath, CreateWizardOverview.this);
+				dialog.open();
+				
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
 		lNewDbUserName = new Label(container, SWT.NONE);
 		lNewDbUserName.setText("Username:");
 		tNewDbUserName = new Text(container, SWT.BORDER);
@@ -127,8 +146,14 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 		FormData dataDefaultPathText = new FormData();
 		dataDefaultPathText.top = new FormAttachment(0, 5);
 		dataDefaultPathText.left = new FormAttachment(lDefaultPath, 5);
-		dataDefaultPathText.right = new FormAttachment(100, -5);
+		dataDefaultPathText.right = new FormAttachment(80, -5);
 		tDefaultPath.setLayoutData(dataDefaultPathText);
+		
+		FormData dataDefaultPathButton = new FormData();
+		dataDefaultPathButton.top = new FormAttachment(tDefaultPath, 5, SWT.CENTER);
+		dataDefaultPathButton.left = new FormAttachment(tDefaultPath, 5);
+		dataDefaultPathButton.right = new FormAttachment(100, -5);
+		bDefaultPath.setLayoutData(dataDefaultPathButton);
 
 		FormData dataPLNameLabel = new FormData();
 		dataPLNameLabel.top = new FormAttachment(tProductLineName, 5,
@@ -374,6 +399,7 @@ public class CreateWizardOverview extends CreateWizardOverviewPOJO {
 				validateForm();
 			}
 		};
+		tDefaultPath.addModifyListener(listener);
 		tProductLineName.addModifyListener(listener);
 
 		tNewDbUserName.addModifyListener(listener);

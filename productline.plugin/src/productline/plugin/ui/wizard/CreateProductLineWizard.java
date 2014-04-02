@@ -48,19 +48,25 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 
 	@Override
 	public void addPages() {
-		if (checkIfConfigExist(project)) {
-			MessageDialog
-					.openError(
-							PlatformUI.getWorkbench()
-									.getActiveWorkbenchWindow().getShell(),
-							"Config already exist",
-							"Configuration file for product line already exist in your project. If you want to create new file, delete the old first.");
-			dispose();
-			return;
+		if (project != null) {
+			if (checkIfConfigExist(project)) {
+				MessageDialog
+						.openError(
+								PlatformUI.getWorkbench()
+										.getActiveWorkbenchWindow().getShell(),
+								"Config already exist",
+								"Configuration file for product line already exist in your project. If you want to create new file, delete the old first.");
+				dispose();
+				return;
+			}
 		}
 
 		page1 = new CreateWizardOverview("Create database");
-		page1.setProjectLoacation(project.getLocation());
+		if (project != null) {
+			page1.setProjectLoacation(project.getLocation());
+		} else {
+			page1.setProjectLoacation(null);
+		}
 		addPage(page1);
 		page2 = new CreateWizardImportPage("Import");
 		addPage(page2);
@@ -99,7 +105,8 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 							existingId = saveDataFromYaml(productLineName,
 									page2.gettFilePath().getText(), con, pDao);
 						} else {
-							existingId = saveDataFromDB(pDao, username, password, connectionString);
+							existingId = saveDataFromDB(pDao, username,
+									password, connectionString);
 						}
 						configurationFile = createIFile(existingId, username,
 								password, connectionString);
@@ -148,7 +155,7 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return true;
 	}
 
@@ -205,7 +212,8 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		return 0;
 	}
 
-	private int saveDataFromDB(ProductLineDAO pDao, String username, String password, String connectionString)
+	private int saveDataFromDB(ProductLineDAO pDao, String username,
+			String password, String connectionString)
 			throws ClassNotFoundException, SQLException {
 		String sourceUsername = page2.gettWebUserName().getText();
 		String sourcePassword = page2.gettWebPassword().getText();
@@ -218,7 +226,8 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 			p = pDao.getProductLineWithChilds(existingId, con);
 		}
 		p.setParent(null);
-		try(Connection con = DaoUtil.connect(username, password, connectionString)){
+		try (Connection con = DaoUtil.connect(username, password,
+				connectionString)) {
 			return pDao.createAll(p, con);
 		}
 	}
@@ -316,8 +325,8 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		Object element = selection.getFirstElement();
 		if (element instanceof IJavaElement) {
 			project = ((IJavaElement) element).getJavaProject().getProject();
-		} else if (element instanceof IFile) {
-			project = ((IFile) element).getProject();
+		} else if (element instanceof IResource) {
+			project = ((IResource) element).getProject();
 		}
 
 		workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()

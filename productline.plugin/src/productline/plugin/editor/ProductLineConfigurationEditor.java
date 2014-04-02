@@ -135,9 +135,6 @@ public class ProductLineConfigurationEditor extends FormEditor {
 			addPage(configPage = new ConfigurationPage(this,
 					"productline.plugin.editor.config", "Configuration",
 					project));
-			editor = new TextEditor();
-			int index = addPage(editor, getEditorInput());
-			setPageText(index, "Source");
 		} catch (PartInitException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -246,7 +243,7 @@ public class ProductLineConfigurationEditor extends FormEditor {
 		overviewPage.setDirty(false);
 		configPage.setDirty(false);
 		firePropertyChange(IEditorPart.PROP_DIRTY);
-
+		overviewPage.getTreeViewer().expandAll();
 	}
 
 	private void refreshConfigFile() throws IOException, CoreException {

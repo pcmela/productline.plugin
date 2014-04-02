@@ -23,6 +23,8 @@ public class ProductLineStyledLabelProvider extends StyledCellLabelProvider {
 				if (!m.isVariable()) {
 					text.append(m.getName());
 					text.append(" [mandatory]", StyledString.DECORATIONS_STYLER);
+				}else{
+					text.append(m.getName());
 				}
 			}else if (element instanceof Element) {
 				Element e = (Element) element;

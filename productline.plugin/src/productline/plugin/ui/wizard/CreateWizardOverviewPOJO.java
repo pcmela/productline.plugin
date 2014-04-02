@@ -24,6 +24,7 @@ public abstract class CreateWizardOverviewPOJO extends CreateWizardPageBase{
 
 	protected Label lDefaultPath;
 	protected Text tDefaultPath;
+	protected Button bDefaultPath;
 	
 	protected Label lProductLineName;
 	protected Text tProductLineName;
@@ -56,6 +57,12 @@ public abstract class CreateWizardOverviewPOJO extends CreateWizardPageBase{
 	
 	
 	protected void validateForm(){
+		if(tDefaultPath.getText().trim().equals("")){
+			setDescription("Choose a project");
+			setPageComplete(false);
+			return;
+		}
+		
 		if(tProductLineName.getText().equals("")){
 			setDescription("Enter a product line name");
 			setPageComplete(false);

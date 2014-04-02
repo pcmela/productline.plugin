@@ -141,7 +141,7 @@ public class ProjectListDialog extends Dialog {
 				IProject p = (IProject)listSelection.getFirstElement();
 				
 				IFile f = p.getFile("configuration.productline");
-				if(f != null){
+				if(f.exists()){
 					MessageDialog.openError(new Shell(), "Product line", "In selected project product line configuration already exist.");
 					return;
 				}

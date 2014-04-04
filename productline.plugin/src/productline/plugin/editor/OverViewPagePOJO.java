@@ -112,6 +112,24 @@ public class OverViewPagePOJO extends ProductLineFormPage implements
 
 		return nameValidator;
 	}
+	
+	protected void addDataBindingProductLine(ProductLine productLine) {
+
+		UpdateValueStrategy strategy = new UpdateValueStrategy();
+		strategy.setBeforeSetValidator(getNameValidator());
+		IObservableValue name = PojoProperties.value("name").observe(productLine);
+		IObservableValue description = PojoProperties.value("description")
+				.observe(productLine);
+		IObservableValue targetName = WidgetProperties.text(SWT.Modify)
+				.observe(tProductLineName);
+		IObservableValue targetDescription = WidgetProperties.text(SWT.Modify)
+				.observe(tProductLineDescription);
+
+		Binding bindName = dataBindingContext.bindValue(targetName, name,
+				strategy, null);
+		ControlDecorationSupport.create(bindName, SWT.TOP | SWT.LEFT);
+		dataBindingContext.bindValue(targetDescription, description);
+	}
 
 	protected void addDataBindingModule(Module module) {
 

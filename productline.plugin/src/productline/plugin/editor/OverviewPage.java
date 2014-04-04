@@ -335,7 +335,7 @@ public class OverviewPage extends OverViewPagePOJO {
 				SWT.NONE);
 		tProductLineName = toolkit.createText(detailComposite,
 				productLine.getName());
-		tProductLineName.addModifyListener(modifyListener);
+		
 
 		lProductLineDescription = toolkit.createLabel(detailComposite,
 				"Description");
@@ -343,7 +343,6 @@ public class OverviewPage extends OverViewPagePOJO {
 				false, false));
 		tProductLineDescription = toolkit.createText(detailComposite, null,
 				SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
-		tProductLineDescription.addModifyListener(modifyListener);
 
 		GridData tdName = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tdName.horizontalSpan = 3;
@@ -352,6 +351,11 @@ public class OverviewPage extends OverViewPagePOJO {
 		tdDescription.horizontalSpan = 3;
 		tdDescription.heightHint = 75;
 
+		addDataBindingProductLine(productLine);
+		
+		tProductLineName.addModifyListener(modifyListener);
+		tProductLineDescription.addModifyListener(modifyListener);
+		
 		tProductLineName.setLayoutData(tdName);
 		tProductLineDescription.setLayoutData(tdDescription);
 

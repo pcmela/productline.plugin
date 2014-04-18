@@ -1,5 +1,8 @@
 package productline.plugin;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -17,6 +20,10 @@ public class Activator implements BundleActivator {
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
+		
+		for(IProject p : ResourcesPlugin.getWorkspace().getRoot().getProjects()){
+			p.refreshLocal(IResource.DEPTH_ONE, null);
+		}
 	}
 
 	/*

@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -135,25 +137,32 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 							password, connectionString);
 				}
 			}
-		} catch (ClassNotFoundException e) {
-			DefaultMessageDialog.driversNotFoundDialog("H2");
-			e.printStackTrace();
-			return false;
-		} catch (SQLException e) {
-			DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-			e.printStackTrace();
-			return false;
-		} catch (FileNotFoundException e) {
-			DefaultMessageDialog.ioException(e.getMessage());
-			e.printStackTrace();
-			return false;
-		} catch (IOException e) {
-			DefaultMessageDialog.ioException(e.getMessage());
-			e.printStackTrace();
-			return false;
-		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			/*
+			 * } catch (ClassNotFoundException e) {
+			 * DefaultMessageDialog.driversNotFoundDialog("H2");
+			 * e.printStackTrace(); return false; } catch (SQLException e) {
+			 * DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
+			 * e.printStackTrace(); return false; } catch (FileNotFoundException
+			 * e) { DefaultMessageDialog.ioException(e.getMessage());
+			 * e.printStackTrace(); return false; } catch (IOException e) {
+			 * DefaultMessageDialog.ioException(e.getMessage());
+			 * e.printStackTrace(); return false; } catch (CoreException e) { //
+			 * TODO Auto-generated catch block e.printStackTrace();
+			 */
+		} catch (Exception e) {
+			File f = new File("C:\\Users\\IBM_ADMIN\\Desktop\\log.txt");
+			try {
+				try (PrintWriter printWriter = new PrintWriter(f)) {
+					e.printStackTrace(printWriter);
+					printWriter.flush();
+					MessageDialog.openError(PlatformUI.getWorkbench()
+							.getActiveWorkbenchWindow().getShell(),
+							"Exception", e.getMessage());
+				}
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 		return true;
@@ -185,25 +194,33 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 			SQLException {
 		File yamlFile = new File(path);
 		if (yamlFile.exists()) {
-			if (yamlFile.isFile()) {
-				ProductLine p = YamlExtractor.extract(path);
-				if (!resolveNameImportFromYaml(p, productLineName)) {
-					String[] names = new String[] { p.getName(),
-							page1.gettProductLineName().getText() };
-					MessageDialog dialog = new MessageDialog(new Shell(),
-							"Conflict in name", null,
-							"Please choose which name you want to persist.",
-							MessageDialog.INFORMATION, names, 0);
-					int result = dialog.open();
-					p.setName(names[result]);
-				}
-				if (p != null) {
-					return pDao.createAll(p, con);
+			try {
+				if (yamlFile.isFile()) {
+					ProductLine p = YamlExtractor.extract(path);
+					if (!resolveNameImportFromYaml(p, productLineName)) {
+						String[] names = new String[] { p.getName(),
+								page1.gettProductLineName().getText() };
+						MessageDialog dialog = new MessageDialog(
+								new Shell(),
+								"Conflict in name",
+								null,
+								"Please choose which name you want to persist.",
+								MessageDialog.INFORMATION, names, 0);
+						int result = dialog.open();
+						p.setName(names[result]);
+					}
+					if (p != null) {
+						return pDao.createAll(p, con);
+					} else {
+						DefaultMessageDialog.yamlIsEmptyException(path);
+					}
 				} else {
-					DefaultMessageDialog.yamlIsEmptyException(path);
+					DefaultMessageDialog.yamlIsNotFileException(path);
 				}
-			} else {
-				DefaultMessageDialog.yamlIsNotFileException(path);
+			} catch (IllegalStateException e) {
+				MessageDialog.openError(PlatformUI.getWorkbench()
+						.getActiveWorkbenchWindow().getShell(),
+						"YAML parsing error", e.getMessage());
 			}
 		} else {
 			DefaultMessageDialog.fileNotFoundException(path);
@@ -240,21 +257,14 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		return false;
 	}
 
-	private File loadDdlScript() {
+	private Reader loadDdlScript() {
 		URL url;
-		try {
-			url = new URL(
-					"platform:/plugin/productline.plugin/resources/DDL.sql");
-			return new File(FileLocator.resolve(url).toURI());
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return null;
+		InputStream is = CreateProductLineWizard.class
+				.getResourceAsStream("/resources/DDL.sql");
+		return new InputStreamReader(is);
+		// url = new URL(
+		// "platform:/plugin/productline.plugin/resources/DDL.sql");
+		// return new File(FileLocator.resolve(url).toURI());
 	}
 
 	private String createConfigurationContent(String productLineName,

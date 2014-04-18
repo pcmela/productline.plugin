@@ -40,7 +40,7 @@ public abstract class CreateWizardPageBase extends WizardPage {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
 			e.printStackTrace();
 		} catch (SQLException e) {
-			DefaultMessageDialog.sqlExceptionDialog("Connection failed!\nPlease enter the valid username, password and connection string and try it again.");
+			DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
 			e.printStackTrace();
 		}
 		return 0;

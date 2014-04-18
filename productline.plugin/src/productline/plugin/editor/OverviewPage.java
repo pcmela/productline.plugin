@@ -188,7 +188,7 @@ public class OverviewPage extends OverViewPagePOJO {
 				final Object selection = ((TreeSelection) treeViewer
 						.getSelection()).getFirstElement();
 
-				ModifyListener modifyListener = new ModifyListener() {
+				ModifyListener modifyListenerName = new ModifyListener() {
 					@Override
 					public void modifyText(ModifyEvent e) {
 						BaseProductLineEntity o = (BaseProductLineEntity) selection;
@@ -209,21 +209,42 @@ public class OverviewPage extends OverViewPagePOJO {
 						treeViewer.expandAll();
 					}
 				};
+				
+				
+				ModifyListener modifyListenerOther = new ModifyListener() {
+					@Override
+					public void modifyText(ModifyEvent e) {
+						BaseProductLineEntity o = (BaseProductLineEntity) selection;
+						if (o instanceof ElementTreeContainer) {
+							o = ((ElementTreeContainer) o).getSource();
+						} else if (o instanceof VariabilityTreeContainer) {
+							o = ((VariabilityTreeContainer) o).getSource();
+						}
+						if (!o.isDirty()) {
+							o.setDirty(true);
+						}
+						if (!isDirty) {
+							isDirty = true;
+							firePropertyChange(IEditorPart.PROP_DIRTY);
+							editor.editorDirtyStateChanged();
+						}
+					}
+				};
 
 				if (selection instanceof ProductLine) {
 					createDetailProductLine((ProductLine) selection,
-							modifyListener);
+							modifyListenerName, modifyListenerOther);
 				}
 				if (selection instanceof Module) {
-					createDetailModule((Module) selection, modifyListener);
+					createDetailModule((Module) selection, modifyListenerName, modifyListenerOther);
 				} else if (selection instanceof VariabilityTreeContainer) {
 					createDetailVariability(
 							((VariabilityTreeContainer) selection).getSource(),
-							modifyListener);
+							modifyListenerName, modifyListenerOther);
 				} else if (selection instanceof ElementTreeContainer) {
 					createDetailElement(
 							((ElementTreeContainer) selection).getSource(),
-							modifyListener);
+							modifyListenerName, modifyListenerOther);
 				} else {
 					return;
 				}
@@ -322,7 +343,7 @@ public class OverviewPage extends OverViewPagePOJO {
 	}
 
 	private void createDetailProductLine(ProductLine productLine,
-			ModifyListener modifyListener) {
+			ModifyListener modifyListener, ModifyListener modifyListenerOther) {
 		disposeActiveElements(rightComposite.getChildren());
 		resetCurrentSelectedObject();
 
@@ -354,7 +375,7 @@ public class OverviewPage extends OverViewPagePOJO {
 		addDataBindingProductLine(productLine);
 		
 		tProductLineName.addModifyListener(modifyListener);
-		tProductLineDescription.addModifyListener(modifyListener);
+		tProductLineDescription.addModifyListener(modifyListenerOther);
 		
 		tProductLineName.setLayoutData(tdName);
 		tProductLineDescription.setLayoutData(tdDescription);
@@ -365,7 +386,7 @@ public class OverviewPage extends OverViewPagePOJO {
 	}
 
 	private void createDetailModule(final Module module,
-			ModifyListener modifyListener) {
+			ModifyListener modifyListener, ModifyListener modifyListenerOther) {
 		disposeActiveElements(rightComposite.getChildren());
 		resetCurrentSelectedObject();
 
@@ -506,7 +527,7 @@ public class OverviewPage extends OverViewPagePOJO {
 
 		addDataBindingModule(module);
 		tModuleName.addModifyListener(modifyListener);
-		tModuleDescription.addModifyListener(modifyListener);
+		tModuleDescription.addModifyListener(modifyListenerOther);
 		bModuleIsVariable.addListener(SWT.Selection, new Listener() {
 
 			@Override
@@ -531,7 +552,7 @@ public class OverviewPage extends OverViewPagePOJO {
 	}
 
 	private void createDetailVariability(Variability variability,
-			ModifyListener modifyListener) {
+			ModifyListener modifyListener, ModifyListener modifyListenerOther) {
 		disposeActiveElements(rightComposite.getChildren());
 		createDetailSection();
 
@@ -563,13 +584,13 @@ public class OverviewPage extends OverViewPagePOJO {
 		tVariabilityDescription.setLayoutData(tdDescription);
 
 		addDataBindingVariable(variability);
-		tVariabilityDescription.addModifyListener(modifyListener);
+		tVariabilityDescription.addModifyListener(modifyListenerOther);
 		tVariabilityName.addModifyListener(modifyListener);
 		rightComposite.layout();
 	}
 
 	private void createDetailElement(Element element,
-			ModifyListener modifyListener) {
+			ModifyListener modifyListener, ModifyListener modifyListenerOther) {
 
 		final Element elementObject = element;
 

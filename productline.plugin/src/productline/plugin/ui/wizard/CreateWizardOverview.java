@@ -19,9 +19,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.PlatformUI;
 
-import productline.plugin.ui.ProductLineIdDialog;
 import productline.plugin.ui.ProjectListDialog;
 
 public class CreateWizardOverview extends CreateWizardOverviewPOJO {

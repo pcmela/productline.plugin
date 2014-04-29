@@ -4,12 +4,6 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            class="productline.plugin.MainViewWrapper"
-            id="productline.plugin.mainView"
-            name="Product Line"
-            restorable="true">
-      </view>
-      <view
             class="productline.plugin.view.BrowseProductLineView"
             id="productline.plugin.browseView"
             name="Browse child product lines"

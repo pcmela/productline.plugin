@@ -2,7 +2,6 @@ package productline.plugin.actions;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,30 +13,21 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.progress.UIJob;
 
 import productline.plugin.internal.Utils;
 import productline.plugin.internal.WhereUsedCode;
 import productline.plugin.internal.WhereUsedCodeResolver;
 import productline.plugin.view.WhereUsedCodeView;
-import productline.plugin.view.WhereUsedView;
-import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
 import diploma.productline.entity.Variability;
@@ -87,13 +77,6 @@ public class WhereUsedInCodeAction extends Action {
 				@Override
 				public IStatus run(IProgressMonitor monitor) {
 					monitor.setTaskName("Finding where used in source code...");
-					//monitor.beginTask("task", 100);
-					try {
-						Thread.sleep(5000);
-					} catch (InterruptedException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
 
 					if (selection instanceof Variability) {
 						Variability v = (Variability) selection;

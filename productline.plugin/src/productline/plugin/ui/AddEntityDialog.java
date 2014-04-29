@@ -2,12 +2,10 @@ package productline.plugin.ui;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -29,7 +27,6 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.internal.ide.actions.LTKLauncher;
 
 import productline.plugin.editor.IPackageListViewer;
 import productline.plugin.internal.DefaultMessageDialog;

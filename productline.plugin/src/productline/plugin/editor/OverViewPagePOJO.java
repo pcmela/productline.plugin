@@ -1,6 +1,6 @@
 package productline.plugin.editor;
 
-import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 import org.eclipse.core.databinding.Binding;
@@ -12,7 +12,6 @@ import org.eclipse.core.databinding.validation.IValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.databinding.fieldassist.ControlDecorationSupport;
 import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
@@ -30,6 +29,9 @@ import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 
+import productline.plugin.actions.AddAction;
+import productline.plugin.actions.CreateCustomLineAction;
+import productline.plugin.actions.RemoveAction;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.PackageModule;
@@ -89,9 +91,35 @@ public class OverViewPagePOJO extends ProductLineFormPage implements
 
 	private IValidator nameValidator = null;
 	protected IProject project;
+	
+	protected RemoveAction actionRemove;
+	protected AddAction actionAdd;
+	protected CreateCustomLineAction createCustomLine;
 
 	public OverViewPagePOJO(FormEditor editor, String id, String title) {
 		super(editor, id, title);
+	}
+	
+	@Override
+	public void setProperties(Properties properties) {
+		this.properties = properties;
+		localDbConfiguration.setDataLocal(properties);
+		refreshActionProperties(properties);
+		
+	}
+	
+	protected void refreshActionProperties(Properties properties){
+		if(actionAdd != null){
+			actionAdd.setProperties(properties);
+		}
+		
+		if(actionRemove != null){
+			actionRemove.setProperties(properties);
+		}
+		
+		if(createCustomLine != null){
+			createCustomLine.setProperties(properties);
+		}
 	}
 
 	protected IValidator getNameValidator() {

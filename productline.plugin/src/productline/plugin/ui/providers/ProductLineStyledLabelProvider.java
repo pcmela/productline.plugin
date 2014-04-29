@@ -3,7 +3,6 @@ package productline.plugin.ui.providers;
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.swt.custom.StyledText;
 
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;

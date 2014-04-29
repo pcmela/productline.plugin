@@ -1,27 +1,12 @@
 package productline.plugin;
 
-import javax.inject.Inject;
-
-import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.ExpandBar;
-import org.eclipse.swt.widgets.ExpandItem;
-
-import productline.plugin.ui.providers.ProductLineTreeContentProvider;
-import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
-import diploma.productline.configuration.YamlExtractor;
-import diploma.productline.entity.ProductLine;
 
 public class MainView {
 
 private TreeViewer viewer;
 	
-	private ExpandBar treeExpandBar;
+	/*private ExpandBar treeExpandBar;
 	private ExpandBar detailExpandBar;
 
 	@Inject
@@ -40,7 +25,7 @@ private TreeViewer viewer;
         
         String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml";
         ProductLine productLine = YamlExtractor.extract(path);
-        /*ProductLine productLine = new ProductLine();
+        ProductLine productLine = new ProductLine();
         Module module1 = new Module();
         Module module2 = new Module();
         Variability var1 = new Variability();
@@ -74,7 +59,7 @@ private TreeViewer viewer;
         
         productLine.setModules(m);
         module1.setVariabilities(v);
-        module1.setElements(e);*/
+        module1.setElements(e);
         
         viewer.setInput(new Object[] {productLine});
         viewer.expandAll();
@@ -146,11 +131,11 @@ private TreeViewer viewer;
 			
 		}
 
-		/*
+		
 		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
 		 * productLine = YamlExtractor.extract(path);
-		 */
+		 
 		return null;
 
-	}
+	}*/
 }

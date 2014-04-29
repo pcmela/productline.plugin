@@ -4,21 +4,21 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Set;
 
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.part.ViewPart;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.List;
+import org.eclipse.ui.part.ViewPart;
 
+import productline.plugin.internal.DefaultMessageDialog;
+import productline.plugin.ui.providers.WhereUsedContentProvider;
+import productline.plugin.ui.providers.WhereUsedLabelProvider;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.WhereUsedDAO;
 import diploma.productline.dao.WhereUsedRecord;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.Variability;
-import productline.plugin.internal.DefaultMessageDialog;
-import productline.plugin.ui.providers.WhereUsedContentProvider;
-import productline.plugin.ui.providers.WhereUsedLabelProvider;
 
 public class WhereUsedView extends ViewPart {
 	private WhereUsedDAO wDao = new WhereUsedDAO();

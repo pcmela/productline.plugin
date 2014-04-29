@@ -2,7 +2,6 @@ package productline.plugin.editor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Properties;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -26,7 +25,6 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 
-import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.ProductLineIdDialog;
 import diploma.productline.DaoUtil;

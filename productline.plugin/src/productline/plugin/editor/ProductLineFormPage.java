@@ -137,6 +137,7 @@ public class ProductLineFormPage extends FormPage {
 	public void setProperties(Properties properties) {
 		this.properties = properties;
 		localDbConfiguration.setDataLocal(properties);
+		
 	}
 
 	private Properties propertiesFactory(boolean changed) {

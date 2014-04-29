@@ -12,12 +12,10 @@ import org.eclipse.swt.widgets.Shell;
 
 import productline.plugin.editor.OverviewPage;
 import productline.plugin.internal.DefaultMessageDialog;
-import productline.plugin.internal.ElementTreeContainer;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.ElementDAO;
 import diploma.productline.dao.ModuleDAO;
 import diploma.productline.dao.ProductLineDAO;
-import diploma.productline.dao.ResourceDao;
 import diploma.productline.dao.VariabilityDAO;
 import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
@@ -35,6 +33,14 @@ public class RemoveAction extends Action {
 		this.treeViewer = treeViewer;
 		this.properties = properties;
 		this.overviewPage = overviewPage;
+	}
+	
+	public Properties getProperties() {
+		return properties;
+	}
+
+	public void setProperties(Properties properties) {
+		this.properties = properties;
 	}
 	
 	@Override

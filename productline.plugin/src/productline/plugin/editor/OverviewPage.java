@@ -5,13 +5,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -33,7 +32,6 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -53,7 +51,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.List;
@@ -62,9 +59,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
@@ -88,13 +83,10 @@ import productline.plugin.internal.ProductLineTreeComparator;
 import productline.plugin.internal.VariabilitySetTreeContainer;
 import productline.plugin.internal.VariabilityTreeContainer;
 import productline.plugin.ui.AddEntityDialog;
-import productline.plugin.ui.CreateNewCustomLineDialog;
 import productline.plugin.ui.PackageListDialog;
 import productline.plugin.ui.providers.PackageListContentProvider;
 import productline.plugin.ui.providers.ProductLineStyledLabelProvider;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
-import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
-import productline.plugin.view.WhereUsedView;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.PackageDAO;
 import diploma.productline.dao.ResourceDao;
@@ -108,7 +100,7 @@ import diploma.productline.entity.Resource;
 import diploma.productline.entity.Variability;
 
 public class OverviewPage extends OverViewPagePOJO {
-
+	
 	public OverviewPage(FormEditor editor, String id, String title,
 			IProject project) {
 		super(editor, id, title);
@@ -251,10 +243,10 @@ public class OverviewPage extends OverViewPagePOJO {
 			}
 		});
 
-		final RemoveAction actionRemove = new RemoveAction(treeViewer,
+		actionRemove = new RemoveAction(treeViewer,
 				properties, this);
 		actionRemove.setText("Remove");
-		final AddAction actionAdd = new AddAction(treeViewer, project,
+		actionAdd = new AddAction(treeViewer, project,
 				properties, this);
 		actionAdd.setText("Add");
 
@@ -269,7 +261,7 @@ public class OverviewPage extends OverViewPagePOJO {
 						.toOSString(), project);
 		whereUsedCodeAction.setText("Where used (in source code)");
 
-		final CreateCustomLineAction createCustomLine = new CreateCustomLineAction(
+		createCustomLine = new CreateCustomLineAction(
 				treeViewer, properties, project);
 		createCustomLine.setText("New Custom Line");
 
@@ -288,6 +280,7 @@ public class OverviewPage extends OverViewPagePOJO {
 						mgr.add(actionAdd);
 						mgr.add(createCustomLine);
 						mgr.add(viewChilrenAction);
+						mgr.add(actionRemove);
 					} else if (o instanceof Module) {
 						mgr.add(whereUsedAction);
 						mgr.add(whereUsedCodeAction);
@@ -866,7 +859,7 @@ public class OverviewPage extends OverViewPagePOJO {
 		 * 100;
 		 */
 		detailSection.setLayoutData(gd_detailSection);
-		detailSection.setText("Product Line Hiearchy");
+		detailSection.setText("Product Line Details");
 		toolkit.paintBordersFor(detailSection);
 
 		detailComposite = toolkit.createComposite(detailSection, SWT.NONE);

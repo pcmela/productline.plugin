@@ -5,18 +5,16 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.Set;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
-import diploma.productline.DaoUtil;
-import diploma.productline.dao.ProductLineDAO;
-import diploma.productline.entity.ProductLine;
 import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.ProductLineIdDialog;
+import diploma.productline.DaoUtil;
+import diploma.productline.dao.ProductLineDAO;
+import diploma.productline.entity.ProductLine;
 
 public abstract class CreateWizardPageBase extends WizardPage {
 

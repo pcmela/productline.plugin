@@ -1,6 +1,5 @@
 package productline.plugin.ui.providers;
 
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 

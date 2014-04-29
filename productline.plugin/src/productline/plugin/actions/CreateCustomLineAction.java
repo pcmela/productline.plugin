@@ -9,7 +9,6 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.PlatformUI;
 
-import productline.plugin.editor.OverviewPage;
 import productline.plugin.ui.CreateNewCustomLineDialog;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
@@ -26,6 +25,14 @@ public class CreateCustomLineAction extends Action {
 		this.treeViewer = treeViewer;
 		this.properties = properties;
 		this.project = project;
+	}
+	
+	public Properties getProperties() {
+		return properties;
+	}
+
+	public void setProperties(Properties properties) {
+		this.properties = properties;
 	}
 
 	@Override

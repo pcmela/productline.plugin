@@ -11,24 +11,17 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.IWorkbenchPartReference;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.part.ViewPart;
 
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.providers.ProductLineStyledLabelProvider;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
-import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.ProductLineDAO;
 import diploma.productline.entity.ProductLine;
-import diploma.productline.entity.Resource;
 
 public class BrowseProductLineView extends ViewPart {
 

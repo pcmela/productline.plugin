@@ -1,7 +1,6 @@
 package productline.plugin.ui;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -19,15 +18,11 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.ITreeSelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -45,6 +40,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
@@ -61,13 +57,6 @@ import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
-
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.application.WorkbenchWindowAdvisor;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 
 public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
@@ -370,7 +359,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		final Set<Module> modules = new HashSet<>();
 		final Object[] elements = checkboxTreeViewer.getCheckedElements();
 
-		Job job = new Job("About to say hello") {
+		Job job = new Job("Creating new custome line...") {
 			protected IStatus run(IProgressMonitor monitor) {
 
 				for (Object o : elements) {

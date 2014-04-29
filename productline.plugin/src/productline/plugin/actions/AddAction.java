@@ -34,7 +34,17 @@ public class AddAction extends Action {
 		this.properties = properties;
 		this.editor = editor;
 	}
-	
+		
+	public Properties getProperties() {
+		return properties;
+	}
+
+	public void setProperties(Properties properties) {
+		this.properties = properties;
+	}
+
+
+
 	@Override
 	public void runWithEvent(Event event) {
 		if (((TreeSelection) treeViewer.getSelection()).getFirstElement() instanceof BaseProductLineEntity) {

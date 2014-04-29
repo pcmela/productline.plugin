@@ -1,11 +1,8 @@
 package productline.plugin.editor;
 
-import org.eclipse.core.databinding.Binding;
-import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.beans.PojoProperties;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jface.databinding.fieldassist.ControlDecorationSupport;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
@@ -15,7 +12,6 @@ import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import productline.plugin.internal.Configuration;
-import diploma.productline.entity.Variability;
 
 public class ConfigurationPagePOJO extends ProductLineFormPage {
 

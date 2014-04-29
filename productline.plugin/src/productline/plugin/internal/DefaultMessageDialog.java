@@ -1,7 +1,6 @@
 package productline.plugin.internal;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 public class DefaultMessageDialog {

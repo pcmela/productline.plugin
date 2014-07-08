@@ -35,6 +35,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.editor.IPackageListViewer;
 import productline.plugin.internal.DefaultMessageDialog;
@@ -47,6 +49,8 @@ import diploma.productline.entity.PackageModule;
 
 public class PackageListDialog extends Dialog {
 
+	private static Logger LOG = LoggerFactory.getLogger(PackageListDialog.class);
+	
 	private Set<IPackageFragment> packages;
 	private IProject project;
 	private ListViewer listViewer;
@@ -163,8 +167,7 @@ public class PackageListDialog extends Dialog {
 
 			}
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 	}
 
@@ -245,11 +248,11 @@ public class PackageListDialog extends Dialog {
 							packages.add(pkg);
 						} catch (ClassNotFoundException e) {
 							DefaultMessageDialog.driversNotFoundDialog("H2");
-							e.printStackTrace();
+							LOG.error(e.getMessage());
 						} catch (SQLException e) {
 							DefaultMessageDialog.sqlExceptionDialog(e
 									.getMessage());
-							e.printStackTrace();
+							LOG.error(e.getMessage());
 						}
 					} else {
 						packages.add(pkg);

@@ -23,6 +23,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.Utils;
 import productline.plugin.internal.WhereUsedCode;
@@ -34,6 +36,8 @@ import diploma.productline.entity.Variability;
 
 public class WhereUsedInCodeAction extends Action {
 
+	private static Logger LOG = LoggerFactory.getLogger(WhereUsedInCodeAction.class);
+	
 	private TreeViewer treeViewer;
 	private String workspace;
 	private IProject eclipseProject;
@@ -52,7 +56,7 @@ public class WhereUsedInCodeAction extends Action {
 			}
 		} catch (CoreException e) {
 			javaProject = null;
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 	}
 
@@ -91,15 +95,12 @@ public class WhereUsedInCodeAction extends Action {
 								result.addAll(resolver.getVariablesOccurences());
 								System.out.println("done");
 							} catch (FileNotFoundException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								LOG.error(e.getMessage());
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								LOG.error(e.getMessage());
 							}
 						} catch (JavaModelException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							LOG.error(e.getMessage());
 						}
 					} else if (selection instanceof Module) {
 						Module v = (Module) selection;
@@ -113,15 +114,12 @@ public class WhereUsedInCodeAction extends Action {
 								result.addAll(resolver.getModulesOccurences());
 								System.out.println("done");
 							} catch (FileNotFoundException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								LOG.error(e.getMessage());
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								LOG.error(e.getMessage());
 							}
 						} catch (JavaModelException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							LOG.error(e.getMessage());
 						}
 					}
 
@@ -138,22 +136,11 @@ public class WhereUsedInCodeAction extends Action {
 				}
 			};
 
-			/*IWorkbench wb = PlatformUI.getWorkbench();
-			IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
-			Shell shell = win != null ? win.getShell() : null;
-			new ProgressMonitorDialog(shell).run(true, true, op);*/
 			op.setUser(true);
 			op.schedule();
 		} catch (PartInitException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} /*catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+			LOG.error(e1.getMessage());
+		} 
 	}
 
 	private Set<IPackageFragment> getPackageFragments(IJavaProject project,

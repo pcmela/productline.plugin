@@ -43,6 +43,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.ProductLineUtils;
 import productline.plugin.internal.CreateCustomeLine;
@@ -60,6 +62,8 @@ import diploma.productline.entity.Variability;
 
 public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
+	private static Logger LOG = LoggerFactory.getLogger(CreateNewCustomLineDialog.class);
+	
 	private ProductLine productLine;
 	private String destinationPath;
 	private IProject project;
@@ -122,7 +126,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 				validateForm();
 			}
 		});
-		new Label(container, SWT.NONE);
+		new Label(container, SWT.NONE).setText("Path:");;
 		tPath = new Text(container, SWT.BORDER);
 		tPath.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1,
 				1));
@@ -230,7 +234,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		});
 
 		setBackgroundAndCheckedForMandatoryFields(tree);
-
+		validateForm();
 		return area;
 	}
 
@@ -277,20 +281,30 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 	private void validateForm() {
 		newName = tNewName.getText();
-		boolean valid = false;
+		String message = null;
+		boolean validName = false;
+		boolean validPath = false;
 		if (tNewName.getText().trim().equals("")) {
-			valid = false;
+			validName = false;
+			message = "Name of new Custome Line is required!";
 		} else {
-			valid = true;
+			validName = true;
 		}
 
 		if (tPath.getText().trim().equals("")) {
-			valid = false;
+			validPath = false;
+			if(message != null){
+				message += "\nPath for new Custome Line is required!";
+			}else{
+				message = "Path for new Custome Line is required!";
+			}
 		} else {
-			valid = true;
+			validPath = true;
 		}
-
-		okButton.setEnabled(valid);
+		setMessage(message);
+		if(okButton != null){
+			okButton.setEnabled(validName && validPath);
+		}
 	}
 
 	/**
@@ -334,10 +348,10 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 			}
 		} catch (ClassNotFoundException e) {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (SQLException e) {
 			DefaultMessageDialog.ioException(e.getMessage());
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 
 		Job job = createCustomeLineJob();
@@ -403,16 +417,13 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 					try (Connection con = DaoUtil.connect(properties)) {
 						pDao.createAll(refreshedProductLine, con);
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						LOG.error(e.getMessage());
 					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						LOG.error(e.getMessage());
 					}
 
 				} catch (JavaModelException | IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					LOG.error(e1.getMessage()); 
 				}
 
 				Display.getDefault().asyncExec(new Runnable() {

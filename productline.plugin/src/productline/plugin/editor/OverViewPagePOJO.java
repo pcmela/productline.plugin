@@ -28,6 +28,8 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.actions.AddAction;
 import productline.plugin.actions.CreateCustomLineAction;
@@ -41,6 +43,8 @@ import diploma.productline.entity.Variability;
 public class OverViewPagePOJO extends ProductLineFormPage implements
 		IPackageListViewer {
 
+	private static Logger LOG = LoggerFactory.getLogger(OverViewPagePOJO.class);
+	
 	protected SearchControl searchControl;
 	protected SearchMatcher searchMatcher;
 	protected Composite currentComposite;

@@ -8,6 +8,8 @@ import java.util.Set;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DefaultMessageDialog;
@@ -18,6 +20,8 @@ import diploma.productline.entity.ProductLine;
 
 public abstract class CreateWizardPageBase extends WizardPage {
 
+	private static Logger LOG = LoggerFactory.getLogger(CreateWizardPageBase.class);
+	
 	protected CreateWizardPageBase(String pageName) {
 		super(pageName);
 	}
@@ -36,10 +40,10 @@ public abstract class CreateWizardPageBase extends WizardPage {
 			dialog.open();
 		} catch (ClassNotFoundException e) {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (SQLException e) {
 			DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 		return 0;
 	}

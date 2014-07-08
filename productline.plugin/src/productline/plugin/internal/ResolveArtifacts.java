@@ -33,69 +33,78 @@ public class ResolveArtifacts {
 		String newLine = "";
 		
 		if(processingElement){
-			if(beginOfComment){
-				newLine = line;
-				
-				buffer.add(line + "\n");
-				
-				if(line.contains(START_MODULE) && !processingModule){
-					String name = line.replaceFirst(modulePattern, "").trim();
-					reachElement = true;
-					if(module.equals(name)){
-						processingModule = false;
-						processingElement = false;
-					}else{
-						processingModule = true;
-						processingElement = true;
-					}
-				}else if(line.contains(START_VARIABILITY) && !processingVariability){
-					String name = line.replaceFirst(variabilityPattern, "").trim();
-					reachElement = true;
-					boolean exist = false;
-					for(String v : variabilities){
-						if(v.equals(name)){
-							exist = true;
-							break;
-						}
-					}
-					if(!exist){
-						processingVariability = true;
-						processingElement = true;
-					}else{
-						processingVariability = false;
-						processingElement = false;
-					}
-				}else if(line.contains(END_MODULE) || line.contains(END_VARIABILITY)){
-					setAllToFalse();				
-				}else if(line.contains("*/") && (processingModule || processingVariability)){
-					startOfComment = true;
-					beginOfComment = false;
-				}/*else{
-					startOfComment = false;
-					beginOfComment = false;
-				}*/
-			}else{
-				
-				if(line.contains("/**")){
-					processingElement = true;
-					beginOfComment = true;
-				}
-				
-				if(startOfComment && !beginOfComment && reachElement){
-					newLine = "//" + line;
-				}else{
-					newLine = line;
-				}
-			}
+			processingElement(line, newLine);
 		}else{
+			doNotProcessingElement(line, newLine);
+		}
+		
+		return newLine;
+	}
+	
+	private void doNotProcessingElement(String line, String newLine){
+		if(line.contains("/**")){
+			processingElement = true;
+			beginOfComment = true;
+		}
+		newLine = line;
+	}
+	
+	private void processingElement(String line, String newLine){
+		if(beginOfComment){
+			beginCommentSection(line, newLine);
+		}else{
+			
 			if(line.contains("/**")){
 				processingElement = true;
 				beginOfComment = true;
 			}
-			newLine = line;
+			
+			if(startOfComment && !beginOfComment && reachElement){
+				newLine = "//" + line;
+			}else{
+				newLine = line;
+			}
 		}
+	}
+	
+	private void beginCommentSection(String line, String newLine){
+		newLine = line;
 		
-		return newLine;
+		buffer.add(line + "\n");
+		
+		if(line.contains(START_MODULE) && !processingModule){
+			String name = line.replaceFirst(modulePattern, "").trim();
+			reachElement = true;
+			if(module.equals(name)){
+				processingModule = false;
+				processingElement = false;
+			}else{
+				processingModule = true;
+				processingElement = true;
+			}
+		}else if(line.contains(START_VARIABILITY) && !processingVariability){
+			String name = line.replaceFirst(variabilityPattern, "").trim();
+			reachElement = true;
+			boolean exist = false;
+			for(String v : variabilities){
+				if(v.equals(name)){
+					exist = true;
+					break;
+				}
+			}
+			if(!exist){
+				processingVariability = true;
+				processingElement = true;
+			}else{
+				processingVariability = false;
+				processingElement = false;
+			}
+		}else if(line.contains(END_MODULE) || line.contains(END_VARIABILITY)){
+			setAllToFalse();				
+		}else if(line.contains("*/") && (processingModule || processingVariability)){
+			startOfComment = true;
+			beginOfComment = false;
+		}
 	}
 	
 	private void setAllToFalse(){

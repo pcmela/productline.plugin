@@ -9,6 +9,8 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.editor.OverviewPage;
 import productline.plugin.internal.DefaultMessageDialog;
@@ -24,6 +26,8 @@ import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
 public class RemoveAction extends Action {
+	
+	private static Logger LOG = LoggerFactory.getLogger(RemoveAction.class);
 	
 	private TreeViewer treeViewer;
 	private Properties properties;
@@ -63,10 +67,10 @@ public class RemoveAction extends Action {
 						pDao.delete(e, DaoUtil.connect(properties));
 					} catch (ClassNotFoundException e1) {
 						DefaultMessageDialog.driversNotFoundDialog("H2");
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					} catch (SQLException e1) {
 						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					}
 					overviewPage.refreshTree();
 				}else if (entity instanceof Module){
@@ -76,10 +80,10 @@ public class RemoveAction extends Action {
 						mDao.delete(e, DaoUtil.connect(properties));
 					} catch (ClassNotFoundException e1) {
 						DefaultMessageDialog.driversNotFoundDialog("H2");
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					} catch (SQLException e1) {
 						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					}
 					overviewPage.refreshTree();
 				}else if(entity instanceof Variability){
@@ -89,10 +93,10 @@ public class RemoveAction extends Action {
 						vDao.delete(e.getId(), DaoUtil.connect(properties));
 					} catch (ClassNotFoundException e1) {
 						DefaultMessageDialog.driversNotFoundDialog("H2");
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					} catch (SQLException e1) {
 						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					}
 					overviewPage.refreshTree();
 				}else if(entity instanceof Element){
@@ -102,10 +106,10 @@ public class RemoveAction extends Action {
 						eDao.delete(e, DaoUtil.connect(properties));
 					} catch (ClassNotFoundException e1) {
 						DefaultMessageDialog.driversNotFoundDialog("H2");
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					} catch (SQLException e1) {
 						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						e1.printStackTrace();
+						LOG.error(e1.getMessage());
 					}
 					overviewPage.refreshTree();
 				}

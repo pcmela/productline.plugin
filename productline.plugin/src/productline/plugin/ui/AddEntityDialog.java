@@ -27,6 +27,8 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.editor.IPackageListViewer;
 import productline.plugin.internal.DefaultMessageDialog;
@@ -51,6 +53,8 @@ import diploma.productline.entity.Variability;
 public class AddEntityDialog extends TitleAreaDialog implements
 		IPackageListViewer {
 
+	private static Logger LOG = LoggerFactory.getLogger(AddEntityDialog.class);
+	
 	private String title;
 	private String message;
 
@@ -288,13 +292,11 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			VariabilityDAO vDao = new VariabilityDAO();
 			vDao.save(v, con);
 		} catch (ClassNotFoundException err) {
-			// TODO Auto-generated catch block
 			DefaultMessageDialog.driversNotFoundDialog("H2");
-			err.printStackTrace();
+			LOG.error(err.getMessage());
 		} catch (SQLException err) {
-			// TODO Auto-generated catch block
 			DefaultMessageDialog.sqlExceptionDialog(err.getMessage());
-			err.printStackTrace();
+			LOG.error(err.getMessage());
 		}
 	}
 
@@ -315,11 +317,9 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			ElementDAO eDao = new ElementDAO();
 			eDao.save(e, con);
 		} catch (ClassNotFoundException err) {
-			// TODO Auto-generated catch block
-			err.printStackTrace();
+			LOG.error(err.getMessage());
 		} catch (SQLException err) {
-			// TODO Auto-generated catch block
-			err.printStackTrace();
+			LOG.error(err.getMessage());
 		}
 	}
 
@@ -346,10 +346,10 @@ public class AddEntityDialog extends TitleAreaDialog implements
 			}
 		} catch (ClassNotFoundException e) {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (SQLException e) {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 
 	}

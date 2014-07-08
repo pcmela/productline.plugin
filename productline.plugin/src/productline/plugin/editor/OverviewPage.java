@@ -5,15 +5,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -23,7 +20,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -32,7 +28,6 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.FocusAdapter;
@@ -57,7 +52,6 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -69,28 +63,30 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.ide.IDE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.actions.AddAction;
 import productline.plugin.actions.CreateCustomLineAction;
+import productline.plugin.actions.ModuleElementAction;
 import productline.plugin.actions.RemoveAction;
 import productline.plugin.actions.ViewChildAction;
 import productline.plugin.actions.WhereUsedAction;
 import productline.plugin.actions.WhereUsedInCodeAction;
 import productline.plugin.internal.DefaultMessageDialog;
-import productline.plugin.internal.ElementSetTreeContainer;
 import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.ProductLineTreeComparator;
-import productline.plugin.internal.VariabilitySetTreeContainer;
 import productline.plugin.internal.VariabilityTreeContainer;
-import productline.plugin.ui.AddEntityDialog;
-import productline.plugin.ui.PackageListDialog;
+import productline.plugin.ui.listener.ModuleAddButtonListener;
+import productline.plugin.ui.listener.ModuleIsVariableCheckboxListener;
+import productline.plugin.ui.listener.ProductLineHiearchyMenuListener;
+import productline.plugin.ui.listener.ProductLineHiearchyModifyTextListener;
+import productline.plugin.ui.listener.RemovePackageButtonListener;
 import productline.plugin.ui.providers.PackageListContentProvider;
 import productline.plugin.ui.providers.ProductLineStyledLabelProvider;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import diploma.productline.DaoUtil;
-import diploma.productline.dao.PackageDAO;
 import diploma.productline.dao.ResourceDao;
-import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.Element;
 import diploma.productline.entity.ElementType;
 import diploma.productline.entity.Module;
@@ -100,7 +96,9 @@ import diploma.productline.entity.Resource;
 import diploma.productline.entity.Variability;
 
 public class OverviewPage extends OverViewPagePOJO {
-	
+
+	private static Logger LOG = LoggerFactory.getLogger(OverviewPage.class);
+
 	public OverviewPage(FormEditor editor, String id, String title,
 			IProject project) {
 		super(editor, id, title);
@@ -155,15 +153,10 @@ public class OverviewPage extends OverViewPagePOJO {
 		hierarchySection.setClient(tree);
 
 		treeViewer = new TreeViewer(tree);
-		treeViewer.expandToLevel(4);
 		treeViewer.setContentProvider(new ProductLineTreeContentProvider());
 		treeViewer.setLabelProvider(new ProductLineStyledLabelProvider());
 		treeViewer.setComparator(new ProductLineTreeComparator());
 
-		/*
-		 * String path = "C:\\Users\\IBM_ADMIN\\Desktop\\Neon.yaml"; ProductLine
-		 * productLine = YamlExtractor.extract(path);
-		 */
 		productLine = loadData(true);
 		if (productLine != null) {
 			treeViewer.setInput(new Object[] { productLine });
@@ -180,55 +173,18 @@ public class OverviewPage extends OverViewPagePOJO {
 				final Object selection = ((TreeSelection) treeViewer
 						.getSelection()).getFirstElement();
 
-				ModifyListener modifyListenerName = new ModifyListener() {
-					@Override
-					public void modifyText(ModifyEvent e) {
-						BaseProductLineEntity o = (BaseProductLineEntity) selection;
-						if (o instanceof ElementTreeContainer) {
-							o = ((ElementTreeContainer) o).getSource();
-						} else if (o instanceof VariabilityTreeContainer) {
-							o = ((VariabilityTreeContainer) o).getSource();
-						}
-						if (!o.isDirty()) {
-							o.setDirty(true);
-						}
-						if (!isDirty) {
-							isDirty = true;
-							firePropertyChange(IEditorPart.PROP_DIRTY);
-							editor.editorDirtyStateChanged();
-						}
-						treeViewer.refresh();
-						treeViewer.expandAll();
-					}
-				};
-				
-				
-				ModifyListener modifyListenerOther = new ModifyListener() {
-					@Override
-					public void modifyText(ModifyEvent e) {
-						BaseProductLineEntity o = (BaseProductLineEntity) selection;
-						if (o instanceof ElementTreeContainer) {
-							o = ((ElementTreeContainer) o).getSource();
-						} else if (o instanceof VariabilityTreeContainer) {
-							o = ((VariabilityTreeContainer) o).getSource();
-						}
-						if (!o.isDirty()) {
-							o.setDirty(true);
-						}
-						if (!isDirty) {
-							isDirty = true;
-							firePropertyChange(IEditorPart.PROP_DIRTY);
-							editor.editorDirtyStateChanged();
-						}
-					}
-				};
+				ModifyListener modifyListenerName = new ProductLineHiearchyModifyTextListener(
+						selection, OverviewPage.this);
+				ModifyListener modifyListenerOther = new ProductLineHiearchyModifyTextListener(
+						selection, OverviewPage.this);
 
 				if (selection instanceof ProductLine) {
 					createDetailProductLine((ProductLine) selection,
 							modifyListenerName, modifyListenerOther);
 				}
 				if (selection instanceof Module) {
-					createDetailModule((Module) selection, modifyListenerName, modifyListenerOther);
+					createDetailModule((Module) selection, modifyListenerName,
+							modifyListenerOther);
 				} else if (selection instanceof VariabilityTreeContainer) {
 					createDetailVariability(
 							((VariabilityTreeContainer) selection).getSource(),
@@ -243,11 +199,9 @@ public class OverviewPage extends OverViewPagePOJO {
 			}
 		});
 
-		actionRemove = new RemoveAction(treeViewer,
-				properties, this);
+		actionRemove = new RemoveAction(treeViewer, properties, this);
 		actionRemove.setText("Remove");
-		actionAdd = new AddAction(treeViewer, project,
-				properties, this);
+		actionAdd = new AddAction(treeViewer, project, properties, this);
 		actionAdd.setText("Add");
 
 		final ViewChildAction viewChilrenAction = new ViewChildAction();
@@ -261,65 +215,23 @@ public class OverviewPage extends OverViewPagePOJO {
 						.toOSString(), project);
 		whereUsedCodeAction.setText("Where used (in source code)");
 
-		createCustomLine = new CreateCustomLineAction(
-				treeViewer, properties, project);
+		createCustomLine = new CreateCustomLineAction(treeViewer, properties,
+				project);
 		createCustomLine.setText("New Custom Line");
 
 		final MenuManager mgr = new MenuManager();
 		mgr.setRemoveAllWhenShown(true);
 
-		mgr.addMenuListener(new IMenuListener() {
-
-			@Override
-			public void menuAboutToShow(IMenuManager manager) {
-				TreeSelection selection = ((TreeSelection) treeViewer
-						.getSelection());
-				if (!selection.isEmpty()) {
-					Object o = selection.getFirstElement();
-					if (o instanceof ProductLine) {
-						mgr.add(actionAdd);
-						mgr.add(createCustomLine);
-						mgr.add(viewChilrenAction);
-						mgr.add(actionRemove);
-					} else if (o instanceof Module) {
-						mgr.add(whereUsedAction);
-						mgr.add(whereUsedCodeAction);
-						mgr.add(actionRemove);
-					} else if (o instanceof VariabilitySetTreeContainer
-							|| o instanceof ElementSetTreeContainer) {
-						mgr.add(actionAdd);
-					} else if (o instanceof Variability || o instanceof Element
-							|| o instanceof Module) {
-						mgr.add(whereUsedAction);
-						if (o instanceof Variability) {
-							mgr.add(whereUsedCodeAction);
-						}
-						mgr.add(actionRemove);
-					}
-				}
-			}
-		});
+		mgr.addMenuListener(new ProductLineHiearchyMenuListener(mgr,
+				actionRemove, actionAdd, createCustomLine, treeViewer,
+				viewChilrenAction, whereUsedAction, whereUsedCodeAction));
 
 		treeViewer.getControl().setMenu(
 				mgr.createContextMenu(treeViewer.getControl()));
 
-		Action newModuleElementAction = new Action("Create new Module", null) {
-			public void run() {
-				AddEntityDialog dialog = new AddEntityDialog(new Shell(),
-						productLine, Module.class, project, properties);
-				dialog.create();
-				if (dialog.open() == Window.OK) {
-					System.out.println("Module Created");
-					productLine = loadData(false);
-					if (productLine != null) {
-						treeViewer.setInput(new Object[] { productLine });
-					} else {
-						treeViewer.setInput(new Object[] {});
-					}
-					treeViewer.expandAll();
-				}
-			}
-		};
+		Action newModuleElementAction = new ModuleElementAction(
+				"Create new Module", null, productLine, project, this,
+				treeViewer, properties);
 
 		ToolBarManager modulesToolBarManager = new ToolBarManager(SWT.FLAT);
 		modulesToolBarManager.add(newModuleElementAction);
@@ -349,7 +261,6 @@ public class OverviewPage extends OverViewPagePOJO {
 				SWT.NONE);
 		tProductLineName = toolkit.createText(detailComposite,
 				productLine.getName());
-		
 
 		lProductLineDescription = toolkit.createLabel(detailComposite,
 				"Description");
@@ -366,16 +277,14 @@ public class OverviewPage extends OverViewPagePOJO {
 		tdDescription.heightHint = 75;
 
 		addDataBindingProductLine(productLine);
-		
+
 		tProductLineName.addModifyListener(modifyListener);
 		tProductLineDescription.addModifyListener(modifyListenerOther);
-		
+
 		tProductLineName.setLayoutData(tdName);
 		tProductLineDescription.setLayoutData(tdDescription);
 
 		rightComposite.layout();
-
-		// tProductLineName.addModifyListener(listener);
 	}
 
 	private void createDetailModule(final Module module,
@@ -428,62 +337,14 @@ public class OverviewPage extends OverViewPagePOJO {
 
 		bAddPackage = new Button(detailResourcesDetailComposite, SWT.NONE);
 		bAddPackage.setText("Add");
-		bAddPackage.addListener(SWT.Selection, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				PackageListDialog dialog = new PackageListDialog(new Shell(),
-						project, OverviewPage.this, module, properties);
-				try {
-					dialog.setStoredElements(PackageDAO.getStoredPackages(
-							DaoUtil.connect(properties), module
-									.getProductLine().getId()));
-				} catch (ClassNotFoundException e) {
-					DefaultMessageDialog.driversNotFoundDialog("H2");
-					e.printStackTrace();
-				} catch (SQLException e2) {
-					DefaultMessageDialog.sqlExceptionDialog(e2.getMessage());
-					e2.printStackTrace();
-				}
-				dialog.open();
-
-			}
-		});
+		bAddPackage.addListener(SWT.Selection, new ModuleAddButtonListener(
+				module, project, properties, this));
 
 		bRemovePackage = new Button(detailResourcesDetailComposite, SWT.NONE);
 		bRemovePackage.setText("Remove");
-		bRemovePackage.addListener(SWT.Selection, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				Iterator<PackageModule> it = ((IStructuredSelection) listViewerPackage
-						.getSelection()).iterator();
-				boolean ok = MessageDialog.openConfirm(new Shell(),
-						"Remove package",
-						"Are you sure that you want to remove package?");
-				if (ok) {
-					try (Connection con = DaoUtil.connect(properties)) {
-						PackageDAO pDao = new PackageDAO();
-						while (it.hasNext()) {
-							PackageModule pkg = it.next();
-							pDao.delete(pkg.getId(), con);
-						}
-						Set<PackageModule> packages = pDao
-								.getPackagesWhithChildsByModule(module, con);
-						listViewerPackage.setInput(packages);
-						((Module) ((IStructuredSelection) treeViewer
-								.getSelection()).getFirstElement())
-								.setPackages(packages);
-					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		});
+		bRemovePackage.addListener(SWT.Selection,
+				new RemovePackageButtonListener(module, treeViewer, properties,
+						listViewerPackage));
 
 		FormData bdAddPackage = new FormData();
 		bdAddPackage.left = new FormAttachment(0, 5);
@@ -521,25 +382,8 @@ public class OverviewPage extends OverViewPagePOJO {
 		addDataBindingModule(module);
 		tModuleName.addModifyListener(modifyListener);
 		tModuleDescription.addModifyListener(modifyListenerOther);
-		bModuleIsVariable.addListener(SWT.Selection, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				BaseProductLineEntity o = (BaseProductLineEntity) ((IStructuredSelection) treeViewer
-						.getSelection()).getFirstElement();
-
-				if (!o.isDirty()) {
-					o.setDirty(true);
-				}
-				if (!isDirty) {
-					isDirty = true;
-					firePropertyChange(IEditorPart.PROP_DIRTY);
-					editor.editorDirtyStateChanged();
-				}
-				treeViewer.refresh();
-				treeViewer.expandAll();
-			}
-		});
+		bModuleIsVariable.addListener(SWT.Selection,
+				new ModuleIsVariableCheckboxListener(this, treeViewer));
 
 		rightComposite.layout();
 	}
@@ -716,7 +560,7 @@ public class OverviewPage extends OverViewPagePOJO {
 						try {
 							IDE.openEditorOnFileStore(page, fileStore);
 						} catch (PartInitException e) {
-							e.printStackTrace();
+							LOG.error(e.getMessage());
 						}
 					}
 				}
@@ -797,11 +641,6 @@ public class OverviewPage extends OverViewPagePOJO {
 
 			@Override
 			public void handleEvent(Event event) {
-				// MessageDialog.openConfirm(new Shell(), "Remove package", );
-				/*
-				 * Resource r = (Resource) ((IStructuredSelection)
-				 * listViewerPackage .getSelection()).getFirstElement();
-				 */
 				Iterator it = ((StructuredSelection) listViewerPackage
 						.getSelection()).iterator();
 				boolean ok = MessageDialog

@@ -12,9 +12,12 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.part.FileEditorInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.Configuration;
 import productline.plugin.internal.ConfigurationKeys;
@@ -24,7 +27,9 @@ import diploma.productline.entity.BaseProductLineEntity;
 import diploma.productline.entity.ProductLine;
 
 public class ProductLineFormPage extends FormPage {
-
+	
+	private static Logger LOG = LoggerFactory.getLogger(ProductLineFormPage.class);
+	
 	protected IFile source;
 	protected FormEditor editor;
 	protected BaseProductLineEntity currentSelectedObject;
@@ -70,7 +75,7 @@ public class ProductLineFormPage extends FormPage {
 
 	}
 
-	protected ProductLine loadData(final boolean initial) {
+	public ProductLine loadData(final boolean initial) {
 		ProductLine productLine = null;
 
 		try (Connection con = DaoUtil.connect(properties)) {
@@ -89,7 +94,7 @@ public class ProductLineFormPage extends FormPage {
 						"Synchronization error",
 						"Product line id have not correct format! Id must be number. Actual id is: "
 								+ stringId);
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 				return null;
 			}
 
@@ -110,7 +115,7 @@ public class ProductLineFormPage extends FormPage {
 			return productLine;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 			MessageDialog.openError(this.getSite().getShell(),
 					"Synchronization error", e.getMessage());
 		}
@@ -147,17 +152,25 @@ public class ProductLineFormPage extends FormPage {
 			localDbConfiguration = new Configuration();
 			localDbConfiguration.setDataLocal(properties);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			LOG.error(e1.getMessage());
 		} catch (CoreException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			LOG.error(e1.getMessage());
 		}
 		return properties;
 	}
 
+	public void setDirtyAndfirePropertyChange(boolean dirty){
+		isDirty = dirty;
+		firePropertyChange(IEditorPart.PROP_DIRTY);
+		editor.editorDirtyStateChanged();
+	}
+	
 	public void setDirty(boolean isDirty) {
 		this.isDirty = isDirty;
+	}
+	
+	public boolean isDirty() {
+		return this.isDirty;
 	}
 
 	public Configuration getLocalDbConfiguration() {

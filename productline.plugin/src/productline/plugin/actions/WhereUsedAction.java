@@ -8,10 +8,14 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.view.WhereUsedView;
 
 public class WhereUsedAction extends Action {
+	
+	private static Logger LOG = LoggerFactory.getLogger(WhereUsedAction.class);
 	
 	private TreeViewer treeViewer;
 	
@@ -41,8 +45,7 @@ public class WhereUsedAction extends Action {
 			}
 			System.out.println(p);
 		} catch (PartInitException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 	}
 }

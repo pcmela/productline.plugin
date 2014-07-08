@@ -17,12 +17,16 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.WhereUsedCode;
 import productline.plugin.ui.providers.WhereUsedContentProvider;
 import productline.plugin.ui.providers.WhereUsedLabelProvider;
 
 public class WhereUsedCodeView extends ViewPart {
+	private static Logger LOG = LoggerFactory.getLogger(WhereUsedCode.class);
+
 	private ListViewer listViewer;
 	private final String NO_DATA = "No data found";
 
@@ -85,8 +89,7 @@ public class WhereUsedCodeView extends ViewPart {
 			IDE.openEditor(page, marker); // 3.0 API
 			marker.delete();
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 	}
 }

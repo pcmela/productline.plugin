@@ -15,6 +15,8 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.providers.ProductLineStyledLabelProvider;
@@ -25,6 +27,8 @@ import diploma.productline.entity.ProductLine;
 
 public class BrowseProductLineView extends ViewPart {
 
+	private static Logger LOG = LoggerFactory.getLogger(BrowseProductLineView.class);
+	
 	private TreeViewer treeViewer;
 	private ProductLineDAO plDao;
 	private ProductLine parentProductLine;
@@ -95,10 +99,10 @@ public class BrowseProductLineView extends ViewPart {
 			return plDao.getProductLineByParent(productLine.getId(), con);
 		} catch (ClassNotFoundException e) {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (SQLException e) {
 			DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 		return new ProductLine[0];
 	}

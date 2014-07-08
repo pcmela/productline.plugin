@@ -24,6 +24,8 @@ import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.ProductLineIdDialog;
@@ -33,20 +35,24 @@ import diploma.productline.entity.ProductLine;
 
 public class ConfigurationPage extends ConfigurationPagePOJO {
 
-	public ConfigurationPage(FormEditor editor, String id, String title, IProject project) {
+	private static Logger LOG = LoggerFactory
+			.getLogger(ConfigurationPage.class);
+
+	public ConfigurationPage(FormEditor editor, String id, String title,
+			IProject project) {
 		super(editor, id, title, project);
 		this.editor = editor;
 		this.project = project;
 	}
-	
+
 	private ModifyListener localModify = new ModifyListener() {
-		
+
 		@Override
 		public void modifyText(ModifyEvent e) {
-			if(!localDbConfiguration.isDirty()){
+			if (!localDbConfiguration.isDirty()) {
 				localDbConfiguration.setDirty(true);
 			}
-			
+
 			if (!isDirty) {
 				isDirty = true;
 				firePropertyChange(IEditorPart.PROP_DIRTY);
@@ -54,12 +60,12 @@ public class ConfigurationPage extends ConfigurationPagePOJO {
 			}
 		}
 	};
-	
-private ModifyListener remoteModify = new ModifyListener() {
-		
+
+	private ModifyListener remoteModify = new ModifyListener() {
+
 		@Override
 		public void modifyText(ModifyEvent e) {
-			if(!localDbConfiguration.isDirty()){
+			if (!localDbConfiguration.isDirty()) {
 				localDbConfiguration.setDirty(true);
 				isDirty = true;
 				firePropertyChange(IEditorPart.PROP_DIRTY);
@@ -83,18 +89,18 @@ private ModifyListener remoteModify = new ModifyListener() {
 		SashForm sashForm = new SashForm(body, SWT.NONE);
 		toolkit.adapt(sashForm);
 		toolkit.adapt(sashForm, true, true);
-		
+
 		Composite localComposite = toolkit.createComposite(sashForm);
 		localComposite.setLayout(new GridLayout(1, false));
-		
+
 		createProductLineSection(localComposite, toolkit);
 		createLocalDbSection(localComposite, toolkit);
-		//createRemoteDbSection(localComposite, toolkit);
+		// createRemoteDbSection(localComposite, toolkit);
 	}
-	
+
 	private void createProductLineSection(Composite localComposite,
-			FormToolkit formToolkit){
-		
+			FormToolkit formToolkit) {
+
 		Section detailSection = formToolkit.createSection(localComposite,
 				ExpandableComposite.TITLE_BAR);
 		detailSection.marginHeight = 1;
@@ -102,19 +108,21 @@ private ModifyListener remoteModify = new ModifyListener() {
 		detailSection.setLayoutData(gd_detailSection);
 		detailSection.setText("Product line");
 		toolkit.paintBordersFor(detailSection);
-		
-		Composite detailComposite = formToolkit.createComposite(detailSection, SWT.NONE);
+
+		Composite detailComposite = formToolkit.createComposite(detailSection,
+				SWT.NONE);
 		detailComposite.setLayout(new GridLayout(3, false));
 		detailSection.setClient(detailComposite);
-		
+
 		lProductLineId = toolkit.createLabel(detailComposite, "Id:");
 		tProductLineId = toolkit.createText(detailComposite, "");
-		GridData tdTextId = new GridData(/*SWT.FILL, SWT.TOP, true, false*/);
-		//tdTextId.horizontalSpan = 3;
+		GridData tdTextId = new GridData(/* SWT.FILL, SWT.TOP, true, false */);
+		// tdTextId.horizontalSpan = 3;
 		tdTextId.widthHint = 100;
 		tProductLineId.setLayoutData(tdTextId);
 		tProductLineId.setEnabled(false);
-		bProductLineId = toolkit.createButton(detailComposite, "Get id", SWT.PUSH);
+		bProductLineId = toolkit.createButton(detailComposite, "Get id",
+				SWT.PUSH);
 		bProductLineId.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -122,11 +130,10 @@ private ModifyListener remoteModify = new ModifyListener() {
 			}
 		});
 	}
-	
+
 	private void createLocalDbSection(Composite localComposite,
 			FormToolkit formToolkit) {
 
-		
 		Section detailSection = formToolkit.createSection(localComposite,
 				ExpandableComposite.TITLE_BAR);
 		detailSection.marginHeight = 1;
@@ -134,100 +141,104 @@ private ModifyListener remoteModify = new ModifyListener() {
 		detailSection.setLayoutData(gd_detailSection);
 		detailSection.setText("Local DB");
 		toolkit.paintBordersFor(detailSection);
-		
-		Composite detailComposite = formToolkit.createComposite(detailSection, SWT.NONE);
+
+		Composite detailComposite = formToolkit.createComposite(detailSection,
+				SWT.NONE);
 		detailComposite.setLayout(new GridLayout(2, false));
 		detailSection.setClient(detailComposite);
-		
-		
-		lLocalConnectionString = toolkit.createLabel(detailComposite, "Connection string:", SWT.NONE);
+
+		lLocalConnectionString = toolkit.createLabel(detailComposite,
+				"Connection string:", SWT.NONE);
 		tLocalConnectionString = toolkit.createText(detailComposite, "");
 		GridData tdConString = new GridData(SWT.FILL, SWT.TOP, true, false);
-		//tdConString.horizontalSpan = 3;
+		// tdConString.horizontalSpan = 3;
 		tLocalConnectionString.setLayoutData(tdConString);
-		
+
 		lLocalUsername = toolkit.createLabel(detailComposite, "Username:");
 		tLocalUsername = toolkit.createText(detailComposite, "");
 		GridData tdUsername = new GridData(SWT.FILL, SWT.TOP, true, false);
-		//tdUsername.horizontalSpan = 3;
+		// tdUsername.horizontalSpan = 3;
 		tLocalUsername.setLayoutData(tdUsername);
-		
+
 		lLocalPassword = toolkit.createLabel(detailComposite, "Password");
 		tLocalPassword = toolkit.createText(detailComposite, "");
 		GridData tdPassword = new GridData(SWT.FILL, SWT.TOP, true, false);
-		//tdPassword.horizontalSpan = 3;
+		// tdPassword.horizontalSpan = 3;
 		tLocalPassword.setLayoutData(tdPassword);
-		
+
 		addDataBindingLocalDb(localDbConfiguration);
 		addModifyListenerLocal();
 	}
-	
-	/*private void createRemoteDbSection(Composite localComposite,
-			FormToolkit formToolkit) {
-		
-		Section detailSection = formToolkit.createSection(localComposite,
-				ExpandableComposite.TITLE_BAR);
-		detailSection.marginHeight = 1;
-		GridData gd_detailSection = new GridData(SWT.FILL, SWT.TOP, true, false);
-		detailSection.setLayoutData(gd_detailSection);
-		detailSection.setText("Remote DB");
-		toolkit.paintBordersFor(detailSection);
-		
-		Composite detailComposite = formToolkit.createComposite(detailSection, SWT.NONE);
-		detailComposite.setLayout(new GridLayout(2, false));
-		detailSection.setClient(detailComposite);
-		
-		lRemoteConnectionString = toolkit.createLabel(detailComposite, "Connection string:");
-		tRemoteConnectionString = toolkit.createText(detailComposite, "");
-		GridData tdConString = new GridData(SWT.FILL, SWT.TOP, true, false);
-		//tdConString.horizontalSpan = 3;
-		tRemoteConnectionString.setLayoutData(tdConString);
-		
-		lRemoteUsername = toolkit.createLabel(detailComposite, "Username:");
-		tRemoteUsername = toolkit.createText(detailComposite, "");
-		GridData tdUsername = new GridData(SWT.FILL, SWT.TOP, true, false);
-		//tdUsername.horizontalSpan = 3;
-		tRemoteUsername.setLayoutData(tdUsername);
-		
-		lRemotePassword = toolkit.createLabel(detailComposite, "Password");
-		tRemotePassword = toolkit.createText(detailComposite, "");
-		GridData tdPassword = new GridData(SWT.FILL, SWT.TOP, true, false);
-		//tdPassword.horizontalSpan = 3;
-		tRemotePassword.setLayoutData(tdPassword);
-		
-		addDataBindingRemoteDb(remoteDbConfiguration);
-		addModifyListenerRemote();
-	}*/
-	
-	private void addModifyListenerLocal(){
+
+	/*
+	 * private void createRemoteDbSection(Composite localComposite, FormToolkit
+	 * formToolkit) {
+	 * 
+	 * Section detailSection = formToolkit.createSection(localComposite,
+	 * ExpandableComposite.TITLE_BAR); detailSection.marginHeight = 1; GridData
+	 * gd_detailSection = new GridData(SWT.FILL, SWT.TOP, true, false);
+	 * detailSection.setLayoutData(gd_detailSection);
+	 * detailSection.setText("Remote DB");
+	 * toolkit.paintBordersFor(detailSection);
+	 * 
+	 * Composite detailComposite = formToolkit.createComposite(detailSection,
+	 * SWT.NONE); detailComposite.setLayout(new GridLayout(2, false));
+	 * detailSection.setClient(detailComposite);
+	 * 
+	 * lRemoteConnectionString = toolkit.createLabel(detailComposite,
+	 * "Connection string:"); tRemoteConnectionString =
+	 * toolkit.createText(detailComposite, ""); GridData tdConString = new
+	 * GridData(SWT.FILL, SWT.TOP, true, false); //tdConString.horizontalSpan =
+	 * 3; tRemoteConnectionString.setLayoutData(tdConString);
+	 * 
+	 * lRemoteUsername = toolkit.createLabel(detailComposite, "Username:");
+	 * tRemoteUsername = toolkit.createText(detailComposite, ""); GridData
+	 * tdUsername = new GridData(SWT.FILL, SWT.TOP, true, false);
+	 * //tdUsername.horizontalSpan = 3;
+	 * tRemoteUsername.setLayoutData(tdUsername);
+	 * 
+	 * lRemotePassword = toolkit.createLabel(detailComposite, "Password");
+	 * tRemotePassword = toolkit.createText(detailComposite, ""); GridData
+	 * tdPassword = new GridData(SWT.FILL, SWT.TOP, true, false);
+	 * //tdPassword.horizontalSpan = 3;
+	 * tRemotePassword.setLayoutData(tdPassword);
+	 * 
+	 * addDataBindingRemoteDb(remoteDbConfiguration); addModifyListenerRemote();
+	 * }
+	 */
+
+	private void addModifyListenerLocal() {
 		tProductLineId.addModifyListener(localModify);
 		tLocalConnectionString.addModifyListener(localModify);
 		tLocalUsername.addModifyListener(localModify);
 		tLocalPassword.addModifyListener(localModify);
 	}
-	
-	private void addModifyListenerRemote(){
+
+	private void addModifyListenerRemote() {
 		tRemoteConnectionString.addModifyListener(remoteModify);
 		tRemoteUsername.addModifyListener(remoteModify);
 		tRemotePassword.addModifyListener(remoteModify);
 	}
-	
-	protected int openExistingProductLinesDialog(Text control){
-		
+
+	protected int openExistingProductLinesDialog(Text control) {
+
 		ProductLineDAO pDao = new ProductLineDAO();
-		
-		try(Connection con = DaoUtil.connect(properties)){
+
+		try (Connection con = DaoUtil.connect(properties)) {
 			Set<ProductLine> productLines = pDao.getProductLine(con);
-			ProductLineIdDialog dialog = new ProductLineIdDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), productLines, control);
+			ProductLineIdDialog dialog = new ProductLineIdDialog(PlatformUI
+					.getWorkbench().getActiveWorkbenchWindow().getShell(),
+					productLines, control);
 			dialog.open();
 		} catch (ClassNotFoundException e) {
 			DefaultMessageDialog.driversNotFoundDialog("H2");
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (SQLException e) {
-			DefaultMessageDialog.sqlExceptionDialog("Connection failed!\nPlease enter the valid username, password and connection string and try it again.");
-			e.printStackTrace();
+			DefaultMessageDialog
+					.sqlExceptionDialog("Connection failed!\nPlease enter the valid username, password and connection string and try it again.");
+			LOG.error(e.getMessage());
 		}
 		return 0;
 	}
-	
+
 }

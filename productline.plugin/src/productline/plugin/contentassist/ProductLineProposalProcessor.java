@@ -28,6 +28,8 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import diploma.productline.DaoUtil;
 import diploma.productline.dao.ModuleDAO;
@@ -38,6 +40,8 @@ import diploma.productline.entity.Variability;
 
 public class ProductLineProposalProcessor implements IContentAssistProcessor {
 
+	private static Logger LOG = LoggerFactory.getLogger(ProductLineProposalProcessor.class);
+	
 	private final String PREFIX_VARIABILITY = "@variability";
 	private final String PREFIX_MODULE = "@module";
 	private static final ICompletionProposal[] NO_PROPOSALS = new ICompletionProposal[0];
@@ -90,8 +94,7 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 			}
 
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 
 		return NO_PROPOSALS;
@@ -155,7 +158,7 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 				return null;
 			}
 		} catch (JavaModelException e) {
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 			return null;
 		}
 	}
@@ -237,11 +240,9 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 			properties.load(new FileInputStream(getEclipseProject()
 					.getLocation() + "/configuration.productline"));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 		return properties;
 	}
@@ -257,11 +258,9 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 			return variabilities = vDao.getVariabilitiesByModuleId(moduleId,
 					con);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 
 		return new HashSet<Variability>();
@@ -274,15 +273,13 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 			try{
 				return mDao.getModuleByProductLine(con, Integer.parseInt(properties.getProperty("productline_id")));
 			}catch (NumberFormatException e){
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 				return new HashSet<>();
 			}
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 
 		return new HashSet<Module>();

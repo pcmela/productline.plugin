@@ -32,6 +32,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.part.FileEditorInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.Configuration;
 import productline.plugin.internal.DefaultMessageDialog;
@@ -48,6 +50,8 @@ import diploma.productline.entity.Variability;
 
 public class ProductLineConfigurationEditor extends FormEditor {
 
+	private static Logger LOG = LoggerFactory.getLogger(ProductLineConfigurationEditor.class);
+	
 	private TextEditor editor;
 	private IProject project;
 	private IFile file;
@@ -135,8 +139,7 @@ public class ProductLineConfigurationEditor extends FormEditor {
 					"productline.plugin.editor.config", "Configuration",
 					project));
 		} catch (PartInitException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error(e.getMessage());
 		}
 
 	}
@@ -167,17 +170,21 @@ public class ProductLineConfigurationEditor extends FormEditor {
 			}
 
 		}
-		
-		try {
-			refreshConfigFile();
-		} catch (IOException e2) {
-			DefaultMessageDialog.ioException(e2.getMessage());
-			e2.printStackTrace();
-		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+		if(refreshConfigFile() == false){
+			return;
 		}
+
 		
+		saveObjectToDatabase();
+		
+		overviewPage.setDirty(false);
+		configPage.setDirty(false);
+		firePropertyChange(IEditorPart.PROP_DIRTY);
+		overviewPage.getTreeViewer().expandAll();
+	}
+	
+	private boolean saveObjectToDatabase(){
 		Object[] input = (Object[]) overviewPage.getTreeViewer().getInput();
 		if (input.length > 0) {
 			ProductLine productLine = (ProductLine) ((Object[]) overviewPage
@@ -187,7 +194,7 @@ public class ProductLineConfigurationEditor extends FormEditor {
 
 				if (productLine.isDirty()) {
 					if (!checkNameValue(productLine, "Productline")) {
-						return;
+						return false;
 					}
 					ProductLineDAO pDao = new ProductLineDAO();
 					pDao.update(productLine, con);
@@ -199,7 +206,7 @@ public class ProductLineConfigurationEditor extends FormEditor {
 					for (Module m : productLine.getModules()) {
 						if (m.isDirty()) {
 							if (!checkNameValue(m, "Module")) {
-								return;
+								return false;
 							}
 							mDao.update(m, con);
 							overviewPage.getTreeViewer().refresh();
@@ -210,7 +217,7 @@ public class ProductLineConfigurationEditor extends FormEditor {
 							for (Variability v : m.getVariabilities()) {
 								if (v.isDirty()) {
 									if (!checkNameValue(v, "Variability")) {
-										return;
+										return false;
 									}
 									vDao.update(v, con);
 									overviewPage.getTreeViewer().refresh();
@@ -223,7 +230,7 @@ public class ProductLineConfigurationEditor extends FormEditor {
 							for (Element e : m.getElements()) {
 								if (e.isDirty()) {
 									if (!checkNameValue(e, "Element")) {
-										return;
+										return false;
 									}
 									eDao.update(e, con);
 									overviewPage.getTreeViewer().refresh();
@@ -233,33 +240,46 @@ public class ProductLineConfigurationEditor extends FormEditor {
 					}
 				}
 			} catch (ClassNotFoundException e1) {
-				e1.printStackTrace();
+				LOG.error(e1.getMessage());
+				DefaultMessageDialog.driversNotFoundDialog("H2");
+				return false;
 			} catch (SQLException e1) {
 				DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-				e1.printStackTrace();
+				LOG.error(e1.getMessage());
+				return false;
 			}
 		}
-		overviewPage.setDirty(false);
-		configPage.setDirty(false);
-		firePropertyChange(IEditorPart.PROP_DIRTY);
-		overviewPage.getTreeViewer().expandAll();
+		return true;
 	}
 
-	private void refreshConfigFile() throws IOException, CoreException {
-		Configuration local = configPage.getLocalDbConfiguration();
-		if (local.isDirty()) {
-			Properties properties = Configuration.getProperties(local);
-			String content = getPropertyAsString(properties);
+	private boolean refreshConfigFile() {
+		try {
+			Configuration local = configPage.getLocalDbConfiguration();
+			if (local.isDirty()) {
+				Properties properties = Configuration.getProperties(local);
+				String content = getPropertyAsString(properties);
 
-			file.setContents(new ByteArrayInputStream(content.getBytes()),
-					IFile.FORCE, null);
+				file.setContents(new ByteArrayInputStream(content.getBytes()),
+						IFile.FORCE, null);
 
-			local.setDirty(false);
-			overviewPage.setProperties(properties);
-			configPage.setProperties(properties);
-			
-			overviewPage.refreshTree();
+				local.setDirty(false);
+				overviewPage.setProperties(properties);
+				configPage.setProperties(properties);
+
+				overviewPage.refreshTree();
+			}
+		} catch (IOException e2) {
+			DefaultMessageDialog.ioException(e2.getMessage());
+			LOG.error(e2.getMessage());
+			return false;
+		} catch (CoreException e) {
+			LOG.error(e.getMessage());
+			MessageDialog.openError(new Shell(), "Core Exception",
+					e.getMessage());
+			return false;
 		}
+
+		return true;
 	}
 
 	private boolean checkNameValue(BaseProductLineEntity obj, String type) {

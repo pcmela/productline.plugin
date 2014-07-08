@@ -22,6 +22,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import diploma.productline.entity.Element;
 import diploma.productline.entity.Module;
@@ -32,6 +34,8 @@ import diploma.productline.entity.Variability;
 
 public class CreateCustomeLine {
 
+	private static Logger LOG = LoggerFactory.getLogger(CreateCustomeLine.class);
+	
 	private ProductLine productLine;
 	private IProject project;
 	private String destinationPath;
@@ -53,7 +57,6 @@ public class CreateCustomeLine {
 				.replace(javaProject.getPath().toOSString(), "");
 		this.packageElements = Utils.getPackageInJavaProject(javaProject);
 		createDestinationFolders();
-		System.out.println("s");
 		copyDefaultProjectFiles();
 		createPackageStructure(workspace);
 		copyElementResources(project.getLocation().toOSString());
@@ -64,9 +67,6 @@ public class CreateCustomeLine {
 		File classPathFile = new File(project.getLocation().toString()
 				+ "/.classpath");
 		if (classPathFile.exists() && classPathFile.isFile()) {
-			System.out.println(destinationPath);
-			System.out.println(classPathFile.getAbsolutePath());
-			System.out.println(project.getLocation().toOSString());
 			Files.copy(
 					Paths.get(project.getLocation().toString() + "/.classpath"),
 					Paths.get(destinationPath + "/.classpath"),
@@ -92,102 +92,65 @@ public class CreateCustomeLine {
 
 	private void createPackageStructure(String workspacePath)
 			throws JavaModelException {
-		System.out.println(workspacePath);
 		for (Module m : productLine.getModules()) {
 			for (PackageModule pkgModule : m.getPackages()) {
 				for (IPackageFragment pkg : packageElements) {
-					if (pkg.getElementName().equals(pkgModule.getName())) {
-						String destinationDirectory = destinationPath
-								+ pkg.getPath()
-										.toOSString()
-										.substring(
-												javaProject.getPath()
-														.toOSString().length());
-						System.out.println(workspacePath + pkg.getPath());
-						System.out.println(destinationDirectory);
-						for (File f : new File(workspacePath + pkg.getPath())
-								.listFiles()) {
-							if(!f.isFile()){
-								continue;
-							}
-							File createFile = new File(destinationDirectory
-									+ "\\" + f.getName());
-							createFile.getParentFile().mkdirs();
-							try {
-								createFile.createNewFile();
-
-								try (BufferedReader br = new BufferedReader(
-										new FileReader(workspacePath
-												+ pkg.getPath() + "\\"
-												+ f.getName()));
-										BufferedWriter bw = new BufferedWriter(
-												new FileWriter(
-														destinationDirectory
-																+ "\\"
-																+ f.getName()))) {
-									ResolveArtifacts ra = new ResolveArtifacts(
-											m.getName(),
-											getNamesOfVariabilities(m));
-									String line;
-									while ((line = br.readLine()) != null) {
-										line = ra.processLine(line);
-										bw.write(line + "\n");
-									}
-								}
-							} catch (FileNotFoundException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-						mapOfDirectories.put(workspacePath
-								+ pkg.getPath().toOSString(),
-								destinationDirectory);
-						/*
-						 * File f = new File(destinationDirectory); if
-						 * (!f.exists()) { f.mkdirs(); }
-						 */
-					}
+					createPakcage(pkgModule, pkg, workspacePath, m);
 				}
 			}
 		}
 	}
+	
+	private void createPakcage(PackageModule pkgModule, IPackageFragment pkg, String workspacePath, Module m){
+		if (pkg.getElementName().equals(pkgModule.getName())) {
+			String destinationDirectory = destinationPath
+					+ pkg.getPath()
+							.toOSString()
+							.substring(
+									javaProject.getPath()
+											.toOSString().length());
+			for (File f : new File(workspacePath + pkg.getPath())
+					.listFiles()) {
+				if(!f.isFile()){
+					continue;
+				}
+				File createFile = new File(destinationDirectory
+						+ "\\" + f.getName());
+				createFile.getParentFile().mkdirs();
+				try {
+					createFile.createNewFile();
 
-	private void copyFiles() throws IOException {
-		Iterator<Entry<String, String>> it = mapOfDirectories.entrySet()
-				.iterator();
-		while (it.hasNext()) {
-			Map.Entry<String, String> pairs = (Map.Entry<String, String>) it
-					.next();
-			File source = new File(pairs.getKey());
-			for (File f : source.listFiles()) {
-				if (f.isFile()) {
-					/*
-					 * System.out.println(f.getPath().toString());
-					 * System.out.println(f.getAbsolutePath().replace(
-					 * pairs.getKey(), pairs.getValue()));
-					 */
-					try (BufferedReader br = new BufferedReader(new FileReader(
-							f));
+					try (BufferedReader br = new BufferedReader(
+							new FileReader(workspacePath
+									+ pkg.getPath() + "\\"
+									+ f.getName()));
 							BufferedWriter bw = new BufferedWriter(
-									new FileWriter(Paths.get(
-											f.getAbsolutePath().replace(
-													pairs.getKey(),
-													pairs.getValue())).toFile()))) {
-
+									new FileWriter(
+											destinationDirectory
+													+ "\\"
+													+ f.getName()))) {
+						ResolveArtifacts ra = new ResolveArtifacts(
+								m.getName(),
+								getNamesOfVariabilities(m));
+						String line;
+						while ((line = br.readLine()) != null) {
+							line = ra.processLine(line);
+							bw.write(line + "\n");
+						}
 					}
-
-					Files.copy(
-							Paths.get(f.getAbsolutePath()),
-							Paths.get(f.getAbsolutePath().replace(
-									pairs.getKey(), pairs.getValue())),
-							StandardCopyOption.REPLACE_EXISTING);
+				} catch (FileNotFoundException e) {
+					LOG.error(e.getMessage());
+				} catch (IOException e) {
+					LOG.error(e.getMessage());
 				}
 			}
+			mapOfDirectories.put(workspacePath
+					+ pkg.getPath().toOSString(),
+					destinationDirectory);
 		}
 	}
+
+	
 
 	private Set<String> getNamesOfVariabilities(Module module) {
 		Set<String> result = new HashSet<>();

@@ -9,6 +9,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.part.ViewPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.ui.providers.WhereUsedContentProvider;
@@ -21,6 +23,8 @@ import diploma.productline.entity.Module;
 import diploma.productline.entity.Variability;
 
 public class WhereUsedView extends ViewPart {
+	private static Logger LOG = LoggerFactory.getLogger(WhereUsedView.class);
+	
 	private WhereUsedDAO wDao = new WhereUsedDAO();
 	private ListViewer listViewer;
 	private final String NO_DATA = "No data found";
@@ -37,11 +41,6 @@ public class WhereUsedView extends ViewPart {
 		listViewer.setLabelProvider(new WhereUsedLabelProvider());
 	}
 
-	@Override
-	public void setFocus() {
-		// TODO Auto-generated method stub
-
-	}
 	
 	public void refresh(Object obj){
 		if(obj instanceof Module){
@@ -51,10 +50,10 @@ public class WhereUsedView extends ViewPart {
 				setListViewerInput(records);
 			} catch (ClassNotFoundException e) {
 				DefaultMessageDialog.driversNotFoundDialog("H2");
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 			} catch (SQLException e) {
 				DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 			}
 		}else if(obj instanceof Variability){
 			Variability v = (Variability)obj;
@@ -63,10 +62,10 @@ public class WhereUsedView extends ViewPart {
 				setListViewerInput(records);
 			} catch (ClassNotFoundException e) {
 				DefaultMessageDialog.driversNotFoundDialog("H2");
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 			} catch (SQLException e) {
 				DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 			}
 		}else if(obj instanceof Element){
 			Element el = (Element)obj;
@@ -75,10 +74,10 @@ public class WhereUsedView extends ViewPart {
 				setListViewerInput(records);
 			} catch (ClassNotFoundException e) {
 				DefaultMessageDialog.driversNotFoundDialog("H2");
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 			} catch (SQLException e) {
 				DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-				e.printStackTrace();
+				LOG.error(e.getMessage());
 			}
 		}
 	}
@@ -89,6 +88,12 @@ public class WhereUsedView extends ViewPart {
 		}else{
 			listViewer.setInput(NO_DATA);
 		}
+	}
+
+	@Override
+	public void setFocus() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

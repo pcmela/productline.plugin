@@ -29,6 +29,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
 import org.eclipse.ui.PlatformUI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import productline.plugin.internal.ConfigurationKeys;
 import productline.plugin.internal.DefaultMessageDialog;
@@ -39,6 +41,8 @@ import diploma.productline.entity.ProductLine;
 
 public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard {
 
+	private static Logger LOG = LoggerFactory.getLogger(CreateProductLineWizard.class);
+	
 	CreateWizardOverview page1;
 	CreateWizardImportPage page2;
 
@@ -135,31 +139,18 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 							password, connectionString);
 				}
 			}
-			/*
-			 * } catch (ClassNotFoundException e) {
-			 * DefaultMessageDialog.driversNotFoundDialog("H2");
-			 * e.printStackTrace(); return false; } catch (SQLException e) {
-			 * DefaultMessageDialog.sqlExceptionDialog(e.getMessage());
-			 * e.printStackTrace(); return false; } catch (FileNotFoundException
-			 * e) { DefaultMessageDialog.ioException(e.getMessage());
-			 * e.printStackTrace(); return false; } catch (IOException e) {
-			 * DefaultMessageDialog.ioException(e.getMessage());
-			 * e.printStackTrace(); return false; } catch (CoreException e) { //
-			 * TODO Auto-generated catch block e.printStackTrace();
-			 */
+			
 		} catch (Exception e) {
 			File f = new File("C:\\Users\\IBM_ADMIN\\Desktop\\log.txt");
 			try {
 				try (PrintWriter printWriter = new PrintWriter(f)) {
-					e.printStackTrace(printWriter);
 					printWriter.flush();
 					MessageDialog.openError(PlatformUI.getWorkbench()
 							.getActiveWorkbenchWindow().getShell(),
 							"Exception", e.getMessage());
 				}
 			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				LOG.error(e1.getMessage());
 			}
 		}
 

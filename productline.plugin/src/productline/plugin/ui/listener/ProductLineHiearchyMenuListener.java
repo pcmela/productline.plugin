@@ -33,20 +33,25 @@ public class ProductLineHiearchyMenuListener implements IMenuListener {
 	protected WhereUsedAction whereUsedAction;
 	protected WhereUsedInCodeAction whereUsedCodeAction;
 
+	
+
 	public ProductLineHiearchyMenuListener(MenuManager mgr,
 			RemoveAction actionRemove, AddAction actionAdd,
 			CreateCustomLineAction createCustomLine, TreeViewer treeViewer,
 			ViewChildAction viewChilrenAction, WhereUsedAction whereUsedAction,
 			WhereUsedInCodeAction whereUsedCodeAction) {
-
+		super();
 		this.mgr = mgr;
 		this.actionRemove = actionRemove;
+		this.actionAdd = actionAdd;
 		this.createCustomLine = createCustomLine;
 		this.treeViewer = treeViewer;
 		this.viewChilrenAction = viewChilrenAction;
 		this.whereUsedAction = whereUsedAction;
 		this.whereUsedCodeAction = whereUsedCodeAction;
 	}
+
+
 
 	@Override
 	public void menuAboutToShow(IMenuManager manager) {

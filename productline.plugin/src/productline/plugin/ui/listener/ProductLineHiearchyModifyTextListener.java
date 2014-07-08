@@ -6,15 +6,17 @@ import org.eclipse.swt.events.ModifyListener;
 import productline.plugin.editor.OverviewPage;
 import productline.plugin.internal.ElementTreeContainer;
 import productline.plugin.internal.VariabilityTreeContainer;
+import productline.plugin.ui.listener.model.ProductLineEventListener;
 import diploma.productline.entity.BaseProductLineEntity;
 
 public class ProductLineHiearchyModifyTextListener implements ModifyListener {
 
 	private Object selection;
-	private OverviewPage page;
+	private ProductLineEventListener page;
 	
-	public ProductLineHiearchyModifyTextListener(Object selection, OverviewPage page){
+	public ProductLineHiearchyModifyTextListener(Object selection, ProductLineEventListener page){
 		this.selection = selection;
+		this.page=page;
 	}
 	
 	@Override

@@ -1,5 +1,6 @@
 package productline.plugin.ui.listener.model;
 
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.events.ModifyListener;
 
 import diploma.productline.entity.Element;
@@ -20,4 +21,12 @@ public interface ProductLineEventListener {
 	
 	public void createDetailElement(Element element,
 			ModifyListener modifyListener, ModifyListener modifyListenerOther);
+	
+	public TreeViewer getTreeViewer();
+
+	public void setTreeViewer(TreeViewer treeViewer);
+	
+	public boolean isDirty();
+	
+	public void setDirtyAndfirePropertyChange(boolean dirty);
 }

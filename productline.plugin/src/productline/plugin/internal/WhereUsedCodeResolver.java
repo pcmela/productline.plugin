@@ -30,6 +30,12 @@ public class WhereUsedCodeResolver {
 		this.project = project;
 	}
 
+	/**
+	 * Return all occurrences of selected variability in source code
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	public Set<WhereUsedCode> getVariablesOccurences()
 			throws FileNotFoundException, IOException {
 		Set<WhereUsedCode> result = new HashSet<>();
@@ -43,10 +49,17 @@ public class WhereUsedCodeResolver {
 		return result;
 	}
 
+	/**
+	 * Return all occurrences of selected module in source code 
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	public Set<WhereUsedCode> getModulesOccurences()
 			throws FileNotFoundException, IOException {
 		Set<WhereUsedCode> result = new HashSet<>();
 		if (packages != null) {
+			//browse all java packages in project
 			for (IPackageFragment pkg : packages) {
 				File f = new File(workspace + pkg.getPath().toOSString());
 				result.addAll(readFileAndGetModuleOccurences(f,
@@ -61,9 +74,12 @@ public class WhereUsedCodeResolver {
 		Set<WhereUsedCode> result = new HashSet<>();
 		String search = START_VARIABILITY + nameOfSearchItem;
 
+		// if the file is not the folder with classes return empty result
 		if (!file.isDirectory()) {
 			return result;
 		}
+		
+		// browse the package folder and search occurrences in all java classes
 		for (File f : file.listFiles()) {
 			if (!f.isFile()) {
 				continue;
@@ -95,6 +111,8 @@ public class WhereUsedCodeResolver {
 		if (!file.isDirectory()) {
 			return result;
 		}
+		
+		//search module occurrences in all java classes
 		for (File f : file.listFiles()) {
 			if (f.isFile()) {
 				continue;

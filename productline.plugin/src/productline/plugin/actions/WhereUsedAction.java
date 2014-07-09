@@ -26,13 +26,19 @@ public class WhereUsedAction extends Action {
 	@Override
 	public void runWithEvent(Event event) {
 		try {
+			
+			//open view viewWhereUsed
 			PlatformUI.getWorkbench().getActiveWorkbenchWindow()
 					.getActivePage()
 					.showView("productline.plugin.viewWhereUsed");
+			
+			//get instance of view viewWhereUsed
 			final IViewPart p = PlatformUI.getWorkbench()
 					.getActiveWorkbenchWindow().getActivePage()
 					.findView("productline.plugin.viewWhereUsed");
 			if (p instanceof WhereUsedView) {
+				
+				//refresh view with new data from actual selected item
 				Display.getDefault().asyncExec(new Runnable() {
 
 					@Override
@@ -43,7 +49,6 @@ public class WhereUsedAction extends Action {
 					}
 				});
 			}
-			System.out.println(p);
 		} catch (PartInitException e) {
 			LOG.error(e.getMessage());
 		}

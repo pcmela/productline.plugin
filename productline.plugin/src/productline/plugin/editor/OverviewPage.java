@@ -142,10 +142,13 @@ public class OverviewPage extends OverViewPagePOJO implements
 		}
 		treeViewer.expandAll();
 
+		// Listener which refresh editor depend on the selected item
 		treeViewer
 				.addSelectionChangedListener(new ProductLineHierarchySelectionListener(
 						this));
 
+		
+		//Creating actions which will be available in menu on the treeViewer
 		actionRemove = new RemoveAction(treeViewer, properties, this);
 		actionRemove.setText("Remove");
 		actionAdd = new AddAction(treeViewer, project, properties, this);
@@ -169,6 +172,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 		final MenuManager mgr = new MenuManager();
 		mgr.setRemoveAllWhenShown(true);
 
+		//Register all actions to the MenuManager
 		mgr.addMenuListener(new ProductLineHiearchyMenuListener(mgr,
 				actionRemove, actionAdd, createCustomLine, treeViewer,
 				viewChilrenAction, whereUsedAction, whereUsedCodeAction));
@@ -305,6 +309,7 @@ public class OverviewPage extends OverViewPagePOJO implements
 		bdRemovePackage.right = new FormAttachment(0, 70);
 		bRemovePackage.setLayoutData(bdRemovePackage);
 
+		// Set up list with packages
 		listViewerPackage = new ListViewer(detailResourcesDetailComposite,
 				SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
 		List list = listViewerPackage.getList();

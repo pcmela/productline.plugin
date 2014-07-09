@@ -26,19 +26,20 @@ import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
 public class RemoveAction extends Action {
-	
+
 	private static Logger LOG = LoggerFactory.getLogger(RemoveAction.class);
-	
+
 	private TreeViewer treeViewer;
 	private Properties properties;
 	private OverviewPage overviewPage;
-	
-	public RemoveAction(TreeViewer treeViewer, Properties properties, OverviewPage overviewPage){
+
+	public RemoveAction(TreeViewer treeViewer, Properties properties,
+			OverviewPage overviewPage) {
 		this.treeViewer = treeViewer;
 		this.properties = properties;
 		this.overviewPage = overviewPage;
 	}
-	
+
 	public Properties getProperties() {
 		return properties;
 	}
@@ -46,7 +47,7 @@ public class RemoveAction extends Action {
 	public void setProperties(Properties properties) {
 		this.properties = properties;
 	}
-	
+
 	@Override
 	public void runWithEvent(Event event) {
 
@@ -54,70 +55,71 @@ public class RemoveAction extends Action {
 			BaseProductLineEntity entity = (BaseProductLineEntity) ((TreeSelection) treeViewer
 					.getSelection()).getFirstElement();
 
-			boolean result = MessageDialog.openConfirm(new Shell(),
-					"Confirm", "Are you sure that you want to remove "
-							+ entity.getClass().getName() + " with name \""
-							+ entity.toString() + "\"?");
+			boolean result = MessageDialog.openConfirm(
+					new Shell(),
+					"Confirm",
+					new StringBuilder("Are you sure that you want to remove ")
+							.append(entity.getClass().getName())
+							.append(" with name \"").append(entity.toString())
+							.append("\"?").toString());
 
-			if (result) {
-				if(entity instanceof ProductLine){
-					ProductLineDAO pDao = new ProductLineDAO();
-					ProductLine e = (ProductLine)entity;
-					try {
-						pDao.delete(e, DaoUtil.connect(properties));
-					} catch (ClassNotFoundException e1) {
-						DefaultMessageDialog.driversNotFoundDialog("H2");
-						LOG.error(e1.getMessage());
-					} catch (SQLException e1) {
-						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						LOG.error(e1.getMessage());
-					}
-					overviewPage.refreshTree();
-				}else if (entity instanceof Module){
-					ModuleDAO mDao = new ModuleDAO();
-					Module e = (Module)entity;
-					try {
-						mDao.delete(e, DaoUtil.connect(properties));
-					} catch (ClassNotFoundException e1) {
-						DefaultMessageDialog.driversNotFoundDialog("H2");
-						LOG.error(e1.getMessage());
-					} catch (SQLException e1) {
-						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						LOG.error(e1.getMessage());
-					}
-					overviewPage.refreshTree();
-				}else if(entity instanceof Variability){
-					VariabilityDAO vDao = new VariabilityDAO();
-					Variability e = (Variability)entity;
-					try {
-						vDao.delete(e.getId(), DaoUtil.connect(properties));
-					} catch (ClassNotFoundException e1) {
-						DefaultMessageDialog.driversNotFoundDialog("H2");
-						LOG.error(e1.getMessage());
-					} catch (SQLException e1) {
-						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						LOG.error(e1.getMessage());
-					}
-					overviewPage.refreshTree();
-				}else if(entity instanceof Element){
-					ElementDAO eDao = new ElementDAO();
-					Element e = (Element)entity;
-					try {
-						eDao.delete(e, DaoUtil.connect(properties));
-					} catch (ClassNotFoundException e1) {
-						DefaultMessageDialog.driversNotFoundDialog("H2");
-						LOG.error(e1.getMessage());
-					} catch (SQLException e1) {
-						DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
-						LOG.error(e1.getMessage());
-					}
-					overviewPage.refreshTree();
-				}
-			} else {
-				
+			if (!result) {
+				return;
 			}
-		} else {
-
+			if (entity instanceof ProductLine) {
+				ProductLineDAO pDao = new ProductLineDAO();
+				ProductLine e = (ProductLine) entity;
+				try {
+					pDao.delete(e, DaoUtil.connect(properties));
+				} catch (ClassNotFoundException e1) {
+					DefaultMessageDialog.driversNotFoundDialog("H2");
+					LOG.error(e1.getMessage());
+				} catch (SQLException e1) {
+					DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
+					LOG.error(e1.getMessage());
+				}
+				overviewPage.refreshTree();
+			} else if (entity instanceof Module) {
+				ModuleDAO mDao = new ModuleDAO();
+				Module e = (Module) entity;
+				try {
+					mDao.delete(e, DaoUtil.connect(properties));
+				} catch (ClassNotFoundException e1) {
+					DefaultMessageDialog.driversNotFoundDialog("H2");
+					LOG.error(e1.getMessage());
+				} catch (SQLException e1) {
+					DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
+					LOG.error(e1.getMessage());
+				}
+				overviewPage.refreshTree();
+			} else if (entity instanceof Variability) {
+				VariabilityDAO vDao = new VariabilityDAO();
+				Variability e = (Variability) entity;
+				try {
+					vDao.delete(e.getId(), DaoUtil.connect(properties));
+				} catch (ClassNotFoundException e1) {
+					DefaultMessageDialog.driversNotFoundDialog("H2");
+					LOG.error(e1.getMessage());
+				} catch (SQLException e1) {
+					DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
+					LOG.error(e1.getMessage());
+				}
+				overviewPage.refreshTree();
+			} else if (entity instanceof Element) {
+				ElementDAO eDao = new ElementDAO();
+				Element e = (Element) entity;
+				try {
+					eDao.delete(e, DaoUtil.connect(properties));
+				} catch (ClassNotFoundException e1) {
+					DefaultMessageDialog.driversNotFoundDialog("H2");
+					LOG.error(e1.getMessage());
+				} catch (SQLException e1) {
+					DefaultMessageDialog.sqlExceptionDialog(e1.getMessage());
+					LOG.error(e1.getMessage());
+				}
+				overviewPage.refreshTree();
+			}
 		}
+
 	}
 }

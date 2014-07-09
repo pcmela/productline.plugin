@@ -15,18 +15,26 @@ import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
+/**
+ * Action which show dialog for the creating new custome line from existing
+ * product line
+ * 
+ * @author pcmela
+ * 
+ */
 public class CreateCustomLineAction extends Action {
-	
+
 	private TreeViewer treeViewer;
 	private Properties properties;
 	private IProject project;
-	
-	public CreateCustomLineAction(TreeViewer treeViewer, Properties properties, IProject project){
+
+	public CreateCustomLineAction(TreeViewer treeViewer, Properties properties,
+			IProject project) {
 		this.treeViewer = treeViewer;
 		this.properties = properties;
 		this.project = project;
 	}
-	
+
 	public Properties getProperties() {
 		return properties;
 	}
@@ -59,8 +67,8 @@ public class CreateCustomLineAction extends Action {
 		}
 		ProductLine newCustomeLine = SerializationUtils.clone(productLine);
 		CreateNewCustomLineDialog dialog = new CreateNewCustomLineDialog(
-				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), newCustomeLine, "", project,
-				properties);
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+				newCustomeLine, "", project, properties);
 		dialog.open();
 	}
 

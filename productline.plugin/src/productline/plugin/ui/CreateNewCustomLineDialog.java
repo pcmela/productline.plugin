@@ -50,6 +50,7 @@ import productline.plugin.ProductLineUtils;
 import productline.plugin.internal.CreateCustomeLine;
 import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.internal.ProductLineTreeComparator;
+import productline.plugin.ui.listener.CustomeLineCheckBoxSelectionListener;
 import productline.plugin.ui.providers.ProductLineTreeContentProvider;
 import productline.plugin.ui.providers.ProductLineTreeLabelProvider;
 import diploma.productline.DaoUtil;
@@ -62,8 +63,9 @@ import diploma.productline.entity.Variability;
 
 public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
-	private static Logger LOG = LoggerFactory.getLogger(CreateNewCustomLineDialog.class);
-	
+	private static Logger LOG = LoggerFactory
+			.getLogger(CreateNewCustomLineDialog.class);
+
 	private ProductLine productLine;
 	private String destinationPath;
 	private IProject project;
@@ -119,6 +121,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		tNewName = new Text(container, SWT.BORDER);
 		tNewName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
 				2, 1));
+		// When input named new name has changed, validate the new value
 		tNewName.addModifyListener(new ModifyListener() {
 
 			@Override
@@ -126,10 +129,13 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 				validateForm();
 			}
 		});
-		new Label(container, SWT.NONE).setText("Path:");;
+		new Label(container, SWT.NONE).setText("Path:");
+		;
 		tPath = new Text(container, SWT.BORDER);
 		tPath.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1,
 				1));
+
+		// When input named path has changed, validate the new value
 		tPath.addModifyListener(new ModifyListener() {
 
 			@Override
@@ -140,6 +146,8 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 		bPath = new Button(container, SWT.PUSH);
 		bPath.setText("Browse");
+
+		// Add listener with opening new model directory dialog
 		bPath.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -196,48 +204,19 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		final Tree tree = checkboxTreeViewer.getTree();
 		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
-		checkboxTreeViewer.getTree().addListener(SWT.Selection, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				if (event.detail == SWT.CHECK) {
-					if ((event.item.getData() instanceof Module)
-							&& !(((Module) event.item.getData())).isVariable()) {
-						event.detail = SWT.NONE;
-						event.type = SWT.None;
-						event.doit = false;
-						try {
-							tree.setRedraw(false);
-							TreeItem item = (TreeItem) event.item;
-							item.setChecked(!item.getChecked());
-						} finally {
-							tree.setRedraw(true);
-						}
-					} else {
-						// ITreeSelection selection =
-						// ((ITreeSelection)event.item);
-						ITreeContentProvider tcp = (ITreeContentProvider) checkboxTreeViewer
-								.getContentProvider();
-						Object child = event.item.getData();
-						Object parent = tcp.getParent(child);
-						if (parent != null) {
-							checkboxTreeViewer.setChecked(parent, true);
-							parent = tcp.getParent(parent);
-							if (parent != null) {
-								checkboxTreeViewer.setChecked(parent, true);
-							}
-						}
-					}
-				}
-
-			}
-		});
+		checkboxTreeViewer.getTree().addListener(SWT.Selection,
+				new CustomeLineCheckBoxSelectionListener(checkboxTreeViewer));
 
 		setBackgroundAndCheckedForMandatoryFields(tree);
 		validateForm();
 		return area;
 	}
 
+	/**
+	 * Set the background of required items and set items to read only
+	 * 
+	 * @param tree
+	 */
 	private void setBackgroundAndCheckedForMandatoryFields(Tree tree) {
 		List<TreeItem> allItems = new ArrayList<TreeItem>();
 
@@ -293,16 +272,16 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 
 		if (tPath.getText().trim().equals("")) {
 			validPath = false;
-			if(message != null){
+			if (message != null) {
 				message += "\nPath for new Custome Line is required!";
-			}else{
+			} else {
 				message = "Path for new Custome Line is required!";
 			}
 		} else {
 			validPath = true;
 		}
 		setMessage(message);
-		if(okButton != null){
+		if (okButton != null) {
 			okButton.setEnabled(validName && validPath);
 		}
 	}
@@ -362,6 +341,12 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 		super.okPressed();
 	}
 
+	/**
+	 * Method which creating new custom line from the selected configuration.
+	 * Save the custom line to the database
+	 * 
+	 * @return
+	 */
 	private Job createCustomeLineJob() {
 		final String path = tPath.getText();
 		final ProductLine productLine = SerializationUtils
@@ -423,7 +408,7 @@ public class CreateNewCustomLineDialog extends TitleAreaDialog {
 					}
 
 				} catch (JavaModelException | IOException e1) {
-					LOG.error(e1.getMessage()); 
+					LOG.error(e1.getMessage());
 				}
 
 				Display.getDefault().asyncExec(new Runnable() {

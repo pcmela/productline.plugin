@@ -14,11 +14,11 @@ public class ViewChildAction extends Action {
 	@Override
 	public void runWithEvent(Event event) {
 		try {
+			//show new view with the children of product line
 			PlatformUI.getWorkbench().getActiveWorkbenchWindow()
 					.getActivePage()
 					.showView("productline.plugin.browseView");
 		} catch (PartInitException e) {
-			// TODO Auto-generated catch block
 			LOG.error(e.getMessage());
 		}
 	}

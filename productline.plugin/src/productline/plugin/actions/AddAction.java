@@ -21,6 +21,11 @@ import diploma.productline.entity.Module;
 import diploma.productline.entity.ProductLine;
 import diploma.productline.entity.Variability;
 
+/**
+ * Action which add support for adding new elements into existing product line
+ * @author pcmela
+ *
+ */
 public class AddAction extends Action {
 	
 	private TreeViewer treeViewer;

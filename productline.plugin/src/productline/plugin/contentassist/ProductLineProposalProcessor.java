@@ -40,8 +40,9 @@ import diploma.productline.entity.Variability;
 
 public class ProductLineProposalProcessor implements IContentAssistProcessor {
 
-	private static Logger LOG = LoggerFactory.getLogger(ProductLineProposalProcessor.class);
-	
+	private static Logger LOG = LoggerFactory
+			.getLogger(ProductLineProposalProcessor.class);
+
 	private final String PREFIX_VARIABILITY = "@variability";
 	private final String PREFIX_MODULE = "@module";
 	private static final ICompletionProposal[] NO_PROPOSALS = new ICompletionProposal[0];
@@ -49,7 +50,6 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 	private Set<Variability> variabilities;
 	private Set<Module> modules;
 	private Properties properties;
-	private int count = 0;
 
 	public ProductLineProposalProcessor() {
 		properties = getProperties();
@@ -61,9 +61,9 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer,
 			int offset) {
 		properties = getProperties();
-		System.out.println(count);
-		count++;
+
 		try {
+			// get prefix i.e. @variability
 			String prefix = getPrefix(viewer, offset);
 
 			if (prefix == null || prefix.length() == 0)
@@ -72,16 +72,19 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 			if (prefix.startsWith(PREFIX_VARIABILITY)) {
 				variabilities = getVariabilities();
 				if (variabilities != null && variabilities.size() > 0) {
+					// String which be replaced with new name
 					String stringToBeReplaced = getStringToBeReplaces(viewer,
 							offset);
 
-					return getArrayOfProposalVariabilities(stringToBeReplaced, offset);
+					return getArrayOfProposalVariabilities(stringToBeReplaced,
+							offset);
 				} else {
 					return NO_PROPOSALS;
 				}
-			} else if(prefix.startsWith(PREFIX_MODULE)){
+			} else if (prefix.startsWith(PREFIX_MODULE)) {
 				modules = getModules();
 				if (modules != null && modules.size() > 0) {
+					// String which be replaced with new name
 					String stringToBeReplaced = getStringToBeReplaces(viewer,
 							offset);
 
@@ -100,37 +103,55 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 		return NO_PROPOSALS;
 	}
 
-	private CompletionProposal[] getArrayOfProposalVariabilities(String stringToBeReplaced, int offset) {
+	/**
+	 * Get arrays of variabilities based on actual modul
+	 * @param stringToBeReplaced
+	 * @param offset
+	 * @return
+	 */
+	private CompletionProposal[] getArrayOfProposalVariabilities(
+			String stringToBeReplaced, int offset) {
 		ArrayList<CompletionProposal> compProposal = new ArrayList<>();
 		int i = 0;
 		for (Variability v : variabilities) {
 			if (!stringToBeReplaced.equals("")) {
 				if (v.getName().toLowerCase()
 						.startsWith(stringToBeReplaced.toLowerCase())) {
-					compProposal.add(new CompletionProposal(v.getName(), offset - stringToBeReplaced.length(),
-							stringToBeReplaced.length(), v.getName().length()));
+					compProposal.add(new CompletionProposal(v.getName(), offset
+							- stringToBeReplaced.length(), stringToBeReplaced
+							.length(), v.getName().length()));
 				}
 			}
 		}
-		
-		return compProposal.toArray(new CompletionProposal[compProposal.size()]);
+
+		return compProposal
+				.toArray(new CompletionProposal[compProposal.size()]);
 	}
-	
-	private CompletionProposal[] getArrayOfProposalModules(String stringToBeReplaced, int offset) {
+
+	/**
+	 * Get arrays of all modules or modules which starting with stringToBeReplaced
+	 * @param stringToBeReplaced
+	 * @param offset
+	 * @return
+	 */
+	private CompletionProposal[] getArrayOfProposalModules(
+			String stringToBeReplaced, int offset) {
 		ArrayList<CompletionProposal> compProposal = new ArrayList<>();
 		int i = 0;
 		for (Module v : modules) {
 			if (!stringToBeReplaced.equals("")) {
 				if (v.getName().toLowerCase()
 						.startsWith(stringToBeReplaced.toLowerCase())) {
-					compProposal.add(new CompletionProposal(v.getName(), offset - stringToBeReplaced.length(),
-							stringToBeReplaced.length(), v.getName().length()));
-			
+					compProposal.add(new CompletionProposal(v.getName(), offset
+							- stringToBeReplaced.length(), stringToBeReplaced
+							.length(), v.getName().length()));
+
 				}
 			}
 		}
-		
-		return compProposal.toArray(new CompletionProposal[compProposal.size()]);
+
+		return compProposal
+				.toArray(new CompletionProposal[compProposal.size()]);
 	}
 
 	private IProject getEclipseProject() {
@@ -142,6 +163,10 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 		return f.getProject();
 	}
 
+	/**
+	 * Get package of the current Java class
+	 * @return
+	 */
 	private IPackageDeclaration getPackage() {
 		IWorkbenchPage activePage = PlatformUI.getWorkbench()
 				.getActiveWorkbenchWindow().getActivePage();
@@ -163,6 +188,13 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 		}
 	}
 
+	/**
+	 * Return String which will be replaced with new name
+	 * @param viewer
+	 * @param offset
+	 * @return
+	 * @throws BadLocationException
+	 */
 	private String getStringToBeReplaces(ITextViewer viewer, int offset)
 			throws BadLocationException {
 		IDocument doc = viewer.getDocument();
@@ -185,6 +217,7 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 	private String getPrefix(ITextViewer viewer, int offset)
 			throws BadLocationException {
 		IDocument doc = viewer.getDocument();
+		// if offset is out of range of document then exit method
 		if (doc == null || offset > doc.getLength())
 			return null;
 
@@ -194,6 +227,10 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 		boolean firstIsSpace = doc.getChar(offset - 1) == ' ';
 
 		if (firstIsSpace) {
+			/**
+			 * Iterate over doc then you get the first word before your actual
+			 * cursor position
+			 */
 			while (--offset >= 0
 					&& Character.isJavaIdentifierPart(doc.getChar(offset))
 					|| (doc.getChar(offset) == ' ' && skipedSpaces == false)
@@ -207,8 +244,12 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 					skipedSpaces = true;
 				}
 			}
-		} else {
+		} else {			
 			boolean reachedSpace = false;
+			/**
+			 * Iterate over doc then you get the first word before your actual
+			 * cursor position
+			 */
 			while (--offset >= 0
 					&& Character.isJavaIdentifierPart(doc.getChar(offset))
 					|| (doc.getChar(offset) == ' ' && skipedSpaces == false)
@@ -228,12 +269,15 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 				}
 			}
 		}
-		String r = doc.get(offset, length);
-		String r1 = doc.get(offset, length + 1);
-		String r2 = doc.get(offset + 1, length);
+
 		return doc.get(offset, length);
 	}
 
+	/**
+	 * Load properties from the product line configuration file
+	 * 
+	 * @return
+	 */
 	private Properties getProperties() {
 		Properties properties = new Properties();
 		try {
@@ -265,14 +309,15 @@ public class ProductLineProposalProcessor implements IContentAssistProcessor {
 
 		return new HashSet<Variability>();
 	}
-	
-	private Set<Module> getModules(){
+
+	private Set<Module> getModules() {
 		try (Connection con = DaoUtil.connect(properties)) {
 			IPackageDeclaration pkg = getPackage();
 			ModuleDAO mDao = new ModuleDAO();
-			try{
-				return mDao.getModuleByProductLine(con, Integer.parseInt(properties.getProperty("productline_id")));
-			}catch (NumberFormatException e){
+			try {
+				return mDao.getModuleByProductLine(con, Integer
+						.parseInt(properties.getProperty("productline_id")));
+			} catch (NumberFormatException e) {
 				LOG.error(e.getMessage());
 				return new HashSet<>();
 			}

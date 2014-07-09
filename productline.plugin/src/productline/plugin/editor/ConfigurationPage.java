@@ -45,6 +45,9 @@ public class ConfigurationPage extends ConfigurationPagePOJO {
 		this.project = project;
 	}
 
+	/**
+	 * Listener which setting dirty property of the editor
+	 */
 	private ModifyListener localModify = new ModifyListener() {
 
 		@Override
@@ -61,18 +64,6 @@ public class ConfigurationPage extends ConfigurationPagePOJO {
 		}
 	};
 
-	private ModifyListener remoteModify = new ModifyListener() {
-
-		@Override
-		public void modifyText(ModifyEvent e) {
-			if (!localDbConfiguration.isDirty()) {
-				localDbConfiguration.setDirty(true);
-				isDirty = true;
-				firePropertyChange(IEditorPart.PROP_DIRTY);
-				editor.editorDirtyStateChanged();
-			}
-		}
-	};
 
 	@Override
 	protected void createFormContent(IManagedForm managedForm) {
@@ -95,7 +86,6 @@ public class ConfigurationPage extends ConfigurationPagePOJO {
 
 		createProductLineSection(localComposite, toolkit);
 		createLocalDbSection(localComposite, toolkit);
-		// createRemoteDbSection(localComposite, toolkit);
 	}
 
 	private void createProductLineSection(Composite localComposite,
@@ -117,7 +107,6 @@ public class ConfigurationPage extends ConfigurationPagePOJO {
 		lProductLineId = toolkit.createLabel(detailComposite, "Id:");
 		tProductLineId = toolkit.createText(detailComposite, "");
 		GridData tdTextId = new GridData(/* SWT.FILL, SWT.TOP, true, false */);
-		// tdTextId.horizontalSpan = 3;
 		tdTextId.widthHint = 100;
 		tProductLineId.setLayoutData(tdTextId);
 		tProductLineId.setEnabled(false);
@@ -163,49 +152,11 @@ public class ConfigurationPage extends ConfigurationPagePOJO {
 		lLocalPassword = toolkit.createLabel(detailComposite, "Password");
 		tLocalPassword = toolkit.createText(detailComposite, "");
 		GridData tdPassword = new GridData(SWT.FILL, SWT.TOP, true, false);
-		// tdPassword.horizontalSpan = 3;
 		tLocalPassword.setLayoutData(tdPassword);
 
 		addDataBindingLocalDb(localDbConfiguration);
 		addModifyListenerLocal();
 	}
-
-	/*
-	 * private void createRemoteDbSection(Composite localComposite, FormToolkit
-	 * formToolkit) {
-	 * 
-	 * Section detailSection = formToolkit.createSection(localComposite,
-	 * ExpandableComposite.TITLE_BAR); detailSection.marginHeight = 1; GridData
-	 * gd_detailSection = new GridData(SWT.FILL, SWT.TOP, true, false);
-	 * detailSection.setLayoutData(gd_detailSection);
-	 * detailSection.setText("Remote DB");
-	 * toolkit.paintBordersFor(detailSection);
-	 * 
-	 * Composite detailComposite = formToolkit.createComposite(detailSection,
-	 * SWT.NONE); detailComposite.setLayout(new GridLayout(2, false));
-	 * detailSection.setClient(detailComposite);
-	 * 
-	 * lRemoteConnectionString = toolkit.createLabel(detailComposite,
-	 * "Connection string:"); tRemoteConnectionString =
-	 * toolkit.createText(detailComposite, ""); GridData tdConString = new
-	 * GridData(SWT.FILL, SWT.TOP, true, false); //tdConString.horizontalSpan =
-	 * 3; tRemoteConnectionString.setLayoutData(tdConString);
-	 * 
-	 * lRemoteUsername = toolkit.createLabel(detailComposite, "Username:");
-	 * tRemoteUsername = toolkit.createText(detailComposite, ""); GridData
-	 * tdUsername = new GridData(SWT.FILL, SWT.TOP, true, false);
-	 * //tdUsername.horizontalSpan = 3;
-	 * tRemoteUsername.setLayoutData(tdUsername);
-	 * 
-	 * lRemotePassword = toolkit.createLabel(detailComposite, "Password");
-	 * tRemotePassword = toolkit.createText(detailComposite, ""); GridData
-	 * tdPassword = new GridData(SWT.FILL, SWT.TOP, true, false);
-	 * //tdPassword.horizontalSpan = 3;
-	 * tRemotePassword.setLayoutData(tdPassword);
-	 * 
-	 * addDataBindingRemoteDb(remoteDbConfiguration); addModifyListenerRemote();
-	 * }
-	 */
 
 	private void addModifyListenerLocal() {
 		tProductLineId.addModifyListener(localModify);
@@ -214,11 +165,6 @@ public class ConfigurationPage extends ConfigurationPagePOJO {
 		tLocalPassword.addModifyListener(localModify);
 	}
 
-	private void addModifyListenerRemote() {
-		tRemoteConnectionString.addModifyListener(remoteModify);
-		tRemoteUsername.addModifyListener(remoteModify);
-		tRemotePassword.addModifyListener(remoteModify);
-	}
 
 	protected int openExistingProductLinesDialog(Text control) {
 

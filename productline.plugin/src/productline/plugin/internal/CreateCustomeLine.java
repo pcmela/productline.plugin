@@ -56,9 +56,13 @@ public class CreateCustomeLine {
 		String workspace = project.getLocation().toOSString()
 				.replace(javaProject.getPath().toOSString(), "");
 		this.packageElements = Utils.getPackageInJavaProject(javaProject);
+		//Create all folders for files
 		createDestinationFolders();
+		//Copy default files for java SE project
 		copyDefaultProjectFiles();
+		//Create package structure based on structure of product line 
 		createPackageStructure(workspace);
+		//Copy all resource into created folders
 		copyElementResources(project.getLocation().toOSString());
 		return true;
 	}

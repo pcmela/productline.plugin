@@ -42,6 +42,10 @@ public class ConfigurationPagePOJO extends ProductLineFormPage {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Adding dataBinding to existing widgets
+	 * @param config
+	 */
 	protected void addDataBindingLocalDb(Configuration config) {
 
 		IObservableValue id = PojoProperties.value("id").observe(config);

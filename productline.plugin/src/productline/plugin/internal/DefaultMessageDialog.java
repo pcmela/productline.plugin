@@ -17,6 +17,12 @@ public class DefaultMessageDialog {
 				message);
 	}
 	
+	public static void defaultErrorDialog(String message){
+		MessageDialog.openError(PlatformUI.getWorkbench()
+				.getActiveWorkbenchWindow().getShell(), "Error",
+				message);
+	}
+	
 	public static void ioException(String message){
 		MessageDialog.openError(PlatformUI.getWorkbench()
 				.getActiveWorkbenchWindow().getShell(), "IO Exception",

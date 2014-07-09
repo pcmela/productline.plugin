@@ -7,6 +7,12 @@ import diploma.productline.entity.Variability;
 
 
 public class ProductLineUtils {
+	
+	/**
+	 * Set parent object to the child object
+	 * @param productLine
+	 * @return ProductLine object with relation from children to parent object
+	 */
 	public static ProductLine refreshRelations(ProductLine productLine){
 		for(Module m : productLine.getModules()){
 			m.setProductLine(productLine);

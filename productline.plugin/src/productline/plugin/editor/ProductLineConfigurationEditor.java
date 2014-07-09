@@ -68,7 +68,6 @@ public class ProductLineConfigurationEditor extends FormEditor {
 						.getPages()) {
 					final FileEditorInput editorInput = (FileEditorInput) ProductLineConfigurationEditor.this
 							.getEditorInput();
-					// ProductLineConfigurationEditor.this.getActiveEditor().getSite().getShell().getDi
 					Display.getDefault().asyncExec(new Runnable() {
 
 						@Override

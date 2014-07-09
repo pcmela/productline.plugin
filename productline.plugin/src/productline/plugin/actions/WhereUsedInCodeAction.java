@@ -26,6 +26,7 @@ import org.eclipse.ui.PlatformUI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import productline.plugin.internal.DefaultMessageDialog;
 import productline.plugin.internal.Utils;
 import productline.plugin.internal.WhereUsedCode;
 import productline.plugin.internal.WhereUsedCodeResolver;
@@ -36,8 +37,9 @@ import diploma.productline.entity.Variability;
 
 public class WhereUsedInCodeAction extends Action {
 
-	private static Logger LOG = LoggerFactory.getLogger(WhereUsedInCodeAction.class);
-	
+	private static Logger LOG = LoggerFactory
+			.getLogger(WhereUsedInCodeAction.class);
+
 	private TreeViewer treeViewer;
 	private String workspace;
 	private IProject eclipseProject;
@@ -57,6 +59,7 @@ public class WhereUsedInCodeAction extends Action {
 		} catch (CoreException e) {
 			javaProject = null;
 			LOG.error(e.getMessage());
+			DefaultMessageDialog.defaultErrorDialog(e.getMessage());
 		}
 	}
 
@@ -68,14 +71,18 @@ public class WhereUsedInCodeAction extends Action {
 		try {
 			final Set<WhereUsedCode> result = new HashSet<>();
 
+			// show view viewWhereCodeUsed
 			PlatformUI.getWorkbench().getActiveWorkbenchWindow()
 					.getActivePage()
 					.showView("productline.plugin.viewWhereCodeUsed");
 
+			// get instance of view viewWhereCodeUsed
 			final IViewPart p = PlatformUI.getWorkbench()
 					.getActiveWorkbenchWindow().getActivePage()
 					.findView("productline.plugin.viewWhereCodeUsed");
 
+			// prepare Eclipse job for searching occurrences of items in source
+			// files
 			Job op = new Job("Searching") {
 
 				@Override
@@ -84,16 +91,16 @@ public class WhereUsedInCodeAction extends Action {
 
 					if (selection instanceof Variability) {
 						Variability v = (Variability) selection;
+						// getting all occurrences of variability in source codes
 						try {
+							Set<IPackageFragment> fragments = getPackageFragments(
+									WhereUsedInCodeAction.this.javaProject, v
+											.getModule().getPackages());
 							WhereUsedCodeResolver resolver = new WhereUsedCodeResolver(
-									workspace,
-									getPackageFragments(
-											WhereUsedInCodeAction.this.javaProject,
-											v.getModule().getPackages()),
-									v.getName(), eclipseProject);
+									workspace, fragments, v.getName(),
+									eclipseProject);
 							try {
 								result.addAll(resolver.getVariablesOccurences());
-								System.out.println("done");
 							} catch (FileNotFoundException e) {
 								LOG.error(e.getMessage());
 							} catch (IOException e) {
@@ -104,15 +111,16 @@ public class WhereUsedInCodeAction extends Action {
 						}
 					} else if (selection instanceof Module) {
 						Module v = (Module) selection;
+						// getting all occurrences of module in source codes
 						try {
+							Set<IPackageFragment> fragments = getPackageFragments(
+									WhereUsedInCodeAction.this.javaProject,
+									null);
 							WhereUsedCodeResolver resolver = new WhereUsedCodeResolver(
-									workspace,
-									getPackageFragments(
-											WhereUsedInCodeAction.this.javaProject,
-											null), v.getName(), eclipseProject);
+									workspace, fragments, v.getName(),
+									eclipseProject);
 							try {
 								result.addAll(resolver.getModulesOccurences());
-								System.out.println("done");
 							} catch (FileNotFoundException e) {
 								LOG.error(e.getMessage());
 							} catch (IOException e) {
@@ -123,6 +131,7 @@ public class WhereUsedInCodeAction extends Action {
 						}
 					}
 
+					// refresh the content of the displayed view
 					if (p instanceof WhereUsedCodeView) {
 						Display.getDefault().asyncExec(new Runnable() {
 
@@ -136,13 +145,22 @@ public class WhereUsedInCodeAction extends Action {
 				}
 			};
 
+			//show model status dialog to user
 			op.setUser(true);
+			//run the job
 			op.schedule();
 		} catch (PartInitException e1) {
 			LOG.error(e1.getMessage());
-		} 
+		}
 	}
 
+	/**
+	 * Getting Set of valid packages
+	 * @param project
+	 * @param modulePackages
+	 * @return
+	 * @throws JavaModelException
+	 */
 	private Set<IPackageFragment> getPackageFragments(IJavaProject project,
 			Set<PackageModule> modulePackages) throws JavaModelException {
 		Set<IPackageFragment> result = new HashSet<>();
@@ -150,6 +168,7 @@ public class WhereUsedInCodeAction extends Action {
 				.getPackageInJavaProject(javaProject);
 
 		if (modulePackages != null) {
+			//getting only packages assigned in the module
 			for (PackageModule p : modulePackages) {
 				for (IPackageFragment pkg : packages) {
 					if (pkg.getElementName().equals(p.getName())) {
@@ -159,6 +178,7 @@ public class WhereUsedInCodeAction extends Action {
 				}
 			}
 		} else {
+			//getting all packages in whole project
 			return Utils.getPackageInJavaProject(javaProject);
 		}
 

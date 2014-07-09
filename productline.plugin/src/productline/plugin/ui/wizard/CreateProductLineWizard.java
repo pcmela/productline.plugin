@@ -87,6 +87,8 @@ public class CreateProductLineWizard extends Wizard implements IWorkbenchWizard 
 		String productLineDescription;
 		IFile configurationFile;
 
+		
+		//Save new product line to DB
 		ProductLineDAO pDao = new ProductLineDAO();
 		try {
 			if (page1.getbCreateDb().getSelection()) {
